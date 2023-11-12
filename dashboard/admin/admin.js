@@ -1,8 +1,9 @@
 import AdminJS from "adminjs";
 import AdminJSExpress from "@adminjs/express";
 import { Database, Resource } from "@adminjs/mongoose";
-import Model from "../model/mealModel.js";
-const { Meal } = Model;
+// import Model from "../model/mealModel.js";
+// const { Meal } = Model;
+import Meal from "../model/mealModel.js";
 
 AdminJS.registerAdapter({
   Database,

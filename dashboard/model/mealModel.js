@@ -25,4 +25,6 @@ mongoose
 mongoose.connection.on("disconnected", () => {
   console.log("Mongoose disconnected");
 });
-export default { Meal };
+// export default { Meal };
+
+export default Meal;
