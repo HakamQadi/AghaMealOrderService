@@ -14,6 +14,7 @@ const AddNamesScreen = ({ navigation }) => {
         </Text>
       </View>
       <View>
+        <InputField  />
         <InputField />
       </View>
     </View>

@@ -13,6 +13,7 @@ const namesStyle = StyleSheet.create({
   secondryText: {
     color: "#868686",
     fontSize: 16,
+    marginBottom:30
   },
 });
 
