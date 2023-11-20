@@ -5,6 +5,7 @@ const namesStyle = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal:21,
     marginTop: 46,
+    
   },
   wlcmText: {
     fontSize: 33,

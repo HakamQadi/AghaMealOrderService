@@ -1,8 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, Button } from "react-native";
 import styles from "../../style/NamesScreenStyle";
 import InputField from "../../components/InputField";
+
 const AddNamesScreen = ({ navigation }) => {
+  const [inputFields, setInputFields] = useState([1,2]); 
+
+  const addInputField = () => {
+    setInputFields(prevFields => [...prevFields, prevFields.length + 1]);
+  };
+
   return (
     <View style={styles.namesStyle.container}>
       <View>
@@ -14,8 +21,10 @@ const AddNamesScreen = ({ navigation }) => {
         </Text>
       </View>
       <View>
-        <InputField  />
-        <InputField />
+        {inputFields.map((field, index) => (
+          <InputField key={index} />
+        ))}
+        <Button title="Add Input Field" onPress={addInputField} />
       </View>
     </View>
   );

@@ -88,6 +88,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0.45 * 16,
     borderWidth: 1,
     borderColor: "#D6D6D6",
+    // borderRadius:15
   },
   inputFocused: {
     // borderColor: "hsl(236, 32%, 26%)",

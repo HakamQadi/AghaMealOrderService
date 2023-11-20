@@ -16,7 +16,7 @@ app.use(express.json());
 // app.get("/", (req, res) => {
 //   res.send("home");
 // });
-app.use("/",MealRouter );
+app.use("/admin/meals",MealRouter );
 
 // app.use("/api/user", userRoute);
 // app.use("/api/recipes", recipesRoute);

@@ -16,7 +16,7 @@ const mealNavigation = {
 };
 
 const admin = new AdminJS({
-  // rootPath: '/admin/resources/Meals', // Set the rootPath to the meals page
+  rootPath: '/admin', // Set the rootPath to the meals page
   resources: [
     {
       resource: Meal,

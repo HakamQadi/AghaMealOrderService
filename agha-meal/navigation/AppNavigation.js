@@ -10,7 +10,14 @@ const AppNavigation = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Names">
+      <Stack.Navigator
+        initialRouteName="Names"
+        screenOptions={{
+          cardStyle: {
+            backgroundColor: "white",
+          },
+        }}
+      >
         <Stack.Screen
           name="Names"
           component={AddNamesScreen}
