@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, TextInput, StyleSheet, Animated } from "react-native";
+import { View, TextInput, StyleSheet, Animated, TouchableOpacity } from "react-native";
+import { FontAwesome5 } from "@expo/vector-icons";
 
-const InputField = () => {
+const InputField = ({ onRemove }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   const handleFocus = () => {
@@ -41,6 +42,9 @@ const InputField = () => {
         onFocus={handleFocus}
         onBlur={handleBlur}
       />
+      {/* <TouchableOpacity style={styles.removeBtn} onPress={onRemove}>
+        <FontAwesome5 name="minus" size={20} color="white" />
+      </TouchableOpacity> */}
       <Animated.View
         style={[
           styles.outline,
@@ -82,18 +86,13 @@ const styles = StyleSheet.create({
     width: 20 * 16,
     color: "black",
     fontSize: 16,
-    // backgroundColor: "hsl(236, 32%, 26%)",
     backgroundColor: "#D6D6D6",
     paddingVertical: 0.35 * 16,
     paddingHorizontal: 0.45 * 16,
     borderWidth: 1,
     borderColor: "#D6D6D6",
-    // borderRadius:15
   },
-  inputFocused: {
-    // borderColor: "hsl(236, 32%, 26%)",
-    // borderColor: "#EEA734",
-  },
+  inputFocused: {},
   outline: {
     position: "absolute",
     backgroundColor: "#EEA734",
@@ -121,6 +120,17 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     left: 0,
+  },
+  removeBtn: {
+    position: "absolute",
+    // right: 5,
+    top: "15%",
+    // transform: [{ translateY: -10 }],
+    backgroundColor: "red",
+    borderRadius: 5,
+    padding: 5,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
