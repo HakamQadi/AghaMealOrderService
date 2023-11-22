@@ -51,9 +51,12 @@ const namesStyle = StyleSheet.create({
     backgroundColor: "red",
     borderRadius: 5,
     padding: 10,
-    marginLeft: 10,
+    marginBottom: 5,
   },
-  
+  inputFieldContainer: {
+    flexDirection: "row-reverse",
+    gap: 5,
+  },
 });
 
 export default {
