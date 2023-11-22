@@ -20,14 +20,10 @@ const namesStyle = StyleSheet.create({
     alignItems: "center",
   },
   addBtn: {
-    justifyContent: "center",
-    alignItems: "center",
     backgroundColor: "#EEA734",
-    borderRadius: 50,
+    borderRadius: 5,
     padding: 10,
-    width: 50,
-    height: 50,
-    marginTop: 40,
+    marginBottom: 5,
   },
   continueBtnContainer: {
     width: "85%",
@@ -50,12 +46,24 @@ const namesStyle = StyleSheet.create({
   removeBtn: {
     backgroundColor: "red",
     borderRadius: 5,
-    padding: 10,
+    paddingHorizontal: 5,
     marginBottom: 5,
+    
+    // color:'white'
   },
   inputFieldContainer: {
     flexDirection: "row-reverse",
     gap: 5,
+  },
+  input: {
+    width: 20 * 16,
+    color: "black",
+    fontSize: 16,
+    backgroundColor: "#D6D6D6",
+    paddingVertical: 0.35 * 16,
+    paddingHorizontal: 0.45 * 16,
+    borderWidth: 1,
+    borderColor: "#D6D6D6",
   },
 });
 

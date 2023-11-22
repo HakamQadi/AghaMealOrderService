@@ -2,10 +2,11 @@
 import React from "react";
 import { View, Text, Button } from "react-native";
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation,route }) => {
+  const { names } = route.params;
   return (
     <View>
-      <Text>Home Screen</Text>
+      <Text>{names}</Text>
     </View>
   );
 };

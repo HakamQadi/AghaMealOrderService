@@ -4,6 +4,7 @@ import { FontAwesome5 } from "@expo/vector-icons";
 
 const InputField = ({ onRemove }) => {
   const [isFocused, setIsFocused] = useState(false);
+  // const [names, setNames] = useState([]);
 
   const handleFocus = () => {
     setIsFocused(true);
@@ -33,6 +34,12 @@ const InputField = ({ onRemove }) => {
     animateOutline(isFocused ? 1 : 0, isFocused ? 1 : 0);
   }, [isFocused]);
 
+
+  const handleNamesInput=(text)=>{
+    setNames(text)
+  
+  } 
+  // console.log(names)
   return (
     <View style={styles.container}>
       <TextInput
@@ -41,6 +48,7 @@ const InputField = ({ onRemove }) => {
         placeholderTextColor="#838584"
         onFocus={handleFocus}
         onBlur={handleBlur}
+        onChangeText={handleNamesInput}
       />
       {/* <TouchableOpacity style={styles.removeBtn} onPress={onRemove}>
         <FontAwesome5 name="minus" size={20} color="white" />
