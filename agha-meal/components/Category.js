@@ -8,6 +8,11 @@ import {
   Dimensions,
 } from "react-native";
 
+// npm i expo-constants
+// 1) add any thing you want to the app.json
+// 2) Import this
+// import Constants from "expo-constants";
+
 const Category = () => {
   const categoryList = [
     {
@@ -39,7 +44,8 @@ const Category = () => {
       </View>
     </ImageBackground>
   );
-
+  // 3)use it here
+  // console.log(Constants.expoConfig.API.TEST);
   return (
     <View style={{}}>
       <FlatList
