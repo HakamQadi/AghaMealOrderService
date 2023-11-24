@@ -14,6 +14,7 @@ const HomeScreen = ({ navigation, route }) => {
     <View>
       <Text>{names[currentIndex]}'s Order</Text>
       <Text>Choose Category</Text>
+
       <Category />
       <TouchableOpacity
         style={{ borderWidth: 1, margin: 20, alignItems: "center" }}

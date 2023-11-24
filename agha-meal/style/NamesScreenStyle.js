@@ -67,6 +67,8 @@ const namesStyle = StyleSheet.create({
   },
 });
 
+
+
 export default {
   namesStyle,
 };
