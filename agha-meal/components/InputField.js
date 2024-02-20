@@ -1,3 +1,6 @@
+// TODO remove this 
+
+
 import React, { useState } from "react";
 import { View, TextInput, StyleSheet, Animated, TouchableOpacity } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";

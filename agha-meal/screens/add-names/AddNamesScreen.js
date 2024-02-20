@@ -4,12 +4,13 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   Animated,
+  FlatList,
 } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import styles from "../../style/NamesScreenStyle";
+import styles from "./styles";
+import Button from "../../components/button/Button";
 
 const AddNamesScreen = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -18,34 +19,17 @@ const AddNamesScreen = ({ navigation }) => {
   const addName = () => {
     if (name.trim() !== "") {
       setNamesList((prevNames) => [...prevNames, name]);
-      setName(""); // Clear the input field after adding the name
     }
   };
 
   const setNamesToLocalStorage = async (value) => {
     try {
-      // console.log(namesList)
       await AsyncStorage.setItem("names", JSON.stringify(value));
-      navigation.navigate('Home',{names:namesList})
-    } catch (e) {
-      // saving error
-    }
+      navigation.navigate("Home", { names: namesList });
+    } catch (e) {}
   };
 
-
-  // const test = async () => {
-  //   try {
-  //     // console.log(namesList)
-  //     const value = await AsyncStorage.getItem('names');
-  //     console.log(value)
-  //   } catch (e) {
-  //     // saving error
-  //   }
-  // };
-
-
   const [isFocused, setIsFocused] = useState(false);
-  // const [names, setNames] = useState([]);
 
   const handleFocus = () => {
     setIsFocused(true);
@@ -79,68 +63,71 @@ const AddNamesScreen = ({ navigation }) => {
     setName(text);
   };
 
+  const renderNameItem = ({ item, index }) => (
+    <View style={styles.nameContainer}>
+      <Text style={styles.nameContainer}>{item}</Text>
+      <TouchableOpacity
+        onPress={() => {
+          const updatedNames = namesList.filter((_, i) => i !== index);
+          setNamesList(updatedNames);
+        }}
+        style={styles.removeBtn}
+      >
+        <FontAwesome5 name="minus" size={20} color="white" />
+      </TouchableOpacity>
+    </View>
+  );
   return (
-    <ScrollView contentContainerStyle={styles.namesStyle.scrollContainer}>
-      <View style={styles.namesStyle.container}>
-        <View>
-          <Text style={styles.namesStyle.wlcmText}>
-            Welcome to Agha Meal Order Service
-          </Text>
-          <Text style={styles.namesStyle.secondryText}>
-            Enter all names who want to order
-          </Text>
-        </View>
-        <View style={styles.namesStyle.inputFieldContainer}>
-          <View style={styles.namesStyle.inputContainer}>
-            <TextInput
-              style={styles.namesStyle.input}
-              placeholder="Enter a name"
-              value={name}
-              onChangeText={(text) => setName(text)}
-            />
-          </View>
-          <TouchableOpacity style={styles.namesStyle.addBtn} onPress={addName}>
-            <TouchableOpacity onPress={addName} style={{ color: "white" }}>
-              <FontAwesome5 name="plus" size={20} color="white" />
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </View>
+    <View style={styles.container}>
+      <View style={styles.headerTextContainer}>
+        <Text style={styles.wlcmText}>Welcome to Agha Meal Order Service</Text>
+        <Text style={styles.secondryText}>
+          Enter all names who want to order
+        </Text>
+      </View>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter a name"
+          value={name}
+          onChangeText={(text) => setName(text)}
+        />
+        <TouchableOpacity style={styles.addBtn} onPress={addName}>
+          <FontAwesome5 name="plus" size={20} color="white" />
+        </TouchableOpacity>
+      </View>
 
-        <ScrollView contentContainerStyle={{ marginTop: 20  }}>
-          {namesList.map((item, index) => (
-            <View key={index} style={{ flexDirection: "row", gap: 5,justifyContent:'flex-end' }}>
-              <Text>{item}</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  const updatedNames = namesList.filter((_, i) => i !== index);
-                  setNamesList(updatedNames);
-                }}
-                style={styles.namesStyle.removeBtn}
-              >
-                <FontAwesome5 name="minus" size={20} color="white" />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
+      <FlatList
+        data={namesList}
+        renderItem={renderNameItem}
+        keyExtractor={(item, index) => index.toString()}
+        contentContainerStyle={{
+          width: 250,
+          paddingVertical: 20,
+        }}
+      />
 
-        <View style={styles.namesStyle.continueBtnContainer}>
+      <Button
+        text={"Continue"}
+        onPress={() => setNamesToLocalStorage(namesList)}
+      />
+      {/* <View style={styles.continueBtnContainer}>
           <TouchableOpacity
-            style={styles.namesStyle.continueBtn}
+            style={styles.continueBtn}
             onPress={() => setNamesToLocalStorage(namesList)}
           >
-            <Text style={styles.namesStyle.continueBtnText}>Continue</Text>
-          </TouchableOpacity>
-        </View>
-        {/* <View style={styles.namesStyle.continueBtnContainer}>
-          <TouchableOpacity
-            style={styles.namesStyle.continueBtn}
-            onPress={() => test()}
-          >
-            <Text style={styles.namesStyle.continueBtnText}>test</Text>
+            <Text style={styles.continueBtnText}>Continue</Text>
           </TouchableOpacity>
         </View> */}
-      </View>
-    </ScrollView>
+      {/* <View style={styles.continueBtnContainer}>
+          <TouchableOpacity
+            style={styles.continueBtn}
+            onPress={() => test()}
+          >
+            <Text style={styles.ƒ√}>test</Text>
+          </TouchableOpacity>
+        </View> */}
+    </View>
   );
 };
 
