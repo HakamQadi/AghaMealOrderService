@@ -56,6 +56,13 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 16,
   },
+  addNamesError: {
+    color: "red",
+    fontSize: 16,
+    alignSelf: "flex-start",
+    marginLeft: 16,
+    marginTop: 5,
+  },
 });
 
 export default styles;

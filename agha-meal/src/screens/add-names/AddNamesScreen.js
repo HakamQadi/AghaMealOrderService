@@ -69,7 +69,7 @@
         </View> */
 }
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -84,8 +84,12 @@ import { useForm, Controller } from "react-hook-form";
 import { OrderContext } from "../../context/OrderContext";
 import Button from "../../components/button/Button";
 import styles from "./styles";
+import { useTranslations } from "../../hooks/useTranslations";
+import { locale } from "i18n-js";
 
 const AddNamesScreen = ({ navigation }) => {
+  // const { t } = useTranslations();
+
   const { setNames } = useContext(OrderContext);
   const [namesList, setNamesList] = useState([]);
   const [error, setError] = useState(false);
@@ -109,15 +113,13 @@ const AddNamesScreen = ({ navigation }) => {
   } = form;
 
   const addName = ({ name }) => {
-    if (name.trim() !== "") {
-      const updatedNamesList = [...namesList, name];
-      setNamesList(updatedNamesList);
-      setNames(updatedNamesList);
+    const updatedNamesList = [...namesList, name];
+    setNamesList(updatedNamesList);
+    setNames(updatedNamesList);
 
-      // reset states
-      reset({ name: "" });
-      setError(!error);
-    }
+    // reset states
+    reset({ name: "" });
+    setError(false);
   };
   const continueSubmit = () => {
     if (namesList.length === 0) {
@@ -149,9 +151,11 @@ const AddNamesScreen = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.headerTextContainer}>
         <Text style={styles.wlcmText}>Welcome to Agha Meal Order Service</Text>
+        {/* <Text style={styles.wlcmText}>{t("welcomeMessage")}</Text> */}
         <Text style={styles.secondryText}>
           Enter all names who want to order
         </Text>
+        {/* <Text style={styles.secondryText}>{t("enterALlNames")}</Text> */}
       </View>
       <View style={styles.inputContainer}>
         <Controller
@@ -171,6 +175,9 @@ const AddNamesScreen = ({ navigation }) => {
           <FontAwesome5 name="plus" size={20} color="white" />
         </TouchableOpacity>
       </View>
+      {errors.name?.message && (
+        <Text style={styles.addNamesError}>Please add a name</Text>
+      )}
       <FlatList
         data={namesList}
         renderItem={renderNameItem}
@@ -181,6 +188,7 @@ const AddNamesScreen = ({ navigation }) => {
         }}
       />
       {error && <Text style={styles.error}>Please add at least one name</Text>}
+      {/* {error && <Text style={styles.error}>{t("addNames")}</Text>} */}
       <Button text="Continue" onPress={continueSubmit} />
     </View>
   );
