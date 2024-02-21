@@ -4,7 +4,6 @@ const windowWidth = Dimensions.get("window").width;
 
 const styles = StyleSheet.create({
   card: {
-    // backgroundColor: "#fff",
     ...Platform.select({
       ios: {
         shadowColor: "#000",

@@ -1,4 +1,5 @@
-// HomeScreen.js
+// TODO future apdate : add more than one resturant
+
 import React, { useContext, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import Category from "../../components/category/Category";
@@ -8,10 +9,11 @@ import { OrderContext } from "../../context/OrderContext";
 
 const HomeScreen = ({ navigation, route }) => {
   const { state } = useContext(OrderContext);
-console.log("HOME STATE ::: ",state)
+
+  console.log("HOME STATE ::: ", state);
+
   const { names } = route.params;
   const [currentIndex, setCurrentIndex] = useState(0);
-  console.log(names.length);
   const handleNextName = () => {
     setCurrentIndex(currentIndex + 1);
   };
@@ -22,7 +24,7 @@ console.log("HOME STATE ::: ",state)
         <Text style={Style.subText}>Choose Category</Text>
       </View>
 
-      <Category />
+      <Category navigation={navigation} />
 
       <Button
         text={"Continue"}

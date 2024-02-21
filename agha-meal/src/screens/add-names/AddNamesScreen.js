@@ -39,7 +39,8 @@ const AddNamesScreen = ({ navigation }) => {
   const handleSubmit = () => {
     {
       namesList.length != 0
-        ? navigation.navigate("Home", { names: namesList })
+        ? // TODO Optional : remove the names from here and get them from the context in the home screen
+          navigation.navigate("Home", { names: namesList })
         : null;
     }
   };

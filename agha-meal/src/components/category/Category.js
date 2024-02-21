@@ -15,7 +15,7 @@ import styles from "./style";
 // 2) Import this
 // import Constants from "expo-constants";
 
-const Category = () => {
+const Category = ({ navigation }) => {
   const categoryList = [
     {
       id: 1,
@@ -44,11 +44,13 @@ const Category = () => {
     },
   ];
 
+  const onCategoryPress = () => {
+    // TODO here we need to get all items for the category and navigate to items screen
+    navigation.navigate("Items");
+  };
+
   const renderCategoryItem = ({ item }) => (
-    <TouchableOpacity
-      onPress={() => console.log(item.name)}
-      style={styles.card}
-    >
+    <TouchableOpacity onPress={onCategoryPress} style={styles.card}>
       <ImageBackground
         style={styles.cardImage}
         source={item.image}

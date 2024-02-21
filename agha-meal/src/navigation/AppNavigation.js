@@ -4,6 +4,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import HomeScreen from "../screens/home/HomeScreen";
 import AddNamesScreen from "../screens/add-names/AddNamesScreen";
+import CategoryItems from "../components/categoryItems/CategoryItems";
 
 const AppNavigation = () => {
   const Stack = createStackNavigator();
@@ -24,6 +25,7 @@ const AppNavigation = () => {
           options={{ headerShown: false }}
         />
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Items" component={CategoryItems} />
       </Stack.Navigator>
     </NavigationContainer>
   );
