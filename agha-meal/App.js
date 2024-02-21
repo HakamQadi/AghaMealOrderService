@@ -2,13 +2,17 @@ import React from "react";
 import { SafeAreaView, StatusBar, StyleSheet } from "react-native";
 import AppNavigation from "./src/navigation/AppNavigation";
 import { Provider as OrderDataProvider } from "./src/context/OrderContext";
+import translations from "./src/translations/";
+import {TranslationProvider} from "./src/localization/i18n"
 
 function App() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" />
       <OrderDataProvider>
-        <AppNavigation />
+        <TranslationProvider translations={translations}>
+          <AppNavigation />
+        </TranslationProvider>
       </OrderDataProvider>
     </SafeAreaView>
   );
