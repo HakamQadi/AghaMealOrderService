@@ -1,12 +1,15 @@
 import React from "react";
 import { SafeAreaView, StatusBar, StyleSheet } from "react-native";
-import AppNavigation from "./navigation/AppNavigation";
+import AppNavigation from "./src/navigation/AppNavigation";
+import { Provider as OrderDataProvider } from "./src/context/OrderContext";
 
 function App() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" />
-      <AppNavigation />
+      <OrderDataProvider>
+        <AppNavigation />
+      </OrderDataProvider>
     </SafeAreaView>
   );
 }

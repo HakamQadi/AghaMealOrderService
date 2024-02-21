@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   View,
   Text,
@@ -11,57 +11,79 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "./styles";
 import Button from "../../components/button/Button";
+import { OrderContext } from "../../context/OrderContext";
 
 const AddNamesScreen = ({ navigation }) => {
   const [name, setName] = useState("");
   const [namesList, setNamesList] = useState([]);
+  const { state, setNames } = useContext(OrderContext);
+
+  console.log("STATE ::: ", state);
+
+  // const addName = () => {
+  //   if (name.trim() !== "") {
+  //     setNamesList((prevNames) => [...prevNames, name]);
+  //   }
+  //   setNames(namesList);
+  // };
 
   const addName = () => {
     if (name.trim() !== "") {
-      setNamesList((prevNames) => [...prevNames, name]);
+      const updatedNamesList = [...namesList, name];
+      setNamesList(updatedNamesList);
+      setNames(updatedNamesList);
+      setName("");
     }
   };
 
-  const setNamesToLocalStorage = async (value) => {
-    try {
-      await AsyncStorage.setItem("names", JSON.stringify(value));
-      navigation.navigate("Home", { names: namesList });
-    } catch (e) {}
+  const handleSubmit = () => {
+    {
+      namesList.length != 0
+        ? navigation.navigate("Home", { names: namesList })
+        : null;
+    }
   };
 
-  const [isFocused, setIsFocused] = useState(false);
+  // const setNamesToLocalStorage = async (value) => {
+  //   try {
+  //     await AsyncStorage.setItem("names", JSON.stringify(value));
+  //     navigation.navigate("Home", { names: namesList });
+  //   } catch (e) {}
+  // };
 
-  const handleFocus = () => {
-    setIsFocused(true);
-  };
+  // const [isFocused, setIsFocused] = useState(false);
 
-  const handleBlur = () => {
-    setIsFocused(false);
-  };
+  // const handleFocus = () => {
+  //   setIsFocused(true);
+  // };
 
-  const outlineScaleX = new Animated.Value(0);
-  const outlineScaleY = new Animated.Value(0);
+  // const handleBlur = () => {
+  //   setIsFocused(false);
+  // };
 
-  const animateOutline = (valueX, valueY) => {
-    Animated.timing(outlineScaleX, {
-      toValue: valueX,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-    Animated.timing(outlineScaleY, {
-      toValue: valueY,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  };
+  // const outlineScaleX = new Animated.Value(0);
+  // const outlineScaleY = new Animated.Value(0);
 
-  React.useEffect(() => {
-    animateOutline(isFocused ? 1 : 0, isFocused ? 1 : 0);
-  }, [isFocused]);
+  // const animateOutline = (valueX, valueY) => {
+  //   Animated.timing(outlineScaleX, {
+  //     toValue: valueX,
+  //     duration: 300,
+  //     useNativeDriver: false,
+  //   }).start();
+  //   Animated.timing(outlineScaleY, {
+  //     toValue: valueY,
+  //     duration: 300,
+  //     useNativeDriver: false,
+  //   }).start();
+  // };
 
-  const handleNamesInput = (text) => {
-    setName(text);
-  };
+  // React.useEffect(() => {
+  //   animateOutline(isFocused ? 1 : 0, isFocused ? 1 : 0);
+  // }, [isFocused]);
+
+  // const handleNamesInput = (text) => {
+  //   setName(text);
+  // };
 
   const renderNameItem = ({ item, index }) => (
     <View style={styles.nameContainer}>
@@ -70,6 +92,7 @@ const AddNamesScreen = ({ navigation }) => {
         onPress={() => {
           const updatedNames = namesList.filter((_, i) => i !== index);
           setNamesList(updatedNames);
+          setNames(updatedNames);
         }}
         style={styles.removeBtn}
       >
@@ -107,10 +130,7 @@ const AddNamesScreen = ({ navigation }) => {
         }}
       />
 
-      <Button
-        text={"Continue"}
-        onPress={() => setNamesToLocalStorage(namesList)}
-      />
+      <Button text={"Continue"} onPress={() => handleSubmit(namesList)} />
       {/* <View style={styles.continueBtnContainer}>
           <TouchableOpacity
             style={styles.continueBtn}
