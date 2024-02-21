@@ -29,7 +29,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     alignItems: "center",
     padding: 5,
-
   },
   removeBtn: {
     backgroundColor: "red",
@@ -52,6 +51,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderWidth: 1,
     borderColor: "#D6D6D6",
+  },
+  error: {
+    color: "red",
+    fontSize: 16,
   },
 });
 
