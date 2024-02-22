@@ -1,74 +1,3 @@
-// const addName = () => {
-//   if (name.trim() !== "") {
-//     setNamesList((prevNames) => [...prevNames, name]);
-//   }
-//   setNames(namesList);
-// };
-// const setNamesToLocalStorage = async (value) => {
-//   try {
-//     await AsyncStorage.setItem("names", JSON.stringify(value));
-//     navigation.navigate("Home", { names: namesList });
-//   } catch (e) {}
-// };
-
-// const [isFocused, setIsFocused] = useState(false);
-
-// const handleFocus = () => {
-//   setIsFocused(true);
-// };
-
-// const handleBlur = () => {
-//   setIsFocused(false);
-// };
-
-// const outlineScaleX = new Animated.Value(0);
-// const outlineScaleY = new Animated.Value(0);
-
-// const animateOutline = (valueX, valueY) => {
-//   Animated.timing(outlineScaleX, {
-//     toValue: valueX,
-//     duration: 300,
-//     useNativeDriver: false,
-//   }).start();
-//   Animated.timing(outlineScaleY, {
-//     toValue: valueY,
-//     duration: 300,
-//     useNativeDriver: false,
-//   }).start();
-// };
-
-// React.useEffect(() => {
-//   animateOutline(isFocused ? 1 : 0, isFocused ? 1 : 0);
-// }, [isFocused]);
-
-// const handleNamesInput = (text) => {
-//   setName(text);
-// };
-
-{
-  /* <Button text={"Continue"} onPress={() => nameSubmit(handleSubmit)} /> */
-}
-{
-  /* <View style={styles.continueBtnContainer}>
-          <TouchableOpacity
-            style={styles.continueBtn}
-            onPress={() => setNamesToLocalStorage(namesList)}
-          >
-            <Text style={styles.continueBtnText}>Continue</Text>
-          </TouchableOpacity>
-        </View> */
-}
-{
-  /* <View style={styles.continueBtnContainer}>
-          <TouchableOpacity
-            style={styles.continueBtn}
-            onPress={() => test()}
-          >
-            <Text style={styles.ƒ√}>test</Text>
-          </TouchableOpacity>
-        </View> */
-}
-
 import React, { useContext, useState } from "react";
 import {
   View,
@@ -86,6 +15,7 @@ import Button from "../../components/button/Button";
 import styles from "./styles";
 
 const AddNamesScreen = ({ navigation }) => {
+
   const { setNames } = useContext(OrderContext);
   const [namesList, setNamesList] = useState([]);
   const [error, setError] = useState(false);
@@ -109,15 +39,13 @@ const AddNamesScreen = ({ navigation }) => {
   } = form;
 
   const addName = ({ name }) => {
-    if (name.trim() !== "") {
-      const updatedNamesList = [...namesList, name];
-      setNamesList(updatedNamesList);
-      setNames(updatedNamesList);
+    const updatedNamesList = [...namesList, name];
+    setNamesList(updatedNamesList);
+    setNames(updatedNamesList);
 
-      // reset states
-      reset({ name: "" });
-      setError(!error);
-    }
+    // reset states
+    reset({ name: "" });
+    setError(false);
   };
   const continueSubmit = () => {
     if (namesList.length === 0) {
@@ -171,6 +99,9 @@ const AddNamesScreen = ({ navigation }) => {
           <FontAwesome5 name="plus" size={20} color="white" />
         </TouchableOpacity>
       </View>
+      {!!errors.name?.message && (
+        <Text style={styles.addNamesError}>{errors.name?.message}</Text>
+      )}
       <FlatList
         data={namesList}
         renderItem={renderNameItem}
@@ -187,3 +118,4 @@ const AddNamesScreen = ({ navigation }) => {
 };
 
 export default AddNamesScreen;
+

@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     margin: 8,
     height: 200,
-    width: (windowWidth - 32) / 2, // Calculate the width dynamically for 2 columns
+    width: (windowWidth - 32) / 2.1, // Calculate the width dynamically for 2 columns
   },
   overlay: {
     flex: 1,

@@ -1,30 +1,60 @@
-import React from "react";
-import { View, Text, Modal, Button } from "react-native";
+import React, { useState } from "react";
+import { View, Text, Modal, Image, TouchableOpacity } from "react-native";
+import Button from "../../../components/button/Button";
+import Style from "./style";
 
 export default function BottomPopUp({ selectedItem, hideModal }) {
+  const [itemCount, setItemCount] = useState(0);
+
+  const increaseCount = () => {
+    setItemCount(itemCount + 1);
+  };
+  const decreaseCount = () => {
+    itemCount > 0 ? setItemCount(itemCount - 1) : setItemCount(0);
+  };
+
+  // TODO send this function back with hideModal
+  const addItem = () => {
+    // TODO adding item to order logic (maybe AsyncStorage) here and send it back to categoryItems to save it in the context
+    setItemCount(0);
+    hideModal();
+  };
+
+  const cancel = () => {
+    setItemCount(0);
+    hideModal();
+  };
+
   return (
     <Modal visible={!!selectedItem} animationType="fade" transparent={true}>
       <View style={{ flex: 1 }}>
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-          }}
-        />
-        <View
-          style={{
-            backgroundColor: "white",
-            height: "30%",
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            marginTop: -20,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text>{selectedItem?.name}</Text>
-          <Text>{selectedItem?.price} JOD</Text>
-          <Button title="Close" onPress={hideModal} />
+        <TouchableOpacity onPress={cancel} style={Style.backgroundContainer} />
+        <View style={Style.container}>
+          <View style={Style.itemDetailsContainer}>
+            <View style={{ gap: 10 }}>
+              <Text style={Style.itemNameText}>{selectedItem?.name}</Text>
+              <Text style={Style.itemPriceText}>{selectedItem?.price} JOD</Text>
+            </View>
+            <Image source={selectedItem?.image} style={Style.itemImage} />
+          </View>
+          <View style={Style.counterContainer}>
+            <TouchableOpacity onPress={decreaseCount}>
+              <Image
+                resizeMode="contain"
+                style={Style.icon}
+                source={require("../../../assets/icon/Minus.jpg")}
+              />
+            </TouchableOpacity>
+            <Text>{itemCount}</Text>
+            <TouchableOpacity onPress={increaseCount}>
+              <Image
+                resizeMode="contain"
+                style={Style.icon}
+                source={require("../../../assets/icon/Plus.jpg")}
+              />
+            </TouchableOpacity>
+          </View>
+          <Button style={Style.addButton} text="Add" onPress={addItem} />
         </View>
       </View>
     </Modal>

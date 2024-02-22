@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native";
 
 const Style = StyleSheet.create({
   headerContainer: {
-    paddingHorizontal: 21,
+    marginHorizontal: 16,
     paddingTop: 10,
   },
   nameText: {

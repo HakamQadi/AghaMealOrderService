@@ -65,12 +65,7 @@ const Category = ({ navigation }) => {
   // 3)use it here
   // console.log(Constants.expoConfig.API.TEST);
   return (
-    <View
-      style={{
-        // backgroundColor: "yellow",
-        flex: 1,
-      }}
-    >
+    <View style={{ flex: 1 }}>
       <FlatList
         data={categoryList}
         renderItem={renderCategoryItem}
