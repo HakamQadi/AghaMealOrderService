@@ -3,7 +3,6 @@ import createDataContext from "./createDataContext";
 const initialState = {
   names: [],
   order: [],
-  // isAuthenticated: false,
 };
 
 const orderReducer = (state, action) => {

@@ -15,7 +15,13 @@ const HomeScreen = ({ navigation, route }) => {
   const { names } = route.params;
   const [currentIndex, setCurrentIndex] = useState(0);
   const handleNextName = () => {
-    setCurrentIndex(currentIndex + 1);
+    if (names.length == currentIndex + 1) {
+      console.log("*****************LAST ONE*****************");
+      // navigate to ALl orders screen
+      navigation.navigate("Orders");
+    } else {
+      setCurrentIndex(currentIndex + 1);
+    }
   };
   return (
     <View style={{ flex: 1 }}>
@@ -24,16 +30,14 @@ const HomeScreen = ({ navigation, route }) => {
         <Text style={Style.subText}>Choose Category</Text>
       </View>
 
-      <Category navigation={navigation} />
+      <Category navigation={navigation} name={names[currentIndex]} />
 
       <Button
-        text={"Continue"}
+        text={names.length == currentIndex + 1 ? "Finish" : "Continue"}
         onPress={handleNextName}
         style={{
           alignSelf: "center",
         }}
-        // TODO make it navigate to all orders screen
-        isDisabled={names.length == currentIndex + 1}
       />
     </View>
   );

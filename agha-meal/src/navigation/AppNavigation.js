@@ -1,10 +1,10 @@
-import { View, Text } from "react-native";
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import HomeScreen from "../screens/home/HomeScreen";
-import AddNamesScreen from "../screens/add-names/AddNamesScreen";
+import AddNamesScreen from "../screens/addNames/AddNamesScreen";
 import CategoryItems from "../components/categoryItems/CategoryItems";
+import AllOrdersScreen from "../screens/allOrders/AllOrdersScreen";
 
 const AppNavigation = () => {
   const Stack = createStackNavigator();
@@ -26,6 +26,7 @@ const AppNavigation = () => {
         />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Items" component={CategoryItems} />
+        <Stack.Screen name="Orders" component={AllOrdersScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

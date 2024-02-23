@@ -3,9 +3,13 @@ import { View, Text, Modal, Image, TouchableOpacity } from "react-native";
 import Button from "../../../components/button/Button";
 import Style from "./style";
 
-export default function BottomPopUp({ selectedItem, hideModal }) {
+export default function BottomPopUp({
+  selectedItem,
+  hideModal,
+  name,
+  getOrderData,
+}) {
   const [itemCount, setItemCount] = useState(0);
-
   const increaseCount = () => {
     setItemCount(itemCount + 1);
   };
@@ -13,9 +17,15 @@ export default function BottomPopUp({ selectedItem, hideModal }) {
     itemCount > 0 ? setItemCount(itemCount - 1) : setItemCount(0);
   };
 
-  // TODO send this function back with hideModal
-  const addItem = () => {
-    // TODO adding item to order logic (maybe AsyncStorage) here and send it back to categoryItems to save it in the context
+  const addItem = (data) => {
+    const { count } = data;
+
+    if (count != 0) {
+      console.log("COUNT ::: ", data);
+      getOrderData(data);
+    } else console.log("THERE IS NO ITEM SELECTED");
+
+    // RESET STATES
     setItemCount(0);
     hideModal();
   };
@@ -54,7 +64,13 @@ export default function BottomPopUp({ selectedItem, hideModal }) {
               />
             </TouchableOpacity>
           </View>
-          <Button style={Style.addButton} text="Add" onPress={addItem} />
+          <Button
+            style={Style.addButton}
+            text="Add"
+            onPress={() =>
+              addItem({ count: itemCount, item: selectedItem, name })
+            }
+          />
         </View>
       </View>
     </Modal>

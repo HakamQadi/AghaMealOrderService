@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,10 +9,17 @@ import {
 import Style from "./style";
 import BottomPopUp from "../UI/modal/BottomPopUp";
 import Button from "../button/Button";
+import { OrderContext } from "../../context/OrderContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function CategoryItems({ navigation }) {
-  const [selectedItem, setSelectedItem] = useState(null);
+export default function CategoryItems({ navigation, route }) {
+  const { setOrder } = useContext(OrderContext);
 
+  const [selectedItem, setSelectedItem] = useState();
+  const [orderData, setOrderData] = useState([]);
+
+  const { name } = route.params;
+  // console.log("NAME (ITEMS) ::: ", name);
   const items = [
     {
       id: 1,
@@ -72,8 +79,32 @@ export default function CategoryItems({ navigation }) {
     setSelectedItem(null);
   };
 
-  // TODO set the order to context
-  const finishOrder = () => {
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  const loadOrders = async () => {
+    try {
+      const ordersString = await AsyncStorage.getItem("orders");
+      if (ordersString !== null) {
+        const orders = JSON.parse(ordersString);
+        // console.log("::::ORDERS FROM STORAGE::::", orders);
+        setOrderData(orders);
+      }
+    } catch (error) {
+      console.error("Error loading orders from AsyncStorage:", error);
+    }
+  };
+
+  const getOrderData = (order) => {
+    // console.log("::::TEST::::", order);
+    setOrderData((prevOrders) => [...prevOrders, order]);
+    AsyncStorage.setItem("orders", JSON.stringify([...orderData, order]));
+  };
+
+  const finishOrder = async () => {
+    // console.log("::::ORDER DATA::::", orderData);
+    setOrder(orderData);
     navigation.goBack("Home");
   };
 
@@ -110,7 +141,12 @@ export default function CategoryItems({ navigation }) {
         text="Done"
         onPress={finishOrder}
       />
-      <BottomPopUp selectedItem={selectedItem} hideModal={hideModal} />
+      <BottomPopUp
+        selectedItem={selectedItem}
+        hideModal={hideModal}
+        name={name}
+        getOrderData={getOrderData}
+      />
     </View>
   );
 }

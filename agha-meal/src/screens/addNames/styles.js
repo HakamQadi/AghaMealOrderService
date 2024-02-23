@@ -47,10 +47,11 @@ const styles = StyleSheet.create({
     height: 40,
     color: "black",
     fontSize: 16,
-    backgroundColor: "#D6D6D6",
     paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: "#D6D6D6",
+    backgroundColor: "#FBFBFB",
+    borderColor: "#efefef",
+    borderRadius: 5,
   },
   error: {
     color: "red",

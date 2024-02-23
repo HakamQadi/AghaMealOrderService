@@ -15,7 +15,8 @@ import styles from "./style";
 // 2) Import this
 // import Constants from "expo-constants";
 
-const Category = ({ navigation }) => {
+const Category = ({ navigation, name }) => {
+  console.log("NAME (CATEGORY) ::: ", name);
   const categoryList = [
     {
       id: 1,
@@ -46,7 +47,7 @@ const Category = ({ navigation }) => {
 
   const onCategoryPress = () => {
     // TODO here we need to get all items for the category and navigate to items screen
-    navigation.navigate("Items");
+    navigation.navigate("Items", { name: name });
   };
 
   const renderCategoryItem = ({ item }) => (
@@ -69,7 +70,7 @@ const Category = ({ navigation }) => {
       <FlatList
         data={categoryList}
         renderItem={renderCategoryItem}
-        keyExtractor={(item) => item.id.toString()} // Fix keyExtractor
+        keyExtractor={(item) => item.id.toString()}
         numColumns={2}
         contentContainerStyle={styles.flatListContainer}
       />

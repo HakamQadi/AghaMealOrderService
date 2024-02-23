@@ -15,7 +15,6 @@ import Button from "../../components/button/Button";
 import styles from "./styles";
 
 const AddNamesScreen = ({ navigation }) => {
-
   const { setNames } = useContext(OrderContext);
   const [namesList, setNamesList] = useState([]);
   const [error, setError] = useState(false);
@@ -118,4 +117,3 @@ const AddNamesScreen = ({ navigation }) => {
 };
 
 export default AddNamesScreen;
-
