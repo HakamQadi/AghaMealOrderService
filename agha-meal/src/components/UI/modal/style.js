@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 const Style = StyleSheet.create({
   backgroundContainer: {
     flex: 1,
@@ -10,7 +10,8 @@ const Style = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     marginTop: -20,
-    marginBottom: 20,
+    // android
+    marginBottom: Platform.OS === "ios" ? 20 : 0,
     justifyContent: "space-between",
     alignItems: "center",
   },
@@ -27,6 +28,8 @@ const Style = StyleSheet.create({
   },
   itemPriceText: {
     width: 140,
+    // android
+    textAlign: "left",
   },
   itemImage: {
     width: 100,

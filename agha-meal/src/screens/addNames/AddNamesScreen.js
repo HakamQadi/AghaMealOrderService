@@ -108,10 +108,17 @@ const AddNamesScreen = ({ navigation }) => {
         contentContainerStyle={{
           width: 250,
           paddingVertical: 20,
+          // android
+          alignSelf: "center",
         }}
       />
       {error && <Text style={styles.error}>Please add at least one name</Text>}
-      <Button text="Continue" onPress={continueSubmit} />
+      <Button
+        text="Continue"
+        onPress={continueSubmit}
+        // android
+        style={{ alignSelf: "center" }}
+      />
     </View>
   );
 };
