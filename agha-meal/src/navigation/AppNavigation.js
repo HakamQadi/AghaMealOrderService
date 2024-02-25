@@ -5,6 +5,7 @@ import HomeScreen from "../screens/home/HomeScreen";
 import AddNamesScreen from "../screens/addNames/AddNamesScreen";
 import CategoryItems from "../components/categoryItems/CategoryItems";
 import AllOrdersScreen from "../screens/allOrders/AllOrdersScreen";
+import CheckOutScreen from "../screens/checkOut/CheckOutScreen";
 
 const AppNavigation = () => {
   const Stack = createStackNavigator();
@@ -27,6 +28,12 @@ const AppNavigation = () => {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Items" component={CategoryItems} />
         <Stack.Screen name="Orders" component={AllOrdersScreen} />
+        <Stack.Screen
+          name="CheckOut"
+          component={CheckOutScreen}
+          // TODO make this for every screen
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
