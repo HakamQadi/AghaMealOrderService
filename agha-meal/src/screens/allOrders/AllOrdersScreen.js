@@ -85,17 +85,7 @@ export default function AllOrdersScreen({ navigation }) {
       <Button
         style={Style.button}
         text={"Complete Order"}
-        onPress={
-          handleCompleteOrder
-          //   async () => {
-          //   try {
-          //     await AsyncStorage.removeItem("orders");
-          //     console.log("Orders cleared from AsyncStorage");
-          //   } catch (error) {
-          //     console.error("Error clearing orders from AsyncStorage:", error);
-          //   }
-          // }
-        }
+        onPress={handleCompleteOrder}
       />
     </View>
   );

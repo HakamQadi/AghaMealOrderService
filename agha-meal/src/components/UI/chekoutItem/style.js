@@ -10,7 +10,6 @@ const Style = StyleSheet.create({
   itemDetailsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    // backgroundColor: "green",
     gap: 20,
   },
   countContainer: {

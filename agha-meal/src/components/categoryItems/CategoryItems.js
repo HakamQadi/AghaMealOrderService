@@ -19,7 +19,6 @@ export default function CategoryItems({ navigation, route }) {
   const [orderData, setOrderData] = useState([]);
 
   const { name } = route.params;
-  // console.log("NAME (ITEMS) ::: ", name);
   const items = [
     {
       id: 1,
@@ -88,7 +87,6 @@ export default function CategoryItems({ navigation, route }) {
       const ordersString = await AsyncStorage.getItem("orders");
       if (ordersString !== null) {
         const orders = JSON.parse(ordersString);
-        // console.log("::::ORDERS FROM STORAGE::::", orders);
         setOrderData(orders);
       }
     } catch (error) {
@@ -97,13 +95,11 @@ export default function CategoryItems({ navigation, route }) {
   };
 
   const getOrderData = (order) => {
-    // console.log("::::TEST::::", order);
     setOrderData((prevOrders) => [...prevOrders, order]);
     AsyncStorage.setItem("orders", JSON.stringify([...orderData, order]));
   };
 
   const finishOrder = async () => {
-    // console.log("::::ORDER DATA::::", orderData);
     setOrder(orderData);
     navigation.goBack("Home");
   };
