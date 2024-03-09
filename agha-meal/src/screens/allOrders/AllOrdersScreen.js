@@ -19,6 +19,9 @@ export default function AllOrdersScreen({ navigation }) {
     setDeliveryCost(cost);
   };
 
+  const handleCompleteOrder = () => {
+    navigation.navigate("Checkout");
+  };
   useEffect(() => {
     const calculateTotalPrices = () => {
       const ordersByName = {};
@@ -82,14 +85,17 @@ export default function AllOrdersScreen({ navigation }) {
       <Button
         style={Style.button}
         text={"Complete Order"}
-        onPress={async () => {
-          try {
-            await AsyncStorage.removeItem("orders");
-            console.log("Orders cleared from AsyncStorage");
-          } catch (error) {
-            console.error("Error clearing orders from AsyncStorage:", error);
-          }
-        }}
+        onPress={
+          handleCompleteOrder
+          //   async () => {
+          //   try {
+          //     await AsyncStorage.removeItem("orders");
+          //     console.log("Orders cleared from AsyncStorage");
+          //   } catch (error) {
+          //     console.error("Error clearing orders from AsyncStorage:", error);
+          //   }
+          // }
+        }
       />
     </View>
   );
