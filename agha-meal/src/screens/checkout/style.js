@@ -22,6 +22,9 @@ const Style = StyleSheet.create({
     paddingHorizontal: 16,
   },
   button: { alignSelf: "center", marginBottom: 20 },
+  textColorYellow: {
+    color: "#F8B64C",
+  },
 });
 
 export default Style;

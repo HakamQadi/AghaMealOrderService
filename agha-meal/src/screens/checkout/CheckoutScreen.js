@@ -6,8 +6,9 @@ import Button from "../../components/button/Button";
 import Style from "./style";
 import CheckoutItem from "../../components/UI/chekoutItem/CheckoutItem";
 
-const CheckoutScreen = ({ navigation }) => {
+const CheckoutScreen = ({ navigation, route }) => {
   const { state } = useContext(OrderContext);
+  const { deliveryCost } = route.params;
 
   // Function to group orders by item name
   const groupOrdersByName = () => {
@@ -33,6 +34,12 @@ const CheckoutScreen = ({ navigation }) => {
     });
     return subtotal;
   };
+  // Calculate total
+  const calculateTotal = () => {
+    let total = 0;
+    total = parseFloat(calculateSubtotal()) + parseFloat(deliveryCost || 0);
+    return total;
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -51,6 +58,14 @@ const CheckoutScreen = ({ navigation }) => {
         <View style={Style.detailsRowContainer}>
           <Text>Subtotal</Text>
           <Text>{calculateSubtotal()} JOD</Text>
+        </View>
+        <View style={Style.detailsRowContainer}>
+          <Text>Delivery</Text>
+          <Text>{deliveryCost ? deliveryCost : 0} JOD</Text>
+        </View>
+        <View style={Style.detailsRowContainer}>
+          <Text>Total</Text>
+          <Text style={Style.textColorYellow}>{calculateTotal()} JOD</Text>
         </View>
       </View>
       <Button

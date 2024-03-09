@@ -51,6 +51,8 @@ const AddNamesScreen = ({ navigation }) => {
       setError("Please add at least one name");
     } else {
       setError(false);
+      reset({ name: "" });
+      setNamesList([]);
       // TODO Optional : remove the names from here and get them from the context in the home screen
       navigation.navigate("Home", { names: namesList });
     }

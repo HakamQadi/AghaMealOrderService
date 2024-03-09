@@ -20,7 +20,7 @@ export default function AllOrdersScreen({ navigation }) {
   };
 
   const handleCompleteOrder = () => {
-    navigation.navigate("Checkout");
+    navigation.navigate("Checkout", { deliveryCost: deliveryCost });
   };
   useEffect(() => {
     const calculateTotalPrices = () => {
