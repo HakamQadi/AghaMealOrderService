@@ -21,15 +21,9 @@ export default function AllOrdersScreen({ navigation }) {
     setDeliveryCost(cost);
   };
 
-  const asyncStorage = async () => {
-    try {
-      const ordersString = await AsyncStorage.getItem("orders");
-      if (ordersString == null) {
-        setIsEmptyOrders(true);
-      }
-    } catch (error) {
-      console.error("Error loading orders from AsyncStorage:", error);
-    }
+
+  const handleCompleteOrder = () => {
+    navigation.navigate("Checkout", { deliveryCost: deliveryCost });
   };
   useEffect(() => {
     const calculateTotalPrices = () => {
@@ -113,7 +107,7 @@ export default function AllOrdersScreen({ navigation }) {
       <Button
         style={Style.button}
         text={"Complete Order"}
-        onPress={completeOrderHandler}
+        onPress={handleCompleteOrder}
       />
     </View>
   );

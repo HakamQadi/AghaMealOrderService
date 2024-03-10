@@ -9,6 +9,8 @@ export default function BottomPopUp({
   name,
   getOrderData,
 }) {
+  console.log("selectedItem ::: ", selectedItem);
+
   const [itemCount, setItemCount] = useState(0);
   const increaseCount = () => {
     setItemCount(itemCount + 1);
@@ -42,7 +44,7 @@ export default function BottomPopUp({
         <View style={Style.container}>
           <View style={Style.itemDetailsContainer}>
             <View style={{ gap: 10 }}>
-              <Text style={Style.itemNameText}>{selectedItem?.name}</Text>
+              <Text style={Style.itemNameText}>{selectedItem?.meal}</Text>
               <Text style={Style.itemPriceText}>{selectedItem?.price} JOD</Text>
             </View>
             <Image source={selectedItem?.image} style={Style.itemImage} />
