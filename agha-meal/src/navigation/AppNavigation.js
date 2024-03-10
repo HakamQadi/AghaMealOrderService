@@ -6,7 +6,7 @@ import AddNamesScreen from "../screens/addNames/AddNamesScreen";
 import CategoryItems from "../components/categoryItems/CategoryItems";
 import AllOrdersScreen from "../screens/allOrders/AllOrdersScreen";
 
-import CheckOutScreen from "../screens/checkOut2/CheckOutScreen2";
+import CheckoutScreen from "../screens/checkout/CheckoutScreen";
 
 
 const AppNavigation = () => {
@@ -30,7 +30,7 @@ const AppNavigation = () => {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Items" component={CategoryItems} />
         <Stack.Screen name="Orders" component={AllOrdersScreen} />
-        <Stack.Screen name="Checkout" component={CheckOutScreen} />
+        <Stack.Screen name="Checkout" component={CheckoutScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
