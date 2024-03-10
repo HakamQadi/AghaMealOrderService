@@ -50,7 +50,7 @@ export default function AllOrdersScreen({ navigation }) {
     };
 
     calculateTotalPrices();
-    asyncStorage();
+    // asyncStorage();
   }, [state.order, nameCount, deliveryCostPerName]);
 
   const completeOrderHandler = async () => {
