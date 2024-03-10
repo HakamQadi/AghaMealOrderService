@@ -2,11 +2,14 @@ import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
+    // android
+    // alignItems: "center",
     flex: 1,
   },
   headerTextContainer: {
     marginTop: 46,
+    // android
+    paddingHorizontal: 16,
   },
   wlcmText: {
     fontSize: 33,
@@ -40,7 +43,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     gap: 5,
-    alignItems: "center",
+    // android
+    // alignItems:"center",
+    justifyContent: "center",
   },
   input: {
     width: 320,

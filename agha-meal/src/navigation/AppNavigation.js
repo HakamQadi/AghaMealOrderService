@@ -5,7 +5,9 @@ import HomeScreen from "../screens/home/HomeScreen";
 import AddNamesScreen from "../screens/addNames/AddNamesScreen";
 import CategoryItems from "../components/categoryItems/CategoryItems";
 import AllOrdersScreen from "../screens/allOrders/AllOrdersScreen";
+
 import CheckoutScreen from "../screens/checkout/CheckoutScreen";
+
 
 const AppNavigation = () => {
   const Stack = createStackNavigator();
