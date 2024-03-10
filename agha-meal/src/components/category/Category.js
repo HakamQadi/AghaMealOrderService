@@ -15,50 +15,50 @@ import styles from "./style";
 // 2) Import this
 // import Constants from "expo-constants";
 
-const Category = ({ navigation, name }) => {
-  console.log("NAME (CATEGORY) ::: ", name);
-  const categoryList = [
-    {
-      id: 1,
-      name: "شاورما",
-      image: require("../../assets/Shawerma.jpg"),
-    },
-    {
-      id: 2,
-      name: "دجاج مقلي",
-      image: require("../../assets/FriedChicken.jpg"),
-    },
-    {
-      id: 3,
-      name: "دجاج مقلي - بروستد",
-      image: require("../../assets/Broasted.jpg"),
-    },
-    {
-      id: 4,
-      name: "مشاوي",
-      image: require("../../assets/Mashawe.jpeg"),
-    },
-    {
-      id: 5,
-      name: "ساندويش",
-      image: require("../../assets/Sandwich.jpg"),
-    },
-  ];
+const Category = ({ navigation, name, categories }) => {
+  console.log("NAME (CATEGORY) ::: ", categories);
+  // const categoryList = [
+  //   {
+  //     id: 1,
+  //     name: "شاورما",
+  //     image: require("../../assets/Shawerma.jpg"),
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "دجاج مقلي",
+  //     image: require("../../assets/FriedChicken.jpg"),
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "دجاج مقلي - بروستد",
+  //     image: require("../../assets/Broasted.jpg"),
+  //   },
+  //   {
+  //     id: 4,
+  //     name: "مشاوي",
+  //     image: require("../../assets/Mashawe.jpeg"),
+  //   },
+  //   {
+  //     id: 5,
+  //     name: "ساندويش",
+  //     image: require("../../assets/Sandwich.jpg"),
+  //   },
+  // ];
 
-  const onCategoryPress = () => {
+  const onCategoryPress = (category) => {
     // TODO here we need to get all items for the category and navigate to items screen
-    navigation.navigate("Items", { name: name });
+    navigation.navigate("Items", { category: category });
   };
 
   const renderCategoryItem = ({ item }) => (
-    <TouchableOpacity onPress={onCategoryPress} style={styles.card}>
+    <TouchableOpacity onPress={()=>onCategoryPress(item)} style={styles.card}>
       <ImageBackground
         style={styles.cardImage}
         source={item.image}
         resizeMode="cover"
       >
         <View style={styles.overlay}>
-          <Text style={styles.title}>{item.name}</Text>
+          <Text style={styles.title}>{item}</Text>
         </View>
       </ImageBackground>
     </TouchableOpacity>
@@ -68,9 +68,9 @@ const Category = ({ navigation, name }) => {
   return (
     <View style={{ flex: 1 }}>
       <FlatList
-        data={categoryList}
+        data={categories}
         renderItem={renderCategoryItem}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item._id}
         numColumns={2}
         contentContainerStyle={styles.flatListContainer}
       />
