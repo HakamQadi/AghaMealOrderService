@@ -40,11 +40,7 @@ const Style = StyleSheet.create({
     marginBottom: 10,
   },
   detailsText: { color: "#F8B64C" },
-  button: {
-    alignSelf: "center",
-    // android
-    // marginBottom: 20,
-  },
+  button: { alignSelf: "center", marginBottom: 20 },
 });
 
 export default Style;
