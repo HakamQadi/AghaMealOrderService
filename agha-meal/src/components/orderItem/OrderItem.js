@@ -6,7 +6,8 @@ export default function OrderItem({ item, count, totalItemPrice }) {
   return (
     <View style={Style.itemContainer}>
       <View style={Style.itemNameContainer}>
-        <Text>{item.name}</Text>
+        <Text>{item.meal}</Text>
+        {/* <Text>{item.name}</Text> */}
         <Text> X {count}</Text>
       </View>
       <View style={Style.itemDetailsContainer}>

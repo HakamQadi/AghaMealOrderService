@@ -14,7 +14,8 @@ const CheckoutScreen = ({ navigation, route }) => {
   const groupOrdersByName = () => {
     const ordersByName = {};
     state.order.forEach((order) => {
-      const itemName = order.item.name;
+      const itemName = order.item.meal;
+      // const itemName = order.item.name;
       if (!ordersByName[itemName]) {
         ordersByName[itemName] = { ...order, count: 0 };
       }

@@ -45,13 +45,20 @@ const Category = ({ navigation, name }) => {
     },
   ];
 
-  const onCategoryPress = () => {
+  const onCategoryPress = (category) => {
     // TODO here we need to get all items for the category and navigate to items screen
-    navigation.navigate("Items", { name: name });
+    // navigation.navigate("Items", { name: name, category: /*here*/ });
+    navigation.navigate("Items", { name: name, category: category });
+
+    // navigation.navigate("Items", { name: name, });
   };
 
   const renderCategoryItem = ({ item }) => (
-    <TouchableOpacity onPress={onCategoryPress} style={styles.card}>
+    <TouchableOpacity
+      // onPress={onCategoryPress}
+      onPress={() => onCategoryPress(item.name)}
+      style={styles.card}
+    >
       <ImageBackground
         style={styles.cardImage}
         source={item.image}
