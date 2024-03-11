@@ -13,10 +13,9 @@ import { useForm, Controller } from "react-hook-form";
 import { OrderContext } from "../../context/OrderContext";
 import Button from "../../components/button/Button";
 import styles from "./styles";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const AddNamesScreen = ({ navigation }) => {
-  const { setNames,setOrder } = useContext(OrderContext);
+  const { setNames } = useContext(OrderContext);
   const [namesList, setNamesList] = useState([]);
   const [error, setError] = useState(false);
 
@@ -47,7 +46,7 @@ const AddNamesScreen = ({ navigation }) => {
     reset({ name: "" });
     setError(false);
   };
-  const continueSubmit = async () => {
+  const continueSubmit = () => {
     if (namesList.length === 0) {
       setError("Please add at least one name");
     } else {
@@ -111,17 +110,10 @@ const AddNamesScreen = ({ navigation }) => {
         contentContainerStyle={{
           width: 250,
           paddingVertical: 20,
-          // android
-          alignSelf: "center",
         }}
       />
       {error && <Text style={styles.error}>Please add at least one name</Text>}
-      <Button
-        text="Continue"
-        onPress={continueSubmit}
-        // android
-        style={{ alignSelf: "center" }}
-      />
+      <Button text="Continue" onPress={continueSubmit} />
     </View>
   );
 };
