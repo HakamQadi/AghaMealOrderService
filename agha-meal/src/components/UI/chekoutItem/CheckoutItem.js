@@ -12,7 +12,7 @@ export default function CheckoutItem({ id, name, count, price }) {
           </View>
           <Text>{name}</Text>
         </View>
-        <Text style={Style.textColorYellow}>{price} JOD</Text>
+        <Text style={Style.textColorYellow}>{price.toFixed(2)} JOD</Text>
       </View>
       <View style={Style.divider}></View>
     </View>

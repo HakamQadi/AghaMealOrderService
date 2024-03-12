@@ -42,10 +42,16 @@ export default function BottomPopUp({
         <View style={Style.container}>
           <View style={Style.itemDetailsContainer}>
             <View style={{ gap: 10 }}>
-              <Text style={Style.itemNameText}>{selectedItem?.name}</Text>
+              <Text style={Style.itemNameText}>{selectedItem?.meal}</Text>
+              {/* <Text style={Style.itemNameText}>{selectedItem?.name}</Text> */}
               <Text style={Style.itemPriceText}>{selectedItem?.price} JOD</Text>
             </View>
-            <Image source={selectedItem?.image} style={Style.itemImage} />
+            <Image
+              //  source={selectedItem?.image}
+              source={{ uri: selectedItem?.image }}
+              style={Style.itemImage}
+              resizeMode="cover"
+            />
           </View>
           <View style={Style.counterContainer}>
             <TouchableOpacity onPress={decreaseCount}>

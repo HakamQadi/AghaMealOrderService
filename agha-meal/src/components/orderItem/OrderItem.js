@@ -3,6 +3,7 @@ import { View, Text } from "react-native";
 import Style from "./style";
 
 export default function OrderItem({ item, count, totalItemPrice }) {
+  // console.log("totalItemPrice ::::",totalItemPrice.toFixed(1))
   return (
     <View style={Style.itemContainer}>
       <View style={Style.itemNameContainer}>
@@ -12,7 +13,9 @@ export default function OrderItem({ item, count, totalItemPrice }) {
       </View>
       <View style={Style.itemDetailsContainer}>
         <Text style={Style.detailsText}>Price {item.price}</Text>
-        <Text style={Style.detailsText}>Total Price: {totalItemPrice}</Text>
+        <Text style={Style.detailsText}>
+          Total Price: {totalItemPrice.toFixed(2)}
+        </Text>
       </View>
     </View>
   );
