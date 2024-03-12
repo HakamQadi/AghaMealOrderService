@@ -58,7 +58,7 @@ const CheckoutScreen = ({ navigation, route }) => {
       <View style={Style.detailsContainer}>
         <View style={Style.detailsRowContainer}>
           <Text>Subtotal</Text>
-          <Text>{calculateSubtotal().toFixed(1)} JOD</Text>
+          <Text>{calculateSubtotal().toFixed(2)} JOD</Text>
         </View>
         <View style={Style.detailsRowContainer}>
           <Text>Delivery</Text>
@@ -66,7 +66,7 @@ const CheckoutScreen = ({ navigation, route }) => {
         </View>
         <View style={Style.detailsRowContainer}>
           <Text>Total</Text>
-          <Text style={Style.textColorYellow}>{calculateTotal().toFixed(1)} JOD</Text>
+          <Text style={Style.textColorYellow}>{calculateTotal().toFixed(2)} JOD</Text>
         </View>
       </View>
       <Button

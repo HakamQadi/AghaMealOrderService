@@ -77,7 +77,7 @@ export default function AllOrdersScreen({ navigation }) {
               <Text style={Style.detailsText}>
                 Delivery {deliveryCostPerName ? deliveryCostPerName : 0}
               </Text>
-              <Text style={Style.detailsText}>Total {totalPriceForName.toFixed(1)}</Text>
+              <Text style={Style.detailsText}>Total {totalPriceForName.toFixed(2)}</Text>
             </View>
           </View>
         ))}
