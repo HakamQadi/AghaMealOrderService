@@ -2,14 +2,24 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 dotenv.config({ path: "./.env" });
 
-const userSchema = new mongoose.Schema({
+const mealSchema = new mongoose.Schema({
   meal: String,
-  category: String,
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category"
+  },
   price: Number,
   image: String,
 });
 
-const Meal = mongoose.model("Meals", userSchema, "meals");
+const categorySchema = new mongoose.Schema({
+  name: String,
+  image: String
+});
+
+const Meal = mongoose.model("Meal", mealSchema);
+const Category = mongoose.model("Category", categorySchema);
+
 mongoose
   .connect(process.env.CONN_STR, {
     useNewUrlParser: true,
@@ -25,6 +35,5 @@ mongoose
 mongoose.connection.on("disconnected", () => {
   console.log("Mongoose disconnected");
 });
-// export default { Meal };
 
-export default Meal;
+export { Meal, Category };
