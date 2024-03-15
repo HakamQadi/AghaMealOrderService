@@ -1,5 +1,4 @@
 import { Category, Meal } from "../model/mealModel.js";
-import mongoose from "mongoose";
 
 // GET
 const getAllMeals = async (req, res) => {
@@ -54,21 +53,6 @@ const getMealByCategory = async (req, res) => {
   }
 };
 
-const getAllCategories = async (req, res) => {
-  try {
-    const categories = await Category.find();
-    res.status(200).json({
-      message: "success",
-      categories,
-    });
-  } catch (error) {
-    res.status(404).json({
-      message: "There is something wrong",
-      error,
-    });
-  }
-};
-
 // POST
 const addMeal = async (req, res) => {
   try {
@@ -109,25 +93,46 @@ const addMeal = async (req, res) => {
   }
 };
 
-const addCategory = async (req, res) => {
+// PATCH
+const updateMeal = async (req, res) => {
   try {
-    const { name, image } = req.body;
+    const { id } = req.params;
+    const { meal, category, price, image } = req.body;
 
-    const isCategoryExist = await Category.findOne({ name });
-
-    if (isCategoryExist) {
-      return res.status(409).json({
-        message: "Category already existing",
-        category: isCategoryExist,
+    const isMealExist = await Meal.findOne({ _id: id });
+    if (!isMealExist) {
+      return res.status(404).json({
+        message: "Meal not found",
       });
     } else {
-      const newCategory = await Category.create({
-        name,
-        image,
-      });
-      return res.status(201).json({
-        message: "Add successfully",
-        category: newCategory,
+      const updateFields = {};
+
+      if (meal) updateFields.meal = meal;
+      if (price) updateFields.price = price;
+      if (image) updateFields.image = image;
+
+      if (category) {
+        const categoryDoc = await Category.findOne({ name: category });
+
+        if (!categoryDoc) {
+          return res.status(404).json({
+            message: "Category not found",
+          });
+        } else {
+          updateFields.category = categoryDoc._id;
+        }
+      }
+      const updatedMeal = await Meal.findOneAndUpdate(
+        { _id: id },
+        updateFields,
+        {
+          new: true,
+        }
+      );
+
+      return res.status(200).json({
+        message: "Meal updated successfully",
+        meal: updatedMeal,
       });
     }
   } catch (error) {
@@ -138,11 +143,32 @@ const addCategory = async (req, res) => {
   }
 };
 
+// DELETE
+const deleteMeal = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedMeal = await Meal.findByIdAndDelete({ _id: id });
+    if (!deletedMeal) {
+      return res.status(404).json({
+        message: "Meal not found ",
+      });
+    } else {
+      return res.status(200).json({
+        message: "Meal deleted successfully",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: "There is something wrong",
+      error,
+    });
+  }
+};
+
 export default {
   getAllMeals,
   getMealByCategory,
-  getAllCategories,
-
   addMeal,
-  addCategory,
+  updateMeal,
+  deleteMeal,
 };
