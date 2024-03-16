@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/admin/meals", MealRouter);
-app.use("/admin/category", CategoryRouter);
+app.use("/admin/categories", CategoryRouter);
 
 app.listen(PORT, () => {
   console.log(`started on http://localhost:${PORT}`);

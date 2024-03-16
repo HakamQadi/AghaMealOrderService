@@ -3,10 +3,10 @@ import { Category, Meal } from "../model/mealModel.js";
 // GET
 const getAllMeals = async (req, res) => {
   try {
-    const meals = await Meal.find();
+    // const meals = await Meal.find();
 
     // * this will show the category object inside the meal object
-    // const meals = await Meal.find().populate("category");
+    const meals = await Meal.find().populate("category");
 
     // *this is how to access category info in the front
     // console.log(meals[0].category.name)
