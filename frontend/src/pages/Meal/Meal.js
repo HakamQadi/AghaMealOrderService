@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Style } from "./style";
 import axios from "axios";
-import { Colors } from "../../themes/Colors";
 import Modal from "../../components/Modal/PopupModal";
 
 export default function Meal() {

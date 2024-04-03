@@ -1,5 +1,4 @@
 import React from "react";
-import { Colors } from "../../themes/Colors";
 import { Style } from "./style";
 
 function Modal({ children, onClose }) {
