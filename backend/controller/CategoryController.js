@@ -2,6 +2,7 @@ import { Category, Meal } from "../model/mealModel.js";
 
 // GET
 const getAllCategories = async (req, res) => {
+  console.log("::::::TEST:::::")
   try {
     const categories = await Category.find();
     res.status(200).json({
