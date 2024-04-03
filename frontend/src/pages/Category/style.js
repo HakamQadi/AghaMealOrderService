@@ -1,0 +1,95 @@
+import { Colors } from "../../themes/Colors";
+
+export const Style = {
+  container: {
+    backgroundColor: "#31363F",
+    color: "white",
+    width: "80%",
+  },
+  headerContainer: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginLeft: 16,
+    marginRight: 16,
+  },
+  headerText: {
+    marginTop: 10,
+    textAlign: "center",
+  },
+  addButton: {
+    textDecoration: "none",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 60,
+    height: 35,
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderColor: Colors.darkBlue,
+    borderRadius: 5,
+    backgroundColor: "transparent",
+  },
+  tabelHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    backgroundColor: Colors.darkBlue,
+    padding: 10,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+    fontWeight: "bold",
+  },
+  itemContainer: {
+    display: "flex",
+    justifyContent: "space-between",
+    flexDirection: "row",
+    margin: "5px 0 5px 0",
+    padding: 10,
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderColor: Colors.darkBlue,
+    borderRadius: 5,
+  },
+  itemText: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 100,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  imageContainer: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 100,
+  },
+  image: {
+    width: 50,
+  },
+
+  // Modal Children
+  modalContainer: {
+    marginTop: 20,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    height: "95%",
+  },
+  inputsContainer: {
+    display: "flex",
+    justifyContent: "center",
+    flexDirection: "column",
+    gap: 10,
+    marginTop: 20,
+    marginBottom: 50,
+    height: "50%",
+    width: "60%",
+  },
+  input: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 5,
+  },
+};
