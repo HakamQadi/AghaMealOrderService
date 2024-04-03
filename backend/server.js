@@ -41,6 +41,9 @@ app.use('/images', express.static(path.join(__dirname, './controller/upload')));
 //     message: "All good",
 //   });
 // });
+app.get("/", (req, res) => {
+  res.send("Hi");
+});
 app.use("/admin/meals", MealRouter);
 app.use("/admin/categories", CategoryRouter);
 

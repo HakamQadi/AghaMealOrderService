@@ -13,7 +13,8 @@ function Category() {
   const fetchCategoriesData = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8080/admin/categories"
+        "https://aghamealorderservice.onrender.com/admin/categories"
+        // "http://localhost:8080/admin/categories"
       );
       setCategories(response.data.categories);
     } catch (error) {
