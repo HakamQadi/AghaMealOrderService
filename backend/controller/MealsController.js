@@ -1,5 +1,10 @@
 import { Category, Meal } from "../model/mealModel.js";
 
+import { fileURLToPath } from "url"; // Import fileURLToPath
+import { dirname } from "path"; // Import dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 // GET
 const getAllMeals = async (req, res) => {
   try {
@@ -57,7 +62,9 @@ const getMealByCategory = async (req, res) => {
 // POST
 const addMeal = async (req, res) => {
   try {
-    const { meal, category, price, image } = req.body;
+    const { meal, category, price } = req.body;
+    // Get the file that was set to our field named "image"
+    const { image } = req.files;
 
     const isMealExist = await Meal.findOne({ meal });
 
@@ -75,11 +82,24 @@ const addMeal = async (req, res) => {
         });
       }
 
+      // If no image submitted, exit
+      if (!image)
+        return res.status(400).json({
+          message: "no image submitted",
+        });
+      image.mv(__dirname + "/upload/" + image.name);
+
+      // // All good
+      // res.status(200).json({
+      //   message: "All good",
+      // });
       const newMeal = await Meal.create({
         meal,
         category: categoryDoc._id,
         price,
-        image,
+        // image,
+        image: image.name,
+        // image: "test.image",
       });
       return res.status(201).json({
         message: "Add successfully",

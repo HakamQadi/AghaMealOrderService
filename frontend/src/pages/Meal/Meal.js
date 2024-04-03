@@ -10,7 +10,9 @@ export default function Meal() {
   const [mealName, setMealName] = useState("");
   const [mealCategory, setMealCategory] = useState("");
   const [mealPrice, setMealPrice] = useState("");
-  const [mealImage, setMealImage] = useState("");
+  // const [mealImage, setMealImage] = useState("");
+  const [mealImage, setMealImage] = useState(null); // State to hold the selected image file
+
   const fetchMealsData = async () => {
     try {
       const response = await axios.get("http://localhost:8080/admin/meals");
@@ -25,32 +27,65 @@ export default function Meal() {
     setModalOpen(false);
   };
 
+  // const handleAddMeal = async () => {
+  //   const newMeal = {
+  //     meal: mealName,
+  //     category: mealCategory,
+  //     price: mealPrice,
+  //     image: mealImage,
+  //   };
+
+  //   try {
+  //     await axios.post("http://localhost:8080/upload", newMeal);
+  //     // await axios.post("http://localhost:8080/admin/meals/add", newMeal);
+  //     setModalOpen(false);
+  //     fetchMealsData();
+  //     // Reset states
+  //     setMealName("");
+  //     setMealCategory("");
+  //     setMealPrice("");
+  //     setMealImage("");
+  //   } catch (error) {
+  //     // Handle error here
+  //     console.error("ERROR :: ", error);
+  //   }
+  // };
+
   const handleAddMeal = async () => {
-    const newMeal = {
-      meal: mealName,
-      category: mealCategory,
-      price: mealPrice,
-      image: mealImage,
-    };
+    const formData = new FormData(); // Create a FormData object to append the meal data
+    formData.append("meal", mealName);
+    formData.append("category", mealCategory);
+    formData.append("price", mealPrice);
+    formData.append("image", mealImage); // Append the image file
 
     try {
-      await axios.post("http://localhost:8080/admin/meals/add", newMeal);
-      setModalOpen(false);
+      const response = await axios.post(
+        "http://localhost:8080/admin/meals/add",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log(response.data);
       fetchMealsData();
       // Reset states
       setMealName("");
       setMealCategory("");
       setMealPrice("");
-      setMealImage("");
+      setMealImage(null);
+
+      setModalOpen(false);
     } catch (error) {
-      // Handle error here
-      console.error("ERROR :: ", error);
+      console.error("ERROR :: ", error.message);
     }
   };
-
   useEffect(() => {
     fetchMealsData();
-  }, [fetchMealsData()]);
+  }, []);
+  // }, [isModalopen]);
+  // }, [fetchMealsData()]);
 
   return (
     <main className="contentContainer ">
@@ -99,17 +134,18 @@ export default function Meal() {
                   </div>
                   <div style={Style.input}>
                     <p style={{ margin: 0 }}>Image</p>
-                    {/* <input
+                    <input
                       style={{
                         width: "50%",
                       }}
                       type="file"
-                    /> */}
-                    <input
+                      onChange={(e) => setMealImage(e.target.files[0])} // Capture the selected image file
+                    />
+                    {/* <input
                       type="text"
                       value={mealImage}
                       onChange={(e) => setMealImage(e.target.value)}
-                    />
+                    /> */}
                   </div>
                 </div>
                 <button
@@ -138,9 +174,10 @@ export default function Meal() {
                 <div style={Style.itemContainer} key={meal._id}>
                   <div style={Style.imageContainer}>
                     <img
-                      src={"https://i.ibb.co/7kFJh4S/image.jpg"}
+                      src={`http://localhost:8080/images/${meal.image}`}
+                      // src={"https://i.ibb.co/7kFJh4S/image.jpg"}
                       // src={meal.image}
-                      alt="Category"
+                      alt="Meal"
                       style={Style.image}
                     />
                   </div>
