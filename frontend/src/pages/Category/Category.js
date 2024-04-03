@@ -55,7 +55,6 @@ function Category() {
     <main className="contentContainer ">
       <section style={Style.container}>
         <div className="container">
-          {/* <h1 style={Style.headerText}>Categories</h1> */}
           <div style={Style.headerContainer}>
             <h1 style={Style.headerText}>Categories</h1>
             <button
@@ -69,88 +68,18 @@ function Category() {
           </div>
           {isModalopen && (
             <Modal onClose={closeFunction}>
-              <div
-                style={{
-                  // backgroundColor: "red",
-                  marginTop: 20,
-                  display: "flex",
-                  flexDirection: "column",
-                  // justifyContent: "space-between",
-                  alignItems: "center",
-                  height: "95%",
-                }}
-              >
+              <div style={Style.modalContainer}>
                 <h1>Add New Category</h1>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    flexDirection: "column",
-                    gap: 10,
-                    // backgroundColor: "green",
-                    marginTop: 20,
-                    marginBottom: 50,
-                    height: "50%",
-                    width: "60%",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 5,
-                    }}
-                  >
+                <div style={Style.inputsContainer}>
+                  <div style={Style.input}>
                     <p style={{ margin: 0 }}>Name</p>
-                    {/* <input /> */}
                     <input
                       type="text"
                       value={categoryName}
                       onChange={(e) => setCategoryName(e.target.value)}
-                      // placeholder="Meal Name"
                     />
                   </div>
-                  {/* <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 5,
-                    }}
-                  >
-                    <p style={{ margin: 0 }}>Category</p>
-                    <input
-                      type="text"
-                      value={mealCategory}
-                      onChange={(e) => setMealCategory(e.target.value)}
-                      // placeholder="Meal Name"
-                    />
-                  </div> */}
-                  {/* <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 5,
-                    }}
-                  >
-                    <p style={{ margin: 0 }}>Price</p>
-                    <input
-                      type="text"
-                      value={mealPrice}
-                      onChange={(e) => setMealPrice(e.target.value)}
-                      // placeholder="Meal Name"
-                    />
-                  </div> */}
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 5,
-                    }}
-                  >
+                  <div style={Style.input}>
                     <p style={{ margin: 0 }}>Image</p>
                     {/* <input
                       style={{
@@ -165,12 +94,9 @@ function Category() {
                     />
                   </div>
                 </div>
-                {/* <button>
-                  <span>ADD</span>
-                </button> */}
+
                 <button
                   onClick={handleAddMeal}
-                  // onClick={() => console.log("ADD MEAL")}
                   className="navItem"
                   href="#"
                   style={Style.addButton}

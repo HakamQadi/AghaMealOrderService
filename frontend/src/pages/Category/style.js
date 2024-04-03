@@ -67,4 +67,29 @@ export const Style = {
   image: {
     width: 50,
   },
+
+  // Modal Children
+  modalContainer: {
+    marginTop: 20,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    height: "95%",
+  },
+  inputsContainer: {
+    display: "flex",
+    justifyContent: "center",
+    flexDirection: "column",
+    gap: 10,
+    marginTop: 20,
+    marginBottom: 50,
+    height: "50%",
+    width: "60%",
+  },
+  input: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 5,
+  },
 };
