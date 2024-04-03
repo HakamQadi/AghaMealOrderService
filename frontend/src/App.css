@@ -1,0 +1,44 @@
+.sidenav {
+  height: 100%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #222831;
+  transition: .5s ease;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.contentContainer {
+  height: 100vh;
+  display: flex;
+  justify-content: end;
+}
+
+.navItem {
+  color: white;
+}
+
+.navItem:hover {
+  background-color: #31363F;
+  transition: .5s ease;
+  overflow-x: hidden;
+  color: #EEA734;
+}
+
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge, and Firefox */
+.scroll-container {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}

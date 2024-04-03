@@ -32,10 +32,11 @@ const HomeScreen = ({ navigation, route }) => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/admin/meals/category"
+          "http://localhost:8080/admin/categories"
+          // "http://localhost:3000/admin/meals/category"
         ); // Replace URL with your API endpoint
-        console.log(response.data.categories);
-        setCategories(response.data.categories); // Update state with fetched categories
+        console.log("****************response.data ::: ",response);
+        // setCategories(response.data.categories); // Update state with fetched categories
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
@@ -50,11 +51,11 @@ const HomeScreen = ({ navigation, route }) => {
         <Text style={Style.subText}>Choose Category</Text>
       </View>
 
-      <Category
+      {/* <Category
         navigation={navigation}
         name={names[currentIndex]}
         categories={categories}
-      />
+      /> */}
 
       <Button
         text={names.length == currentIndex + 1 ? "Finish" : "Continue"}
