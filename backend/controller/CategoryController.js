@@ -2,7 +2,7 @@ import { Category, Meal } from "../model/mealModel.js";
 
 // GET
 const getAllCategories = async (req, res) => {
-  console.log("::::::TEST:::::")
+  console.log("::::::TEST:::::");
   try {
     const categories = await Category.find();
     res.status(200).json({
@@ -13,7 +13,7 @@ const getAllCategories = async (req, res) => {
   } catch (error) {
     res.status(404).json({
       message: "There is something wrong",
-      error,
+      error: error.message,
     });
   }
 };
