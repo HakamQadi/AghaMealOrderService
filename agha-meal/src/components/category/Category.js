@@ -1,5 +1,3 @@
-// TODO we need here an API to get all categories
-
 import React from "react";
 import {
   View,
@@ -8,12 +6,9 @@ import {
   FlatList,
   TouchableOpacity,
 } from "react-native";
+import { API_URL } from "@env";
 import styles from "./style";
 
-// npm i expo-constants
-// 1) add any thing you want to the app.json
-// 2) Import this
-// import Constants from "expo-constants";
 
 const Category = ({ navigation, name, categories }) => {
   console.log("NAME (CATEGORY) ::: ", categories);
@@ -55,10 +50,12 @@ const Category = ({ navigation, name, categories }) => {
       <ImageBackground
         style={styles.cardImage}
         // source={item.image}
+
         // TODO 1) replace the api URL with a variable
-        // TODO 2) implement that var in the app 
+        // TODO 2) implement that var in the app
+        // TODO 3) create a new branch for the new app code before start working
         source={{
-          uri: `https://aghamealorderservice.onrender.com/images/${item.image}`,
+          uri: `${API_URL}/images/${item.image}`,
         }}
         resizeMode="cover"
       >
@@ -68,8 +65,6 @@ const Category = ({ navigation, name, categories }) => {
       </ImageBackground>
     </TouchableOpacity>
   );
-  // 3)use it here
-  // console.log(Constants.expoConfig.API.TEST);
   return (
     <View style={{ flex: 1 }}>
       <FlatList

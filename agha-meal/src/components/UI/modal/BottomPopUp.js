@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Modal, Image, TouchableOpacity } from "react-native";
 import Button from "../../../components/button/Button";
+import { API_URL } from "@env";
 import Style from "./style";
 
 export default function BottomPopUp({
@@ -9,8 +10,6 @@ export default function BottomPopUp({
   name,
   getOrderData,
 }) {
-  console.log("selectedItem ::: ", selectedItem);
-
   const [itemCount, setItemCount] = useState(0);
   const increaseCount = () => {
     setItemCount(itemCount + 1);
@@ -23,7 +22,6 @@ export default function BottomPopUp({
     const { count } = data;
 
     if (count != 0) {
-      console.log("COUNT ::: ", data);
       getOrderData(data);
     } else console.log("THERE IS NO ITEM SELECTED");
 
@@ -47,7 +45,12 @@ export default function BottomPopUp({
               <Text style={Style.itemNameText}>{selectedItem?.meal}</Text>
               <Text style={Style.itemPriceText}>{selectedItem?.price} JOD</Text>
             </View>
-            <Image source={selectedItem?.image} style={Style.itemImage} />
+            <Image
+              source={{
+                uri: `${API_URL}/images/${selectedItem?.image}`,
+              }}
+              style={Style.itemImage}
+            />
           </View>
           <View style={Style.counterContainer}>
             <TouchableOpacity onPress={decreaseCount}>

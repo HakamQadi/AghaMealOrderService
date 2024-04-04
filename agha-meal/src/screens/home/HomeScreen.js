@@ -1,12 +1,13 @@
 // TODO future apdate : add more than one resturant
 
 import React, { useContext, useState, useEffect } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text } from "react-native";
 import Category from "../../components/category/Category";
 import Button from "../../components/button/Button";
 import Style from "./style";
 import { OrderContext } from "../../context/OrderContext";
-import axios from "axios"; // Import Axios
+import { API_URL } from "@env";
+import axios from "axios";
 
 const HomeScreen = ({ navigation, route }) => {
   const { state } = useContext(OrderContext);
@@ -28,22 +29,16 @@ const HomeScreen = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    // Function to fetch categories
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(
-          "https://aghamealorderservice.onrender.com/admin/categories"
-          // "http://localhost:8080/admin/categories"
-          // "http://localhost:3000/admin/meals/category"
-        ); // Replace URL with your API endpoint
-        console.log("****************response.data ::: ",response.data);
+        const response = await axios.get(`${API_URL}/admin/categories`);
         setCategories(response.data.categories); // Update state with fetched categories
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
     };
 
-    fetchCategories(); // Call fetchCategories function when component mounts
+    fetchCategories();
   }, []);
   return (
     <View style={{ flex: 1 }}>
