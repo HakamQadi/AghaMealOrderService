@@ -51,14 +51,19 @@ const Category = ({ navigation, name, categories }) => {
   };
 
   const renderCategoryItem = ({ item }) => (
-    <TouchableOpacity onPress={()=>onCategoryPress(item)} style={styles.card}>
+    <TouchableOpacity onPress={() => onCategoryPress(item)} style={styles.card}>
       <ImageBackground
         style={styles.cardImage}
-        source={item.image}
+        // source={item.image}
+        // TODO 1) replace the api URL with a variable
+        // TODO 2) implement that var in the app 
+        source={{
+          uri: `https://aghamealorderservice.onrender.com/images/${item.image}`,
+        }}
         resizeMode="cover"
       >
         <View style={styles.overlay}>
-          <Text style={styles.title}>{item}</Text>
+          <Text style={styles.title}>{item.name}</Text>
         </View>
       </ImageBackground>
     </TouchableOpacity>

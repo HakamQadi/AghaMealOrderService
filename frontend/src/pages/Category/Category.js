@@ -121,7 +121,7 @@ function Category() {
                   <div style={Style.imageContainer}>
                     <img
                       // src={"https://i.ibb.co/7kFJh4S/image.jpg"}
-                      src={`http://localhost:8080/images/${category.image}`}
+                      src={`https://aghamealorderservice.onrender.com/images/${category.image}`}
                       alt="Category"
                       style={Style.image}
                     />
