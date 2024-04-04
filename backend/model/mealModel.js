@@ -1,12 +1,14 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 dotenv.config({ path: "./.env" });
+const CONN_STR =
+  "mongodb+srv://admin:admin@cluster0.jcchxl5.mongodb.net/AghaMeal?retryWrites=true&w=majority";
 
 const mealSchema = new mongoose.Schema({
   meal: String,
   category: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Category"
+    ref: "Category",
   },
   price: Number,
   image: String,
@@ -14,14 +16,15 @@ const mealSchema = new mongoose.Schema({
 
 const categorySchema = new mongoose.Schema({
   name: String,
-  image: String
+  image: String,
 });
 
 const Meal = mongoose.model("Meal", mealSchema);
 const Category = mongoose.model("Category", categorySchema);
 
 mongoose
-  .connect(process.env.CONN_STR, {
+  // .connect(process.env.CONN_STR, {
+  .connect(CONN_STR, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
