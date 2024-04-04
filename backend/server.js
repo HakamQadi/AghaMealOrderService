@@ -47,8 +47,6 @@ app.get("/", (req, res) => {
 app.use("/admin/meals", MealRouter);
 app.use("/admin/categories", CategoryRouter);
 
-console.log("process.env.CONN_STR :: ", process.env.CONN_STR);
-
 app.listen(PORT, () => {
   console.log(`started on http://localhost:${PORT}`);
 });

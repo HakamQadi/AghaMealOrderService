@@ -32,10 +32,11 @@ const HomeScreen = ({ navigation, route }) => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8080/admin/categories"
+          "https://aghamealorderservice.onrender.com/admin/categories"
+          // "http://localhost:8080/admin/categories"
           // "http://localhost:3000/admin/meals/category"
         ); // Replace URL with your API endpoint
-        console.log("****************response.data ::: ",response);
+        console.log("****************response.data ::: ",response.data);
         // setCategories(response.data.categories); // Update state with fetched categories
       } catch (error) {
         console.error("Error fetching categories:", error);

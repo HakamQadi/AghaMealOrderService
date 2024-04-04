@@ -1,8 +1,6 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 dotenv.config({ path: "./.env" });
-const CONN_STR =
-  "mongodb+srv://admin:admin@cluster0.jcchxl5.mongodb.net/AghaMeal?retryWrites=true&w=majority";
 
 const mealSchema = new mongoose.Schema({
   meal: String,
@@ -24,7 +22,6 @@ const Category = mongoose.model("Category", categorySchema);
 
 mongoose
   .connect(process.env.CONN_STR, {
-  // .connect(CONN_STR, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
