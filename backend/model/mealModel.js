@@ -23,8 +23,8 @@ const Meal = mongoose.model("Meal", mealSchema);
 const Category = mongoose.model("Category", categorySchema);
 
 mongoose
-  // .connect(process.env.CONN_STR, {
-  .connect(CONN_STR, {
+  .connect(process.env.CONN_STR, {
+  // .connect(CONN_STR, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
