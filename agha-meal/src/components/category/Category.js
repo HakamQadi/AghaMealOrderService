@@ -11,7 +11,7 @@ import styles from "./style";
 
 
 const Category = ({ navigation, name, categories }) => {
-  console.log("NAME (CATEGORY) ::: ", categories);
+  // console.log("NAME (CATEGORY) ::: ", categories);
   const categoryList = [
     {
       id: 1,

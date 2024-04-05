@@ -20,7 +20,6 @@ const HomeScreen = ({ navigation, route }) => {
 
   const handleNextName = () => {
     if (names.length == currentIndex + 1) {
-      console.log("*****************LAST ONE*****************");
       // navigate to ALl orders screen
       navigation.navigate("Orders");
     } else {
