@@ -14,11 +14,16 @@ const CheckoutScreen = ({ navigation, route }) => {
   const groupOrdersByName = () => {
     const ordersByName = {};
     state.order.forEach((order) => {
-      const itemName = order.item.name;
+      // itemName means the user name
+      const itemName = order.name;
       if (!ordersByName[itemName]) {
-        ordersByName[itemName] = { ...order, count: 0 };
+        // Initialize the entry with an empty array to hold all orders for this name
+        ordersByName[itemName] = { count: 0, orders: [] };
       }
+      // Accumulate count
       ordersByName[itemName].count += order.count;
+      // Push the entire order object into the orders array
+      ordersByName[itemName].orders.push(order);
     });
     return ordersByName;
   };
@@ -30,10 +35,13 @@ const CheckoutScreen = ({ navigation, route }) => {
   const calculateSubtotal = () => {
     let subtotal = 0;
     Object.values(ordersByName).forEach((order) => {
-      subtotal += order.count * order.item.price;
+      order.orders.forEach((item) => {
+        subtotal += item.count * item.item.price;
+      });
     });
     return subtotal;
   };
+
   // Calculate total
   const calculateTotal = () => {
     let total = 0;
@@ -45,14 +53,11 @@ const CheckoutScreen = ({ navigation, route }) => {
     <View style={{ flex: 1 }}>
       <ScrollView style={Style.listContainer}>
         {/* Display checkout items grouped by name */}
-        {Object.entries(ordersByName).map(([itemName, order]) => (
-          <CheckoutItem
-            key={itemName}
-            name={itemName}
-            count={order.count}
-            price={order.item.price * order.count}
-          />
-        ))}
+        {Object.entries(ordersByName).map(([itemName, order]) => {
+          return (
+            <CheckoutItem key={itemName} name={itemName} order={order.orders} />
+          );
+        })}
       </ScrollView>
       <View style={Style.detailsContainer}>
         <View style={Style.detailsRowContainer}>

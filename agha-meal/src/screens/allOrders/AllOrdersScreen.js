@@ -1,6 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
 import { View, Text, TextInput, ScrollView } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { OrderContext } from "../../context/OrderContext";
 import Button from "../../components/button/Button";
 import OrderItem from "../../components/orderItem/OrderItem";
@@ -50,19 +49,8 @@ export default function AllOrdersScreen({ navigation }) {
     };
 
     calculateTotalPrices();
-    // asyncStorage();
   }, [state.order, nameCount, deliveryCostPerName]);
 
-  const completeOrderHandler = async () => {
-    // try {
-    //   await AsyncStorage.removeItem("orders");
-    //   //TODO replace with Toast
-    //   console.log("Orders cleared from AsyncStorage");
-    // } catch (error) {
-    //   console.error("Error clearing orders from AsyncStorage:", error);
-    // }
-    navigation.navigate("CheckOut");
-  };
   return (
     <View style={{ flex: 1 }}>
       <Text style={Style.headerText}>Delivery Cost</Text>

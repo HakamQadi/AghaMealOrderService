@@ -10,10 +10,6 @@ import { API_URL } from "@env";
 import axios from "axios";
 
 const HomeScreen = ({ navigation, route }) => {
-  const { state } = useContext(OrderContext);
-
-  console.log("HOME STATE ::: ", state);
-
   const { names } = route.params;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [categories, setCategories] = useState([]);

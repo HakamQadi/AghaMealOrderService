@@ -9,9 +9,7 @@ import {
 import { API_URL } from "@env";
 import styles from "./style";
 
-
 const Category = ({ navigation, name, categories }) => {
-  // console.log("NAME (CATEGORY) ::: ", categories);
   const categoryList = [
     {
       id: 1,
@@ -41,19 +39,13 @@ const Category = ({ navigation, name, categories }) => {
   ];
 
   const onCategoryPress = (category) => {
-    // TODO here we need to get all items for the category and navigate to items screen
-    navigation.navigate("Items", { category: category });
+    navigation.navigate("Items", { category, name });
   };
 
   const renderCategoryItem = ({ item }) => (
     <TouchableOpacity onPress={() => onCategoryPress(item)} style={styles.card}>
       <ImageBackground
         style={styles.cardImage}
-        // source={item.image}
-
-        // TODO 1) replace the api URL with a variable
-        // TODO 2) implement that var in the app
-        // TODO 3) create a new branch for the new app code before start working
         source={{
           uri: `${API_URL}/images/${item.image}`,
         }}

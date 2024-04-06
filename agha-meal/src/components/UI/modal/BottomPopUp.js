@@ -20,7 +20,6 @@ export default function BottomPopUp({
 
   const addItem = (data) => {
     const { count } = data;
-
     if (count != 0) {
       getOrderData(data);
     } else console.log("THERE IS NO ITEM SELECTED");
@@ -73,7 +72,11 @@ export default function BottomPopUp({
             style={Style.addButton}
             text="Add"
             onPress={() =>
-              addItem({ count: itemCount, item: selectedItem, name })
+              addItem({
+                count: itemCount,
+                item: selectedItem,
+                name ,
+              })
             }
           />
         </View>

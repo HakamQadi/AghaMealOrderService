@@ -21,8 +21,7 @@ export default function CategoryItems({ navigation, route }) {
   const [orderData, setOrderData] = useState([]);
   const [items, setItems] = useState([]);
 
-  const { category } = route.params;
-
+  const { category, name } = route.params;
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -38,7 +37,7 @@ export default function CategoryItems({ navigation, route }) {
     fetchCategories();
   }, []);
 
-  const onCategoryPress = (item) => {
+  const onItemPress = (item) => {
     setSelectedItem(item);
   };
 
@@ -75,7 +74,7 @@ export default function CategoryItems({ navigation, route }) {
   const renderItem = ({ item }) => {
     return (
       <View style={{ flexDirection: "column" }}>
-        <TouchableOpacity onPress={() => onCategoryPress(item)}>
+        <TouchableOpacity onPress={() => onItemPress(item)}>
           <ImageBackground
             style={Style.cardImage}
             source={{
@@ -112,7 +111,7 @@ export default function CategoryItems({ navigation, route }) {
       <BottomPopUp
         selectedItem={selectedItem}
         hideModal={hideModal}
-        name={category}
+        name={name}
         getOrderData={getOrderData}
       />
     </View>

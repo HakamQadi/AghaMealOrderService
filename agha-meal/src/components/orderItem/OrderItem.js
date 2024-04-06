@@ -10,7 +10,7 @@ export default function OrderItem({ item, count, totalItemPrice }) {
           // android
           style={{ flex: 0.75 }}
         >
-          {item.name}
+          {item.meal}
         </Text>
         <Text
           // android
