@@ -10,7 +10,8 @@ export default function Home() {
 
   const fetchMealsData = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/admin/meals");
+      const response = await axios.get("https://aghamealorderservice.onrender.com/admin/meals");
+      // const response = await axios.get("http://localhost:8080/admin/meals");
       setMealsLength(response.data.length);
     } catch (error) {
       // TODO Toast HERE!!!
@@ -21,7 +22,8 @@ export default function Home() {
   const fetchCategoriesData = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8080/admin/categories"
+        "https://aghamealorderservice.onrender.com/admin/categories"
+        // "http://localhost:8080/admin/categories"
       );
       setCategoriesLength(response.data.length);
     } catch (error) {

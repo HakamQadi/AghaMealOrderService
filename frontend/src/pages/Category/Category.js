@@ -34,7 +34,8 @@ function Category() {
 
     try {
       await axios.post(
-        "http://localhost:8080/admin/categories/add",
+        // "http://localhost:8080/admin/categories/add",
+        "https://aghamealorderservice.onrender.com/admin/categories/add",
         newCategory
       );
       setModalOpen(false);
