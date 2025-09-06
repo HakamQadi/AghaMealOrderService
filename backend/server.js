@@ -5,7 +5,7 @@ dotenv.config({ path: "./.env" });
 import MealRouter from "./routes/MealsRouter.js";
 import CategoryRouter from "./routes/CategoryRouter.js";
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 8080;
 // const fileUpload = require('express-fileupload');
 import fileUpload from "express-fileupload";
 import path from "path";
