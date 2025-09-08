@@ -1,5 +1,5 @@
 import { Category, Meal } from "../model/mealModel.js";
-import imagekit from "../utils/imagekit.js";
+import imagekit from "../utils/Imagekit.js";
 
 // GET
 const getAllMeals = async (req, res) => {
