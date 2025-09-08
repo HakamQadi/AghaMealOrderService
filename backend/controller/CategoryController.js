@@ -119,6 +119,11 @@ const updateCategory = async (req, res) => {
     updateData.description.ar = req.body["description.ar"];
 
   try {
+    const category = await Category.findById(id);
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
     // Check if another category already has this name (ignore current one)
     const categoryExist = await Category.findOne({
       $or: [{ "name.en": name.en }, { "name.ar": name.ar }],

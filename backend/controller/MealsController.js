@@ -1,188 +1,219 @@
 import { Category, Meal } from "../model/mealModel.js";
-
-import { fileURLToPath } from "url"; // Import fileURLToPath
-import { dirname } from "path"; // Import dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import imagekit from "../utils/imagekit.js";
 
 // GET
 const getAllMeals = async (req, res) => {
   try {
-    // const meals = await Meal.find();
-
-    // * this will show the category object inside the meal object
     const meals = await Meal.find().populate("category");
 
-    // *this is how to access category info in the front
-    // console.log(meals[0].category.name)
-    // console.log(meals[0].category.image)
+    if (!meals || meals.length === 0) {
+      return res.status(404).json({ message: "Meals not found" });
+    }
 
     res.status(200).json({
-      message: "success",
-      length: meals.length,
+      message: "Meals found successfully",
+      count: meals.length,
       meals,
     });
   } catch (error) {
-    res.status(404).json({
-      message: "There is something wrong",
-      error,
-    });
+    console.error("Error getting meals:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 const getMealByCategory = async (req, res) => {
   try {
-    const { category } = req.params;
+    const { categoryId } = req.params;
 
-    const categoryDoc = await Category.findOne({ name: category });
-
+    const categoryDoc = await Category.findById(categoryId);
     if (!categoryDoc) {
-      return res.status(404).json({
-        message: "Category not found",
-      });
+      return res.status(404).json({ message: "Category not found" });
     }
 
-    const mealsByCategory = await Meal.find({
-      category: categoryDoc._id,
-    });
+    const meals = await Meal.find({ category: categoryDoc._id });
 
     res.status(200).json({
-      message: "success",
-      mealsCount: mealsByCategory.length,
-      mealsByCategory,
+      message: "Meals found successfully",
+      count: meals.length,
+      meals,
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    console.error("Error getting meals by category:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 // POST
 const addMeal = async (req, res) => {
+  const name = {
+    en: req.body["name.en"],
+    ar: req.body["name.ar"],
+  };
+
+  const { categoryId, price } = req.body;
+
+  if (!name?.en || !name?.ar) {
+    return res
+      .status(400)
+      .json({ message: "Both English and Arabic names are required" });
+  }
+
+  if (!price || isNaN(price)) {
+    return res.status(400).json({ message: "Valid price is required" });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ message: "Image file is required" });
+  }
+
   try {
-    const { meal, category, price } = req.body;
-    // Get the file that was set to our field named "image"
-    const { image } = req.files;
-
-    const isMealExist = await Meal.findOne({ meal });
-
-    if (isMealExist) {
-      return res.status(409).json({
-        message: "Meal already existing",
-        meal: isMealExist,
-      });
-    } else {
-      const categoryDoc = await Category.findOne({ name: category });
-
-      if (!categoryDoc) {
-        return res.status(404).json({
-          message: "Category not found",
-        });
-      }
-
-      // If no image submitted, exit
-      if (!image)
-        return res.status(400).json({
-          message: "no image submitted",
-        });
-      image.mv(__dirname + "/upload/" + image.name);
-
-      // // All good
-      // res.status(200).json({
-      //   message: "All good",
-      // });
-      const newMeal = await Meal.create({
-        meal,
-        category: categoryDoc._id,
-        price,
-        // image,
-        image: image.name,
-        // image: "test.image",
-      });
-      return res.status(201).json({
-        message: "Add successfully",
-        meal: newMeal,
-      });
-    }
-  } catch (error) {
-    res.status(404).json({
-      message: "There is something wrong",
-      error,
+    // Check if meal already exists
+    const mealExist = await Meal.findOne({
+      $or: [{ "name.en": name.en }, { "name.ar": name.ar }],
     });
+
+    if (mealExist) {
+      return res.status(409).json({ message: "Meal already exists" });
+    }
+
+    // Validate category
+    const categoryDoc = await Category.findById(categoryId);
+    if (!categoryDoc) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    // Upload image to ImageKit
+    const uploadedImage = await imagekit.upload({
+      file: req.file.buffer,
+      fileName: req.file.originalname,
+      folder: "/agha-meal/meals",
+    });
+
+    const { url: imageUrl, fileId } = uploadedImage;
+
+    // Create meal
+    await Meal.create({
+      name,
+      category: categoryDoc._id,
+      price,
+      image: imageUrl,
+      imageFileIds: fileId ? [fileId] : [],
+    });
+
+    return res.status(201).json({ message: "Meal created successfully" });
+  } catch (error) {
+    console.error("Error creating meal:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 // PATCH
 const updateMeal = async (req, res) => {
+  const { id } = req.params;
+
+  const name = {
+    en: req.body["name.en"],
+    ar: req.body["name.ar"],
+  };
+
+  const updateData = {};
+  if (name.en || name.ar) updateData.name = name;
+  if (req.body.price) updateData.price = req.body.price;
+
+  if (req.body.categoryId) {
+    const categoryDoc = await Category.findById(req.body.categoryId);
+    if (!categoryDoc) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+    updateData.category = categoryDoc._id;
+  }
   try {
-    const { id } = req.params;
-    const { meal, category, price, image } = req.body;
+    const meal = await Meal.findById(id);
+    if (!meal) {
+      return res.status(404).json({ message: "Meal not found" });
+    }
 
-    const isMealExist = await Meal.findOne({ _id: id });
-    if (!isMealExist) {
-      return res.status(404).json({
-        message: "Meal not found",
+    // Check duplicate meal name (ignore current one)
+    if (name.en || name.ar) {
+      const mealExist = await Meal.findOne({
+        $or: [{ "name.en": name.en }, { "name.ar": name.ar }],
+        _id: { $ne: id },
       });
-    } else {
-      const updateFields = {};
 
-      if (meal) updateFields.meal = meal;
-      if (price) updateFields.price = price;
-      if (image) updateFields.image = image;
-
-      if (category) {
-        const categoryDoc = await Category.findOne({ name: category });
-
-        if (!categoryDoc) {
-          return res.status(404).json({
-            message: "Category not found",
-          });
-        } else {
-          updateFields.category = categoryDoc._id;
-        }
+      if (mealExist) {
+        return res
+          .status(400)
+          .json({ message: "Meal with this name already exists" });
       }
-      const updatedMeal = await Meal.findOneAndUpdate(
-        { _id: id },
-        updateFields,
-        {
-          new: true,
-        }
-      );
+    }
 
-      return res.status(200).json({
-        message: "Meal updated successfully",
-        meal: updatedMeal,
+    let imageUrl;
+
+    // If new image uploaded
+    if (req.file) {
+      const uploadedImage = await imagekit.upload({
+        file: req.file.buffer,
+        fileName: req.file.originalname,
+        folder: "/agha-meal/meals",
+      });
+
+      imageUrl = uploadedImage.url;
+
+      // Push fileId
+      await Meal.findByIdAndUpdate(id, {
+        $push: { imageFileIds: uploadedImage.fileId },
       });
     }
-  } catch (error) {
-    res.status(404).json({
-      message: "There is something wrong",
-      error,
+
+    if (imageUrl) {
+      updateData.image = imageUrl;
+    }
+
+    const updatedMeal = await Meal.findByIdAndUpdate(id, updateData, {
+      new: true,
     });
+
+    if (!updatedMeal) {
+      return res.status(404).json({ message: "Meal not found" });
+    }
+
+    res.status(200).json({
+      message: "Meal updated successfully",
+      meal: updatedMeal,
+    });
+  } catch (error) {
+    console.error("Error updating meal:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 // DELETE
 const deleteMeal = async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const { id } = req.params;
-    const deletedMeal = await Meal.findByIdAndDelete({ _id: id });
-    if (!deletedMeal) {
-      return res.status(404).json({
-        message: "Meal not found ",
-      });
-    } else {
-      return res.status(200).json({
-        message: "Meal deleted successfully",
-      });
+    const meal = await Meal.findById(id);
+    if (!meal) {
+      return res.status(404).json({ message: "Meal not found" });
     }
+
+    // Delete images from ImageKit
+    if (meal.imageFileIds?.length) {
+      for (const fileId of meal.imageFileIds) {
+        try {
+          await imagekit.deleteFile(fileId);
+        } catch (err) {
+          console.warn(`Failed to delete file ${fileId} from ImageKit`, err);
+        }
+      }
+    }
+
+    await Meal.findByIdAndDelete(id);
+
+    return res.status(200).json({ message: "Meal deleted successfully" });
   } catch (error) {
-    return res.status(500).json({
-      message: "There is something wrong",
-      error,
-    });
+    console.error("Error deleting meal:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
