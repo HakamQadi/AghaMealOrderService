@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Style } from "./style";
-import axios from "axios";
+import axios from "axios"; 
 import { Colors } from "../../themes/Colors";
 
 export default function Home() {
