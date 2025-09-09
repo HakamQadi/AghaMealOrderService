@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Style } from "./style";
-import axios from "axios"; 
+import axios from "axios";
 import { Colors } from "../../themes/Colors";
 
 export default function Home() {
@@ -10,24 +10,24 @@ export default function Home() {
 
   const fetchMealsData = async () => {
     try {
-      const response = await axios.get("https://aghamealorderservice.onrender.com/admin/meals");
-      // const response = await axios.get("http://localhost:8080/admin/meals");
-      setMealsLength(response.data.length);
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/admin/meals`
+      );
+      setMealsLength(response?.data?.count);
     } catch (error) {
       // TODO Toast HERE!!!
-      console.error("ERROR :: ", error);
+      console.error("ERROR :: ", error.response || error.message);
     }
   };
 
   const fetchCategoriesData = async () => {
     try {
       const response = await axios.get(
-        "https://aghamealorderservice.onrender.com/admin/categories"
-        // "http://localhost:8080/admin/categories"
+        `${process.env.REACT_APP_API_BASE_URL}/admin/categories`
       );
-      setCategoriesLength(response.data.length);
+      setCategoriesLength(response?.data?.count);
     } catch (error) {
-      console.error("ERROR :: ", error);
+      console.error("ERROR :: ", error.response || error.message);
     }
   };
 
@@ -40,15 +40,10 @@ export default function Home() {
       <section style={Style.container}>
         <div
           style={{
-            // backgroundColor: "green",
             height: "50%",
             display: "flex",
             alignItems: "center",
-            // justifyContent: "space-around",
             justifyContent: "center",
-            // justifyItems:""
-            // alignContent: "center",
-            // marginTop: 100,
             gap: 300,
           }}
         >

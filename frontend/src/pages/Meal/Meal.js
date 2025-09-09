@@ -16,10 +16,9 @@ export default function Meal() {
   const fetchMealsData = async () => {
     try {
       const response = await axios.get(
-        "https://aghamealorderservice.onrender.com/admin/meals"
+        `${process.env.REACT_APP_API_BASE_URL}/admin/meals`
       );
-      // const response = await axios.get("http://localhost:8080/admin/meals");
-      setMeals(response.data.meals);
+      setMeals(response?.data?.meals);
     } catch (error) {
       // TODO Toast HERE!!!
       console.error("ERROR :: ", error);
@@ -63,8 +62,7 @@ export default function Meal() {
 
     try {
       const response = await axios.post(
-        // "http://localhost:8080/admin/meals/add",
-        "https://aghamealorderservice.onrender.com/admin/meals/add",
+         `${process.env.REACT_APP_API_BASE_URL}/admin/meals/add`,
         formData,
         {
           headers: {
@@ -174,21 +172,17 @@ export default function Meal() {
             style={{ height: "80vh", overflowY: "scroll" }}
           >
             {meals.map((meal) => {
-              // console.log("MEAL :: ", meal);
               return (
                 <div style={Style.itemContainer} key={meal._id}>
                   <div style={Style.imageContainer}>
-                    <img
-                      // src={`http://localhost:8080/images/${meal.image}`}
-                      src={`https://aghamealorderservice.onrender.com/images/${meal.image}`}
-                      // src={"https://i.ibb.co/7kFJh4S/image.jpg"}
-                      // src={meal.image}
-                      alt="Meal"
-                      style={Style.image}
-                    />
+                    <img src={meal?.image} alt="Meal" style={Style.image} />
                   </div>
-                  <div style={Style.itemText}>{meal.meal}</div>
-                  <div style={Style.itemText}>{meal?.category?.name}</div>
+                  {meal?.name?.en ? (
+                    <div style={Style.itemText}>{meal?.name?.en}</div>
+                  ) : null}
+                  {meal?.category?.name ? (
+                    <div style={Style.itemText}>{meal?.category?.name?.en}</div>
+                  ) : null}
                   <div style={Style.priceText}>{meal.price} JOD</div>
                 </div>
               );

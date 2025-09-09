@@ -13,8 +13,7 @@ function Category() {
   const fetchCategoriesData = async () => {
     try {
       const response = await axios.get(
-        "https://aghamealorderservice.onrender.com/admin/categories"
-        // "http://localhost:8080/admin/categories"
+        `${process.env.REACT_APP_API_BASE_URL}/admin/categories`
       );
       setCategories(response.data.categories);
     } catch (error) {
@@ -34,8 +33,7 @@ function Category() {
 
     try {
       await axios.post(
-        // "http://localhost:8080/admin/categories/add",
-        "https://aghamealorderservice.onrender.com/admin/categories/add",
+        `${process.env.REACT_APP_API_BASE_URL}/admin/categories/add`,
         newCategory
       );
       setModalOpen(false);
@@ -121,13 +119,12 @@ function Category() {
                 <div style={Style.itemContainer} key={category._id}>
                   <div style={Style.imageContainer}>
                     <img
-                      // src={"https://i.ibb.co/7kFJh4S/image.jpg"}
-                      src={`https://aghamealorderservice.onrender.com/images/${category.image}`}
+                      src={category?.image}
                       alt="Category"
                       style={Style.image}
                     />
                   </div>
-                  <div style={Style.itemText}>{category.name}</div>
+                  <div style={Style.itemText}>{category?.name?.en}</div>
                 </div>
               );
             })}
