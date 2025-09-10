@@ -240,7 +240,7 @@ export default function Meal() {
 
                   <button
                     onClick={handleAddMeal}
-                    className="w-full mt-8 px-6 py-3 bg-slate-800 hover:bg-slate-700 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-400 hover:text-emerald-300 font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                    className="w-full mt-4 px-6 py-3 bg-slate-800 hover:bg-slate-700 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-400 hover:text-cyan-300 font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                   >
                     Add Meal
                   </button>
@@ -249,97 +249,82 @@ export default function Meal() {
             </Modal>
           )}
 
-          <div className="bg-slate-700 rounded-t-xl p-4 border-b border-slate-600">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-semibold text-slate-200">
-              <div className="flex items-center gap-2">
-                <ImageIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">Image</span>
+          <div className="overflow-x-auto bg-slate-800 rounded-xl">
+            <div className="min-w-[600px]">
+              <div className="bg-slate-700 rounded-t-xl p-4 border-b border-slate-600">
+                <div className="grid grid-cols-4 gap-4 font-semibold text-slate-200">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4" />
+                    <span>Image</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Utensils className="w-4 h-4" />
+                    <span>Name</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Tag className="w-4 h-4" />
+                    <span>Category</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-4 h-4" />
+                    <span>Price</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Utensils className="w-4 h-4" />
-                <span className="hidden sm:inline">Name</span>
-              </div>
-              <div className="hidden md:flex items-center gap-2">
-                <Tag className="w-4 h-4" />
-                <span>Category</span>
-              </div>
-              <div className="hidden md:flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
-                <span>Price</span>
-              </div>
-            </div>
-          </div>
+              <div className="max-h-[60vh] overflow-y-auto bg-slate-800 rounded-b-xl">
+                <div className="space-y-2 p-4">
+                  {meals.map((meal) => (
+                    <div
+                      key={meal._id}
+                      className="grid grid-cols-4 gap-4 p-4 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl border border-slate-600/30 hover:border-slate-500/50 transition-all duration-200 hover:shadow-lg"
+                    >
+                      <div className="flex items-center">
+                        <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-600/50 flex items-center justify-center border border-slate-500/30">
+                          {meal?.image ? (
+                            <img
+                              src={meal.image || "/placeholder.svg"}
+                              alt="Meal"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Utensils className="w-6 h-6 text-slate-400" />
+                          )}
+                        </div>
+                      </div>
 
-          <div className="max-h-[60vh] overflow-y-auto bg-slate-800 rounded-b-xl">
-            <div className="space-y-2 p-4">
-              {meals.map((meal) => (
-                <div
-                  key={meal._id}
-                  className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl border border-slate-600/30 hover:border-slate-500/50 transition-all duration-200 hover:shadow-lg"
-                >
-                  <div className="flex   items-center">
-                    <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-600/50 flex items-center justify-center border border-slate-500/30">
-                      {meal?.image ? (
-                        <img
-                          src={meal.image || "/placeholder.svg"}
-                          alt="Meal"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Utensils className="w-6 h-6 text-slate-400" />
-                      )}
+                      <div className="flex flex-col justify-center items-start">
+                        <span className="text-slate-200 font-medium   px-2">
+                          {meal?.name?.en || "Unnamed Meal"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center">
+                        <span className="text-slate-300 text-center truncate px-2">
+                          {meal?.category?.name?.en || "No Category"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center">
+                        <span className="text-amber-400 font-bold text-center">
+                          {meal.price} JOD
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  ))}
 
-                  <div className="flex flex-col justify-center items-start">
-                    <span className="text-slate-200 font-medium text-center truncate px-2">
-                      {meal?.name?.en || "Unnamed Meal"}
-                    </span>
-                    {meal?.name?.ar && (
-                      <span
-                        className="text-slate-400 text-sm text-center truncate px-2"
-                        dir="rtl"
-                      >
-                        {meal.name.ar}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="hidden md:flex items-center ">
-                    <span className="text-slate-300 text-center truncate px-2">
-                      {meal?.category?.name?.en || "No Category"}
-                    </span>
-                  </div>
-
-                  <div className="hidden md:flex items-center ">
-                    <span className="text-amber-400 font-bold text-center">
-                      {meal.price} JOD
-                    </span>
-                  </div>
-
-                  {/* Mobile-only price and category display */}
-                  <div className="md:hidden flex flex-col  items-center">
-                    <span className="text-amber-400 font-bold text-sm">
-                      {meal.price} JOD
-                    </span>
-                    <span className="text-slate-400 text-xs text-center truncate">
-                      {meal?.category?.name?.en || "No Category"}
-                    </span>
-                  </div>
+                  {meals.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-slate-700/50 rounded-full flex items-center justify-center">
+                        <Utensils className="w-8 h-8 text-slate-400" />
+                      </div>
+                      <p className="text-slate-400 text-lg">No meals found</p>
+                      <p className="text-slate-500 text-sm mt-2">
+                        Add your first meal to get started
+                      </p>
+                    </div>
+                  )}
                 </div>
-              ))}
-
-              {meals.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-slate-700/50 rounded-full flex items-center justify-center">
-                    <Utensils className="w-8 h-8 text-slate-400" />
-                  </div>
-                  <p className="text-slate-400 text-lg">No meals found</p>
-                  <p className="text-slate-500 text-sm mt-2">
-                    Add your first meal to get started
-                  </p>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>

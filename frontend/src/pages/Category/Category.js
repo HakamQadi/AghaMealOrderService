@@ -223,11 +223,11 @@ function Category() {
             <div className="grid grid-cols-2 gap-4 font-semibold text-slate-200">
               <div className="flex items-center   gap-2">
                 <ImageIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">Image</span>
+                <span className="inline">Image</span>
               </div>
               <div className="flex items-center   gap-2">
                 <Tag className="w-4 h-4" />
-                <span className="hidden sm:inline">Name</span>
+                <span className="inline">Name</span>
               </div>
             </div>
           </div>
