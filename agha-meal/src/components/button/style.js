@@ -1,24 +1,34 @@
 import { StyleSheet } from "react-native";
 
-const Style = StyleSheet.create({
-  continueBtnContainer: {
-    width: "85%",
-    paddingVertical: 10,
-  },
-  continueBtn: {
+const styles = StyleSheet.create({
+  button: {
     backgroundColor: "#EEA734",
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
     alignItems: "center",
-    borderRadius: 10,
-    padding: 10,
+    justifyContent: "center",
+    shadowColor: "#EEA734",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  continueBtnText: {
-    color: "white",
+  buttonDisabled: {
+    backgroundColor: "#bdc3c7",
+    shadowOpacity: 0,
+    elevation: 0,
   },
-  disabledButton: {
-    backgroundColor: "#d6d6d6",
-    alignItems: "center",
-    borderRadius: 10,
-    padding: 10,
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  buttonTextDisabled: {
+    color: "#7f8c8d",
   },
 });
-export default Style;
+export default styles;
