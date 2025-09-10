@@ -1,13 +1,27 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Dimensions } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { Ionicons } from "@expo/vector-icons"
-import { useOrder } from "../context/OrderContext"
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  Dimensions,
+  ActivityIndicator,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useOrder } from "../context/OrderContext";
+import { useEffect, useState } from "react";
+import { fetchAllMeals } from "../services/api";
 
-const { width } = Dimensions.get("window")
+const { width } = Dimensions.get("window");
 
 const HomeScreen = ({ navigation }) => {
-  const { getCartItemCount } = useOrder()
-  const cartItemCount = getCartItemCount()
+  const { getCartItemCount } = useOrder();
+  const cartItemCount = getCartItemCount();
+
+  const [featuredMeals, setFeaturedMeals] = useState([]);
+  const [featuredMealsloading, setFeaturedMealsloading] = useState(true);
 
   const quickActions = [
     {
@@ -34,9 +48,9 @@ const HomeScreen = ({ navigation }) => {
       color: "#45B7D1",
       screen: "OrderHistory",
     },
-  ]
+  ];
 
-  const featuredMeals = [
+  const featuredMeals2 = [
     {
       id: 1,
       name: "Grilled Chicken",
@@ -58,33 +72,72 @@ const HomeScreen = ({ navigation }) => {
       image: "/caesar-salad-meal.jpg",
       rating: 4.7,
     },
-  ]
+  ];
+
+  const loadMeals = async () => {
+    try {
+      setFeaturedMealsloading(true);
+
+      let response;
+      if (selectedCategory === "all") {
+        response = await fetchAllMeals();
+      } else {
+        //   console.log("selectedCategory :: ", selectedCategory);
+        response = await fetchMealsByCategory(selectedCategory);
+      }
+
+      setMeals(response?.meals || []);
+      // setFilteredMeals(response?.meals || []);
+    } catch (error) {
+      console.error("Error loading meals:", error);
+    } finally {
+      setFeaturedMealsloading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMeals();
+  }, []);
+
+  // if (loading) {
+  //   return (
+  //     <View style={styles.loadingContainer}>
+  //       <ActivityIndicator size="large" color="#FF6B6B" />
+  //       <Text style={styles.loadingText}>Loading menu...</Text>
+  //     </View>
+  //   );
+  // }
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>Welcome to</Text>
+          <Text style={styles.appName}>Agha Meal</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.cartButton}
+          onPress={() => navigation.navigate("Cart")}
+        >
+          <Ionicons name="bag-outline" size={24} color="#1a1a1a" />
+          {cartItemCount > 0 && (
+            <View style={styles.cartBadge}>
+              <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+      {/* Hero Section */}
+      <View style={styles.heroSection}>
+        <Text style={styles.heroTitle}>
+          Delicious meals{"\n"}delivered fresh
+        </Text>
+        <Text style={styles.heroSubtitle}>
+          Order your favorite meals and get them delivered right to your door
+        </Text>
+      </View>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Welcome to</Text>
-            <Text style={styles.appName}>Agha Meal</Text>
-          </View>
-          <TouchableOpacity style={styles.cartButton} onPress={() => navigation.navigate("Cart")}>
-            <Ionicons name="bag-outline" size={24} color="#1a1a1a" />
-            {cartItemCount > 0 && (
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Hero Section */}
-        <View style={styles.heroSection}>
-          <Text style={styles.heroTitle}>Delicious meals{"\n"}delivered fresh</Text>
-          <Text style={styles.heroSubtitle}>Order your favorite meals and get them delivered right to your door</Text>
-        </View>
-
         {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
@@ -92,15 +145,25 @@ const HomeScreen = ({ navigation }) => {
             {quickActions.map((action) => (
               <TouchableOpacity
                 key={action.id}
-                style={[styles.quickActionCard, { borderLeftColor: action.color }]}
+                style={[
+                  styles.quickActionCard,
+                  { borderLeftColor: action.color },
+                ]}
                 onPress={() => navigation.navigate(action.screen)}
               >
-                <View style={[styles.quickActionIcon, { backgroundColor: action.color }]}>
+                <View
+                  style={[
+                    styles.quickActionIcon,
+                    { backgroundColor: action.color },
+                  ]}
+                >
                   <Ionicons name={action.icon} size={24} color="#fff" />
                 </View>
                 <View style={styles.quickActionContent}>
                   <Text style={styles.quickActionTitle}>{action.title}</Text>
-                  <Text style={styles.quickActionSubtitle}>{action.subtitle}</Text>
+                  <Text style={styles.quickActionSubtitle}>
+                    {action.subtitle}
+                  </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="#ccc" />
               </TouchableOpacity>
@@ -116,30 +179,45 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.featuredMealsContainer}>
-              {featuredMeals.map((meal) => (
-                <TouchableOpacity key={meal.id} style={styles.featuredMealCard}>
-                  <Image source={{ uri: meal.image }} style={styles.featuredMealImage} />
-                  <View style={styles.featuredMealInfo}>
-                    <Text style={styles.featuredMealName}>{meal.name}</Text>
-                    <View style={styles.featuredMealMeta}>
-                      <Text style={styles.featuredMealPrice}>${meal.price}</Text>
-                      <View style={styles.ratingContainer}>
-                        <Ionicons name="star" size={14} color="#FFD700" />
-                        <Text style={styles.ratingText}>{meal.rating}</Text>
+          {featuredMealsloading ? (
+            <View style={styles.featuredMealsLoader}>
+              <ActivityIndicator size="large" color="#FF6B6B" />
+              <Text style={styles.loadingText}>Loading...</Text>
+            </View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.featuredMealsContainer}>
+                {featuredMeals.map((meal) => (
+                  <TouchableOpacity
+                    key={meal.id}
+                    style={styles.featuredMealCard}
+                  >
+                    <Image
+                      source={{ uri: meal.image }}
+                      style={styles.featuredMealImage}
+                    />
+                    <View style={styles.featuredMealInfo}>
+                      <Text style={styles.featuredMealName}>{meal.name}</Text>
+                      <View style={styles.featuredMealMeta}>
+                        <Text style={styles.featuredMealPrice}>
+                          ${meal.price}
+                        </Text>
+                        <View style={styles.ratingContainer}>
+                          <Ionicons name="star" size={14} color="#FFD700" />
+                          <Text style={styles.ratingText}>{meal.rating}</Text>
+                        </View>
                       </View>
                     </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -218,6 +296,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "600",
     color: "#1a1a1a",
+    marginBottom: 16,
   },
   seeAllText: {
     fontSize: 16,
@@ -264,7 +343,9 @@ const styles = StyleSheet.create({
   featuredMealsContainer: {
     flexDirection: "row",
     gap: 16,
-    paddingRight: 20,
+    // paddingRight: 20,
+    paddingHorizontal: 20,
+    marginBottom: 5,
   },
   featuredMealCard: {
     width: 160,
@@ -310,6 +391,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
   },
-})
 
-export default HomeScreen
+  loadingContainer: {
+    // flex: 1,
+    // justifyContent: "center",
+    // alignItems: "center",
+    // height: Dimensions.get("window").height, // ensures full screen height
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
+  },
+  featuredMealsLoader: {
+    width: width, // full width of screen
+
+    justifyContent: "center",
+    alignItems: "center",
+    // paddingVertical: 40, // give it some breathing room
+    // paddingHorizontal: 20,
+    // backgroundColor: "red",
+  },
+});
+
+export default HomeScreen;

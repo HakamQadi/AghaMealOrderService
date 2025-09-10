@@ -44,6 +44,7 @@ export const fetchAllMeals = async () => {
     throw error;
   }
 };
+
 export const fetchMealsByCategory = async (id) => {
   try {
     const response = await api.get(`/admin/meals/category/${id}`);
