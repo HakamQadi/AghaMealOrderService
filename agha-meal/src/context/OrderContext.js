@@ -1,43 +1,3 @@
-// import createDataContext from "./createDataContext";
-
-// const initialState = {
-//   names: [],
-//   order: [],
-// };
-
-// const orderReducer = (state, action) => {
-//   const { type, payload } = action;
-
-//   switch (type) {
-//     case "set_names":
-//       return { ...state, names: payload };
-//     case "set_order":
-//       return { ...state, order: payload };
-//     default:
-//       return state;
-//   }
-// };
-
-// const setNames = (dispatch) => {
-//   return (payload) => {
-//     dispatch({ type: "set_names", payload });
-//   };
-// };
-
-// const setOrder = (dispatch) => {
-//   return (payload) => {
-//     dispatch({ type: "set_order", payload });
-//   };
-// };
-
-// export const { Context: OrderContext, Provider } = createDataContext(
-//   orderReducer,
-//   { setNames, setOrder },
-//   initialState
-// );
-
-"use client";
-
 import React, {
   createContext,
   useContext,
@@ -92,7 +52,7 @@ const orderReducer = (state, action) => {
       return {
         ...state,
         orders: state.orders.map((order) =>
-          order.id === action.payload.id ? action.payload : order
+          order._id === action.payload._id ? action.payload : order
         ),
         loading: false,
         error: null,
@@ -106,13 +66,13 @@ const orderReducer = (state, action) => {
 
     case ORDER_ACTIONS.ADD_TO_CART:
       const existingItem = state.cart.find(
-        (item) => item.id === action.payload.id
+        (item) => item._id === action.payload._id
       );
       if (existingItem) {
         return {
           ...state,
           cart: state.cart.map((item) =>
-            item.id === action.payload.id
+            item._id === action.payload._id
               ? { ...item, quantity: item.quantity + 1 }
               : item
           ),
@@ -126,7 +86,7 @@ const orderReducer = (state, action) => {
     case ORDER_ACTIONS.REMOVE_FROM_CART:
       return {
         ...state,
-        cart: state.cart.filter((item) => item.id !== action.payload),
+        cart: state.cart.filter((item) => item._id !== action.payload),
       };
 
     case ORDER_ACTIONS.CLEAR_CART:

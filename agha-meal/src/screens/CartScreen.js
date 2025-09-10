@@ -1,56 +1,83 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { Ionicons } from "@expo/vector-icons"
-import { useOrder } from "../context/OrderContext"
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  Alert,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useOrder } from "../context/OrderContext";
 
 const CartScreen = ({ navigation }) => {
-  const { cart, removeFromCart, clearCart, getCartTotal, addToCart } = useOrder()
+  const { cart, removeFromCart, clearCart, getCartTotal, addToCart } =
+    useOrder();
 
   const handleRemoveItem = (itemId, itemName) => {
-    Alert.alert("Remove Item", `Are you sure you want to remove ${itemName} from your cart?`, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Remove", style: "destructive", onPress: () => removeFromCart(itemId) },
-    ])
-  }
+    Alert.alert(
+      "Remove Item",
+      `Are you sure you want to remove ${itemName} from your cart?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => removeFromCart(itemId),
+        },
+      ]
+    );
+  };
 
   const handleClearCart = () => {
-    Alert.alert("Clear Cart", "Are you sure you want to remove all items from your cart?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Clear All", style: "destructive", onPress: clearCart },
-    ])
-  }
+    Alert.alert(
+      "Clear Cart",
+      "Are you sure you want to remove all items from your cart?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Clear All", style: "destructive", onPress: clearCart },
+      ]
+    );
+  };
 
   const handleCheckout = () => {
     if (cart.length === 0) {
-      Alert.alert("Empty Cart", "Please add items to your cart before checkout.")
-      return
+      Alert.alert(
+        "Empty Cart",
+        "Please add items to your cart before checkout."
+      );
+      return;
     }
-
-    Alert.alert("Checkout", `Total: $${getCartTotal().toFixed(2)}\n\nProceed to checkout?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Checkout",
-        onPress: () => {
-          // Here you would typically navigate to a checkout screen
-          // or process the order
-          Alert.alert("Success", "Order placed successfully!")
-          clearCart()
-          navigation.navigate("Home")
+    Alert.alert(
+      "Checkout",
+      `Total: $${getCartTotal().toFixed(2)}\n\nProceed to checkout?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Checkout",
+          onPress: () => {
+            // Here you would typically navigate to a checkout screen
+            // or process the order
+            Alert.alert("Success", "Order placed successfully!");
+            clearCart();
+            navigation.navigate("Home");
+          },
         },
-      },
-    ])
-  }
+      ]
+    );
+  };
 
   const updateQuantity = (item, change) => {
     if (change > 0) {
-      addToCart(item)
+      addToCart(item);
     } else if (item.quantity > 1) {
       // Decrease quantity logic would go here
       // For now, we'll just remove the item if quantity becomes 0
     } else {
-      removeFromCart(item.id)
+      removeFromCart(item.id);
     }
-  }
+  };
 
   const renderCartItem = ({ item }) => (
     <View style={styles.cartItem}>
@@ -58,40 +85,56 @@ const CartScreen = ({ navigation }) => {
       <View style={styles.cartItemContent}>
         <View style={styles.cartItemHeader}>
           <Text style={styles.cartItemName}>{item.name.en}</Text>
-          <TouchableOpacity onPress={() => handleRemoveItem(item.id, item.name)} style={styles.removeButton}>
+          <TouchableOpacity
+            onPress={() => handleRemoveItem(item.id, item.name)}
+            style={styles.removeButton}
+          >
             <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
           </TouchableOpacity>
         </View>
         <Text style={styles.cartItemPrice}>${item.price}</Text>
         <View style={styles.quantityContainer}>
-          <TouchableOpacity style={styles.quantityButton} onPress={() => updateQuantity(item, -1)}>
+          <TouchableOpacity
+            style={styles.quantityButton}
+            onPress={() => updateQuantity(item, -1)}
+          >
             <Ionicons name="remove" size={20} color="#666" />
           </TouchableOpacity>
           <Text style={styles.quantityText}>{item.quantity}</Text>
-          <TouchableOpacity style={styles.quantityButton} onPress={() => updateQuantity(item, 1)}>
+          <TouchableOpacity
+            style={styles.quantityButton}
+            onPress={() => updateQuantity(item, 1)}
+          >
             <Ionicons name="add" size={20} color="#666" />
           </TouchableOpacity>
         </View>
       </View>
       <View style={styles.cartItemTotal}>
-        <Text style={styles.cartItemTotalText}>${(item.price * item.quantity).toFixed(2)}</Text>
+        <Text style={styles.cartItemTotalText}>
+          ${(item.price * item.quantity).toFixed(2)}
+        </Text>
       </View>
     </View>
-  )
-
-  const renderEmptyCart = () => (
-    <View style={styles.emptyContainer}>
-      <Ionicons name="bag-outline" size={80} color="#ccc" />
-      <Text style={styles.emptyTitle}>Your cart is empty</Text>
-      <Text style={styles.emptySubtitle}>Add some delicious meals to get started</Text>
-      <TouchableOpacity style={styles.browseButton} onPress={() => navigation.navigate("Menu")}>
-        <Text style={styles.browseButtonText}>Browse Menu</Text>
-      </TouchableOpacity>
-    </View>
-  )
+  );
 
   if (cart.length === 0) {
-    return <SafeAreaView style={styles.container}>{renderEmptyCart()}</SafeAreaView>
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Ionicons name="bag-outline" size={80} color="#ccc" />
+          <Text style={styles.emptyTitle}>Your cart is empty</Text>
+          <Text style={styles.emptySubtitle}>
+            Add some delicious meals to get started
+          </Text>
+          <TouchableOpacity
+            style={styles.browseButton}
+            onPress={() => navigation.navigate("Menu")}
+          >
+            <Text style={styles.browseButtonText}>Browse Menu</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -106,8 +149,8 @@ const CartScreen = ({ navigation }) => {
       <FlatList
         data={cart}
         renderItem={renderCartItem}
-        // keyExtractor={(item) => item?.id}
-        keyExtractor={(item) => item?._id?.toString()}
+        // keyExtractor={(item) => item?._id?.toString()}
+        keyExtractor={(item) => item?._id}
         contentContainerStyle={styles.cartList}
         showsVerticalScrollIndicator={false}
       />
@@ -117,14 +160,17 @@ const CartScreen = ({ navigation }) => {
           <Text style={styles.totalLabel}>Total:</Text>
           <Text style={styles.totalAmount}>${getCartTotal().toFixed(2)}</Text>
         </View>
-        <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
+        <TouchableOpacity
+          style={styles.checkoutButton}
+          onPress={handleCheckout}
+        >
           <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
           <Ionicons name="arrow-forward" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -289,6 +335,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#fff",
   },
-})
+});
 
-export default CartScreen
+export default CartScreen;

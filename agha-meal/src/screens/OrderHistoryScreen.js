@@ -1,72 +1,90 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { Ionicons } from "@expo/vector-icons"
-import { useOrder } from "../context/OrderContext"
-import { fetchOrderHistory } from "../services/api"
+import { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useOrder } from "../context/OrderContext";
+import { fetchOrderHistory } from "../services/api";
 
 const OrderHistoryScreen = ({ navigation }) => {
-  const [loading, setLoading] = useState(true)
-  const { orders, setOrders } = useOrder()
+  const [loading, setLoading] = useState(true);
+  const { orders, setOrders } = useOrder();
 
   useEffect(() => {
-    loadOrderHistory()
-  }, [])
+    loadOrderHistory();
+  }, []);
 
   const loadOrderHistory = async () => {
     try {
-      setLoading(true)
-      const orderHistory = await fetchOrderHistory()
-      setOrders(orderHistory)
+      setLoading(true);
+      // const orderHistory = await fetchOrderHistory();
+      setOrders(mockOrders);
+      // setOrders(orderHistory);
     } catch (error) {
-      console.error("Error loading order history:", error)
+      console.error("Error loading order history:", error);
       // Fallback to mock data
-      setOrders(mockOrders)
+      setOrders(mockOrders);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
+  //TODO move to a utils
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case "delivered":
-        return "#4CAF50"
+        return "#4CAF50";
       case "preparing":
-        return "#FF9800"
+        return "#FF9800";
       case "on the way":
-        return "#2196F3"
+        return "#2196F3";
       case "cancelled":
-        return "#F44336"
+        return "#F44336";
       default:
-        return "#666"
+        return "#666";
     }
-  }
+  };
 
+  //TODO move to a utils
   const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
       case "delivered":
-        return "checkmark-circle"
+        return "checkmark-circle";
       case "preparing":
-        return "restaurant"
+        return "restaurant";
       case "on the way":
-        return "car"
+        return "car";
       case "cancelled":
-        return "close-circle"
+        return "close-circle";
       default:
-        return "time"
+        return "time";
     }
-  }
+  };
 
   const renderOrderItem = ({ item }) => (
-    <TouchableOpacity style={styles.orderItem} onPress={() => navigation.navigate("OrderDetails", { order: item })}>
+    <TouchableOpacity
+      style={styles.orderItem}
+      onPress={() => navigation.navigate("OrderDetails", { order: item })}
+    >
       <View style={styles.orderHeader}>
         <View>
           <Text style={styles.orderNumber}>Order #{item.id}</Text>
           <Text style={styles.orderDate}>{item.date}</Text>
         </View>
-        <View style={[styles.statusContainer, { backgroundColor: getStatusColor(item.status) }]}>
+        <View
+          style={[
+            styles.statusContainer,
+            { backgroundColor: getStatusColor(item.status) },
+          ]}
+        >
           <Ionicons name={getStatusIcon(item.status)} size={16} color="#fff" />
           <Text style={styles.statusText}>{item.status}</Text>
         </View>
@@ -82,18 +100,7 @@ const OrderHistoryScreen = ({ navigation }) => {
         <Ionicons name="chevron-forward" size={20} color="#ccc" />
       </View>
     </TouchableOpacity>
-  )
-
-  const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Ionicons name="receipt-outline" size={80} color="#ccc" />
-      <Text style={styles.emptyTitle}>No orders yet</Text>
-      <Text style={styles.emptySubtitle}>Your order history will appear here</Text>
-      <TouchableOpacity style={styles.browseButton} onPress={() => navigation.navigate("Menu")}>
-        <Text style={styles.browseButtonText}>Start Ordering</Text>
-      </TouchableOpacity>
-    </View>
-  )
+  );
 
   if (loading) {
     return (
@@ -101,11 +108,27 @@ const OrderHistoryScreen = ({ navigation }) => {
         <ActivityIndicator size="large" color="#FF6B6B" />
         <Text style={styles.loadingText}>Loading orders...</Text>
       </View>
-    )
+    );
   }
 
   if (orders.length === 0) {
-    return <SafeAreaView style={styles.container}>{renderEmptyState()}</SafeAreaView>
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Ionicons name="receipt-outline" size={80} color="#ccc" />
+          <Text style={styles.emptyTitle}>No orders yet</Text>
+          <Text style={styles.emptySubtitle}>
+            Your order history will appear here
+          </Text>
+          <TouchableOpacity
+            style={styles.browseButton}
+            onPress={() => navigation.navigate("Menu")}
+          >
+            <Text style={styles.browseButtonText}>Start Ordering</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -118,8 +141,8 @@ const OrderHistoryScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
-  )
-}
+  );
+};
 
 // Mock data for fallback
 const mockOrders = [
@@ -151,7 +174,7 @@ const mockOrders = [
     restaurant: "Agha Meal Kitchen",
     items: [{ name: "Grilled Chicken", quantity: 2, price: 15.99 }],
   },
-]
+];
 
 const styles = StyleSheet.create({
   container: {
@@ -266,6 +289,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#fff",
   },
-})
+});
 
-export default OrderHistoryScreen
+export default OrderHistoryScreen;
