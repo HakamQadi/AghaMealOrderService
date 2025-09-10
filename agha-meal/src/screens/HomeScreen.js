@@ -50,44 +50,11 @@ const HomeScreen = ({ navigation }) => {
     },
   ];
 
-  const featuredMeals2 = [
-    {
-      id: 1,
-      name: "Grilled Chicken",
-      price: 15.99,
-      image: "/grilled-chicken-meal.jpg",
-      rating: 4.8,
-    },
-    {
-      id: 2,
-      name: "Beef Burger",
-      price: 12.99,
-      image: "/beef-burger-meal.jpg",
-      rating: 4.6,
-    },
-    {
-      id: 3,
-      name: "Caesar Salad",
-      price: 9.99,
-      image: "/caesar-salad-meal.jpg",
-      rating: 4.7,
-    },
-  ];
-
   const loadMeals = async () => {
     try {
       setFeaturedMealsloading(true);
-
-      let response;
-      if (selectedCategory === "all") {
-        response = await fetchAllMeals();
-      } else {
-        //   console.log("selectedCategory :: ", selectedCategory);
-        response = await fetchMealsByCategory(selectedCategory);
-      }
-
-      setMeals(response?.meals || []);
-      // setFilteredMeals(response?.meals || []);
+      const response = await fetchAllMeals();
+      setFeaturedMeals(response?.meals.slice(0, 10) || []);
     } catch (error) {
       console.error("Error loading meals:", error);
     } finally {
@@ -189,7 +156,7 @@ const HomeScreen = ({ navigation }) => {
               <View style={styles.featuredMealsContainer}>
                 {featuredMeals.map((meal) => (
                   <TouchableOpacity
-                    key={meal.id}
+                    key={meal._id}
                     style={styles.featuredMealCard}
                   >
                     <Image
@@ -197,7 +164,9 @@ const HomeScreen = ({ navigation }) => {
                       style={styles.featuredMealImage}
                     />
                     <View style={styles.featuredMealInfo}>
-                      <Text style={styles.featuredMealName}>{meal.name}</Text>
+                      <Text style={styles.featuredMealName}>
+                        {meal.name.en}
+                      </Text>
                       <View style={styles.featuredMealMeta}>
                         <Text style={styles.featuredMealPrice}>
                           ${meal.price}
@@ -391,13 +360,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
   },
-
-  loadingContainer: {
-    // flex: 1,
-    // justifyContent: "center",
-    // alignItems: "center",
-    // height: Dimensions.get("window").height, // ensures full screen height
-  },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
@@ -408,9 +370,6 @@ const styles = StyleSheet.create({
 
     justifyContent: "center",
     alignItems: "center",
-    // paddingVertical: 40, // give it some breathing room
-    // paddingHorizontal: 20,
-    // backgroundColor: "red",
   },
 });
 
