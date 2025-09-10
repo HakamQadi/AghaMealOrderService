@@ -1,23 +1,3 @@
-// import React from "react";
-// import { Style } from "./style";
-
-// function Modal({ children, onClose }) {
-//   return (
-//     <div style={Style.overlay}>
-//       <div style={Style.modal}>
-//         {children}
-//         <button style={Style.closeButton} onClick={onClose}>
-//           X
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default Modal;
-
-"use client"
-
 function Modal({ children, onClose }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

@@ -17,7 +17,7 @@ const Header = ({ setSidebarOpen }) => {
   const firstLetter = userName ? userName.charAt(0).toUpperCase() : "-";
 
   return (
-    <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
+    <div className="relative z-10 flex-shrink-0 flex h-16 bg-slate-800 shadow">
       <button
         className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 md:hidden"
         onClick={() => setSidebarOpen(true)}
@@ -29,9 +29,9 @@ const Header = ({ setSidebarOpen }) => {
           <div className="w-full flex md:ml-0">
             <div className="relative w-full text-gray-400 focus-within:text-gray-600">
               <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
-                <span className="text-lg font-semibold text-gray-900">
+                {/* <span className="text-lg font-semibold text-gray-900">
                   Dashboard
-                </span>
+                </span> */}
               </div>
             </div>
           </div>
@@ -39,10 +39,10 @@ const Header = ({ setSidebarOpen }) => {
         <div className="ml-4 flex items-center md:ml-6">
           <div className="ml-3 relative">
             <div className="flex items-center">
-              <span className="text-sm font-medium text-gray-700 mr-3">
+              <span className="text-md font-medium text-slate-400 mr-3">
                 {userName || "Admin"}
               </span>
-              <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-full bg-slate-600 flex items-center justify-center">
                 <span className="text-white font-medium text-sm">
                   {firstLetter}
                 </span>
