@@ -20,6 +20,8 @@ import {
   fetchAllMeals,
   fetchMealsByCategory,
 } from "../services/api";
+import MealCard from "../components/card/MealCard";
+import MealModal from "../components/modal/MealModal";
 
 const { width } = Dimensions.get("window");
 const itemWidth = (width - 60) / 2; // 20px margin on each side + 20px gap between items
@@ -116,46 +118,11 @@ const MenuScreen = ({ navigation }) => {
 
   const handleItemPress = (meal) => {
     setSelectedItem(meal);
-    setItemQuantity(1);
     setModalVisible(true);
   };
 
-  const handleModalAddToCart = () => {
-    for (let i = 0; i < itemQuantity; i++) {
-      addToCart(selectedItem);
-    }
-    setModalVisible(false);
-    Alert.alert(
-      "Added to Cart",
-      `${itemQuantity} x ${selectedItem.name.en} has been added to your cart!`
-    );
-  };
-
-  const increaseQuantity = () => {
-    setItemQuantity((prev) => prev + 1);
-  };
-
-  const decreaseQuantity = () => {
-    if (itemQuantity > 1) {
-      setItemQuantity((prev) => prev - 1);
-    }
-  };
-
   const renderMealItem = ({ item }) => {
-    return (
-      <TouchableOpacity
-        style={styles.gridItem}
-        onPress={() => handleItemPress(item)}
-      >
-        <Image source={{ uri: item?.image }} style={styles.gridItemImage} />
-        <View style={styles.gridItemContent}>
-          <Text style={styles.gridItemName} numberOfLines={2}>
-            {item?.name?.en}
-          </Text>
-          <Text style={styles.gridItemPrice}>${item?.price}</Text>
-        </View>
-      </TouchableOpacity>
-    );
+    return <MealCard meal={item} onPress={handleItemPress} width={itemWidth} />;
   };
 
   const renderCategoryButton = (category) => {
@@ -218,7 +185,6 @@ const MenuScreen = ({ navigation }) => {
           )}
         </TouchableOpacity>
       </View>
-
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <Ionicons
@@ -235,7 +201,6 @@ const MenuScreen = ({ navigation }) => {
           placeholderTextColor="#999"
         />
       </View>
-
       {/* Categories */}
       <View style={styles.categoriesContainer}>
         <FlatList
@@ -247,7 +212,6 @@ const MenuScreen = ({ navigation }) => {
           contentContainerStyle={styles.categoriesList}
         />
       </View>
-
       {/* Meals Grid */}
       {mealsLoading ? (
         <View style={styles.loadingContainer}>
@@ -265,76 +229,11 @@ const MenuScreen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
         />
       )}
-
-      <Modal
-        animationType="fade"
-        transparent={true}
+      <MealModal
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <TouchableOpacity
-          onPress={() => setModalVisible(false)}
-          style={{ flex: 1, backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        />
-
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            {/* Close button */}
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Ionicons name="close" size={24} color="#1a1a1a" />
-            </TouchableOpacity>
-
-            {selectedItem && (
-              <>
-                {/* Item image */}
-                <Image
-                  source={{ uri: selectedItem.image }}
-                  style={styles.modalImage}
-                />
-
-                {/* Item name */}
-                <Text style={styles.modalItemName}>{selectedItem.name.en}</Text>
-
-                {/* Bottom section with controls */}
-                <View style={styles.modalBottomSection}>
-                  {/* Quantity controls */}
-                  <View style={styles.quantityContainer}>
-                    <TouchableOpacity
-                      style={styles.quantityButton}
-                      onPress={decreaseQuantity}
-                    >
-                      <Ionicons name="remove" size={20} color="#FF6B6B" />
-                    </TouchableOpacity>
-
-                    <Text style={styles.quantityText}>{itemQuantity}</Text>
-
-                    <TouchableOpacity
-                      style={styles.quantityButton}
-                      onPress={increaseQuantity}
-                    >
-                      <Ionicons name="add" size={20} color="#FF6B6B" />
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Add to cart button */}
-                  <TouchableOpacity
-                    style={styles.addToCartButton}
-                    onPress={handleModalAddToCart}
-                  >
-                    <Text style={styles.addToCartText}>
-                      Add to Cart - $
-                      {(selectedItem.price * itemQuantity).toFixed(2)}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
+        meal={selectedItem}
+        onClose={() => setModalVisible(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -372,18 +271,27 @@ const styles = StyleSheet.create({
   },
   cartButton: {
     position: "relative",
-    padding: 8,
+    padding: 12,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cartBadge: {
     position: "absolute",
-    top: 0,
-    right: 0,
+    top: 4,
+    right: 4,
     backgroundColor: "#FF6B6B",
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   cartBadgeText: {
     color: "#fff",
@@ -438,112 +346,6 @@ const styles = StyleSheet.create({
   },
   row: {
     justifyContent: "space-between",
-  },
-  gridItem: {
-    width: itemWidth,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  gridItemImage: {
-    width: "100%",
-    height: 120,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-  },
-  gridItemContent: {
-    padding: 12,
-  },
-  gridItemName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1a1a1a",
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  gridItemPrice: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#FF6B6B",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 10,
-    paddingHorizontal: 20,
-    paddingBottom: 50,
-    minHeight: 400,
-  },
-  closeButton: {
-    alignSelf: "flex-end",
-    padding: 8,
-    marginBottom: 10,
-  },
-  modalImage: {
-    width: "100%",
-    height: 200,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  modalItemName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    textAlign: "center",
-    marginBottom: 30,
-  },
-  modalBottomSection: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: "auto",
-  },
-  quantityContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f8f9fa",
-    borderRadius: 25,
-    paddingHorizontal: 4,
-  },
-  quantityButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    margin: 4,
-  },
-  quantityText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    marginHorizontal: 20,
-  },
-  addToCartButton: {
-    backgroundColor: "#FF6B6B",
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderRadius: 25,
-    flex: 1,
-    marginLeft: 20,
-  },
-  addToCartText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
   },
 });
 
