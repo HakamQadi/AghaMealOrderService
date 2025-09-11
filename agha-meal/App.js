@@ -13,7 +13,7 @@ function App() {
       <OrderDataProvider>
         <AppNavigation />
       </OrderDataProvider>
-    </SafeAreaView>
+    </View>
   );
 }
 

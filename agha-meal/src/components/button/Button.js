@@ -1,17 +1,25 @@
-import { View, Text, TouchableOpacity } from "react-native";
-import React from "react";
-import Style from "./style.js";
+import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import styles from "./style";
 
-export default function Button({ onPress, style, isDisabled, text }) {
+const Button = ({ text, onPress, style, textStyle, disabled = false }) => {
   return (
-    <View style={[Style.continueBtnContainer, style]}>
-      <TouchableOpacity
-        disabled={isDisabled}
-        style={isDisabled ? Style.disabledButton : Style.continueBtn}
-        onPress={onPress}
+    <TouchableOpacity
+      style={[styles.button, disabled && styles.buttonDisabled, style]}
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={0.8}
+    >
+      <Text
+        style={[
+          styles.buttonText,
+          disabled && styles.buttonTextDisabled,
+          textStyle,
+        ]}
       >
-        <Text style={Style.continueBtnText}>{text}</Text>
-      </TouchableOpacity>
-    </View>
+        {text}
+      </Text>
+    </TouchableOpacity>
   );
-}
+};
+
+export default Button;

@@ -1,73 +1,203 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
+
+const { width } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
-  container: {
-    // android
-    // alignItems: "center",
+  safeArea: {
     flex: 1,
+    backgroundColor: "#f8f9fa",
   },
-  headerTextContainer: {
-    marginTop: 46,
-    // android
-    paddingHorizontal: 16,
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  headerSection: {
+    alignItems: "center",
+    paddingTop: 60,
+    paddingBottom: 30,
+  },
+  headerIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   wlcmText: {
-    fontSize: 33,
-    color: "black",
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#2c3e50",
+    textAlign: "center",
+    marginBottom: 8,
   },
   secondryText: {
-    color: "#868686",
+    color: "#7f8c8d",
     fontSize: 16,
-    marginBottom: 30,
+    textAlign: "center",
+    lineHeight: 22,
   },
-  addBtn: {
-    backgroundColor: "#EEA734",
-    borderRadius: 5,
-    padding: 10,
-    height: 40,
+  formSection: {
+    marginBottom: 24,
   },
-  nameContainer: {
-    flexDirection: "row",
-    gap: 10,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    padding: 5,
-  },
-  removeBtn: {
-    backgroundColor: "red",
-    borderRadius: 5,
-    paddingHorizontal: 5,
-    height: 25,
-    justifyContent: "center",
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#2c3e50",
+    marginBottom: 12,
   },
   inputContainer: {
     flexDirection: "row",
-    gap: 5,
-    // android
-    // alignItems:"center",
-    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+  },
+  inputWrapper: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e1e8ed",
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
-    width: 320,
-    height: 40,
-    color: "black",
+    flex: 1,
+    height: 50,
+    color: "#2c3e50",
     fontSize: 16,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    backgroundColor: "#FBFBFB",
-    borderColor: "#efefef",
-    borderRadius: 5,
   },
-  error: {
-    color: "red",
-    fontSize: 16,
+  addBtn: {
+    backgroundColor: "#EEA734",
+    borderRadius: 12,
+    width: 50,
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#EEA734",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   addNamesError: {
-    color: "red",
+    color: "#e74c3c",
+    fontSize: 14,
+    marginTop: 8,
+    marginLeft: 4,
+  },
+  listSection: {
+    flex: 1,
+    marginBottom: 20,
+  },
+  listHeader: {
+    marginBottom: 12,
+  },
+  listTitle: {
     fontSize: 16,
-    alignSelf: "flex-start",
-    marginLeft: 16,
-    marginTop: 5,
+    fontWeight: "600",
+    color: "#2c3e50",
+  },
+  listContainer: {
+    paddingBottom: 20,
+  },
+  nameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  nameContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  avatarContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#EEA734",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  avatarText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  nameText: {
+    fontSize: 16,
+    color: "#2c3e50",
+    fontWeight: "500",
+    flex: 1,
+  },
+  removeBtn: {
+    backgroundColor: "#e74c3c",
+    borderRadius: 8,
+    width: 32,
+    height: 32,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  bottomSection: {
+    paddingBottom: 50,
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#fdf2f2",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#fecaca",
+  },
+  error: {
+    color: "#e74c3c",
+    fontSize: 14,
+    marginLeft: 8,
+    fontWeight: "500",
+  },
+  continueButton: {
+    alignSelf: "stretch",
+    marginHorizontal: 0,
   },
 });
 

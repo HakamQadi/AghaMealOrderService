@@ -1,5 +1,5 @@
-import React, { useContext } from "react";
-import { View, Text, ScrollView } from "react-native";
+import { useContext } from "react";
+import { View, Text, ScrollView, SafeAreaView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { OrderContext } from "../../context/OrderContext";
 import Button from "../../components/button/Button";
@@ -14,8 +14,7 @@ const CheckoutScreen = ({ navigation, route }) => {
   const groupOrdersByName = () => {
     const ordersByName = {};
     state.order.forEach((order) => {
-      // itemName means the user name
-      const itemName = order.name;
+      const itemName = order.item.name.en;
       if (!ordersByName[itemName]) {
         // Initialize the entry with an empty array to hold all orders for this name
         ordersByName[itemName] = { count: 0, orders: [] };
@@ -45,32 +44,53 @@ const CheckoutScreen = ({ navigation, route }) => {
   // Calculate total
   const calculateTotal = () => {
     let total = 0;
-    total = parseFloat(calculateSubtotal()) + parseFloat(deliveryCost || 0);
+    total =
+      Number.parseFloat(calculateSubtotal()) +
+      Number.parseFloat(deliveryCost || 0);
     return total;
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView style={Style.listContainer}>
+    <SafeAreaView style={Style.container}>
+      <View style={Style.headerContainer}>
+        <Text style={Style.headerTitle}>Order Summary</Text>
+        <Text style={Style.headerSubtitle}>Review your order details</Text>
+      </View>
+      <ScrollView
+        style={Style.listContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Display checkout items grouped by name */}
         {Object.entries(ordersByName).map(([itemName, order]) => {
+          const price = order.orders[0].item.price;
           return (
-            <CheckoutItem key={itemName} name={itemName} order={order.orders} />
+            <CheckoutItem
+              key={itemName}
+              name={itemName}
+              count={order.count}
+              price={price}
+            />
           );
         })}
       </ScrollView>
-      <View style={Style.detailsContainer}>
-        <View style={Style.detailsRowContainer}>
-          <Text>Subtotal</Text>
-          <Text>{calculateSubtotal()} JOD</Text>
-        </View>
-        <View style={Style.detailsRowContainer}>
-          <Text>Delivery</Text>
-          <Text>{deliveryCost ? deliveryCost : 0} JOD</Text>
-        </View>
-        <View style={Style.detailsRowContainer}>
-          <Text>Total</Text>
-          <Text style={Style.textColorYellow}>{calculateTotal()} JOD</Text>
+      <View style={Style.summaryCard}>
+        <Text style={Style.summaryTitle}>Order Total</Text>
+        <View style={Style.detailsContainer}>
+          <View style={Style.detailsRowContainer}>
+            <Text style={Style.detailLabel}>Subtotal</Text>
+            <Text style={Style.detailValue}>{calculateSubtotal()} JOD</Text>
+          </View>
+          <View style={Style.detailsRowContainer}>
+            <Text style={Style.detailLabel}>Delivery</Text>
+            <Text style={Style.detailValue}>
+              {deliveryCost ? deliveryCost : 0} JOD
+            </Text>
+          </View>
+          <View style={Style.dividerLine} />
+          <View style={Style.detailsRowContainer}>
+            <Text style={Style.totalLabel}>Total</Text>
+            <Text style={Style.totalValue}>{calculateTotal()} JOD</Text>
+          </View>
         </View>
       </View>
       <Button
@@ -87,7 +107,7 @@ const CheckoutScreen = ({ navigation, route }) => {
           }
         }}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .sidenav {
   height: 100%;
   position: fixed;
@@ -15,7 +19,7 @@
 .contentContainer {
   height: 100vh;
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
 }
 
 .navItem {
