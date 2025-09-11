@@ -12,7 +12,7 @@ const MealCard = ({ meal, onPress, width = 180 }) => {
         <Text style={styles.cardName} numberOfLines={2}>
           {meal?.name?.en}
         </Text>
-        <Text style={styles.cardPrice}>${meal?.price}</Text>
+        <Text style={styles.cardPrice}>{meal?.price}JD</Text>
       </View>
     </TouchableOpacity>
   );
@@ -23,7 +23,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     marginBottom: 16,
-    marginRight: 16, // good for horizontal list
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

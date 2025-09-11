@@ -12,6 +12,7 @@ const ORDER_ACTIONS = {
   SET_ERROR: "SET_ERROR",
   SET_ORDERS: "SET_ORDERS",
   ADD_ORDER: "ADD_ORDER",
+  DECREASE_QUANTITY: "DECREASE_QUANTITY",
   UPDATE_ORDER: "UPDATE_ORDER",
   CLEAR_ORDERS: "CLEAR_ORDERS",
   SET_CART: "SET_CART",
@@ -46,6 +47,16 @@ const orderReducer = (state, action) => {
         orders: [action.payload, ...state.orders],
         loading: false,
         error: null,
+      };
+
+    case ORDER_ACTIONS.DECREASE_QUANTITY:
+      return {
+        ...state,
+        cart: state.cart.map((item) =>
+          item._id === action.payload && item.quantity > 1
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        ),
       };
 
     case ORDER_ACTIONS.UPDATE_ORDER:
@@ -165,6 +176,10 @@ export const Provider = ({ children }) => {
     dispatch({ type: ORDER_ACTIONS.ADD_TO_CART, payload: item });
   }, []);
 
+  const decreaseQuantity = useCallback((itemId) => {
+    dispatch({ type: ORDER_ACTIONS.DECREASE_QUANTITY, payload: itemId });
+  }, []);
+
   const removeFromCart = useCallback((itemId) => {
     dispatch({ type: ORDER_ACTIONS.REMOVE_FROM_CART, payload: itemId });
   }, []);
@@ -193,6 +208,7 @@ export const Provider = ({ children }) => {
     updateOrder,
     clearOrders,
     addToCart,
+    decreaseQuantity,
     removeFromCart,
     clearCart,
     getCartTotal,

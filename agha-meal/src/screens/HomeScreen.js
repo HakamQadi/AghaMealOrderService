@@ -362,7 +362,6 @@ const styles = StyleSheet.create({
   featuredMealsContainer: {
     flexDirection: "row",
     gap: 16,
-    marginBottom: 5,
   },
   loadingText: {
     marginTop: 16,

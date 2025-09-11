@@ -70,7 +70,7 @@ const MealModal = ({ visible, onClose, meal }) => {
               onPress={handleAddToCart}
             >
               <Text style={styles.addToCartText}>
-                Add to Cart - ${(meal.price * quantity).toFixed(2)}
+                Add to Cart {(meal.price * quantity).toFixed(2)}JD 
               </Text>
             </TouchableOpacity>
           </View>
