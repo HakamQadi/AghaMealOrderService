@@ -86,7 +86,7 @@ const AppNavigation = () => {
         <Stack.Screen
           name="Cart"
           component={CartScreen}
-          options={{ title: "Your Cart" }}
+          options={{ title: "Your Cart", headerShown: false }}
         />
         <Stack.Screen
           name="OrderHistory"

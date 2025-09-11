@@ -170,6 +170,19 @@ const CartScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.topHeader}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#1a1a1a" />
+        </TouchableOpacity>
+
+        <Text style={styles.screenTitle}>Cart</Text>
+        <View style={{ padding: 12 }}>
+          <View style={{ width: 24, height: 24 }} />
+        </View>
+      </View>
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Your Cart</Text>
@@ -231,6 +244,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8f9fa",
+  },
+  topHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
+  },
+  backButton: {
+    padding: 8,
+  },
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1a1a1a",
   },
   header: {
     flexDirection: "row",
