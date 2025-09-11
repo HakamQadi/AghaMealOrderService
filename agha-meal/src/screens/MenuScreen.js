@@ -9,6 +9,8 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  Modal,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,22 +21,32 @@ import {
   fetchMealsByCategory,
 } from "../services/api";
 
+const { width } = Dimensions.get("window");
+const itemWidth = (width - 60) / 2; // 20px margin on each side + 20px gap between items
+
 const MenuScreen = ({ navigation }) => {
   const [categories, setCategories] = useState([]);
   const [meals, setMeals] = useState([]);
   const [filteredMeals, setFilteredMeals] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [loading, setLoading] = useState(true);
+
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [mealsLoading, setMealsLoading] = useState(false);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [itemQuantity, setItemQuantity] = useState(1);
 
   const { addToCart, getCartItemCount } = useOrder();
   const cartItemCount = getCartItemCount();
 
   useEffect(() => {
-    loadCategories();
+    loadInitialData();
   }, []);
 
   useEffect(() => {
+    setSearchQuery("");
     loadMeals();
   }, [selectedCategory]);
 
@@ -42,43 +54,44 @@ const MenuScreen = ({ navigation }) => {
     filterMeals();
   }, [searchQuery, meals]);
 
-  // Load categories from API
-  const loadCategories = async () => {
+  const loadInitialData = async () => {
     try {
-      setLoading(true);
-      const response = await fetchCategories();
-      const apiCategories = response?.categories || [];
-      //   console.log("apiCategories :: ", apiCategories);
+      // fetch categories first
+      const categoryResponse = await fetchCategories();
+      const apiCategories = categoryResponse?.categories || [];
 
-      // Add "All" category manually
       setCategories([
         { _id: "all", name: { en: "All", ar: "الكل" } },
         ...apiCategories,
       ]);
+
+      // fetch meals for "all"
+      const mealResponse = await fetchAllMeals();
+      setMeals(mealResponse?.meals || []);
+      setFilteredMeals(mealResponse?.meals || []);
     } catch (error) {
-      console.error("Error loading categories:", error);
+      console.error("Error loading initial data:", error);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   };
 
-  // Load meals based on category
+  // Load categories from API
   const loadMeals = async () => {
     try {
-      setLoading(true);
+      setMealsLoading(true);
       let response;
       if (selectedCategory === "all") {
         response = await fetchAllMeals();
       } else {
         response = await fetchMealsByCategory(selectedCategory);
       }
-
       setMeals(response?.meals || []);
       setFilteredMeals(response?.meals || []);
     } catch (error) {
       console.error("Error loading meals:", error);
     } finally {
-      setLoading(false);
+      setMealsLoading(false);
     }
   };
 
@@ -90,45 +103,62 @@ const MenuScreen = ({ navigation }) => {
       filtered = filtered.filter(
         (meal) =>
           meal.name.en.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          meal.name.ar.toLowerCase().includes(searchQuery.toLowerCase())
+          meal.name.ar.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (selectedCategory === "all" &&
+            meal?.category?.name.en
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase()))
       );
     }
 
     setFilteredMeals(filtered);
   };
 
-  const handleAddToCart = (meal) => {
-    addToCart(meal);
+  const handleItemPress = (meal) => {
+    setSelectedItem(meal);
+    setItemQuantity(1);
+    setModalVisible(true);
+  };
+
+  const handleModalAddToCart = () => {
+    for (let i = 0; i < itemQuantity; i++) {
+      addToCart(selectedItem);
+    }
+    setModalVisible(false);
     Alert.alert(
       "Added to Cart",
-      `${meal.name.en} has been added to your cart!`
+      `${itemQuantity} x ${selectedItem.name.en} has been added to your cart!`
     );
   };
 
-  const renderMealItem = ({ item }) => (
-    <View style={styles.menuItem}>
-      <Image source={{ uri: item.image }} style={styles.menuItemImage} />
-      <View style={styles.menuItemContent}>
-        <View style={styles.menuItemHeader}>
-          <Text style={styles.menuItemName}>{item.name.en}</Text>
-          <Text style={styles.menuItemPrice}>${item.price}</Text>
-        </View>
+  const increaseQuantity = () => {
+    setItemQuantity((prev) => prev + 1);
+  };
 
-        <View style={styles.menuItemFooter}>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => handleAddToCart(item)}
-          >
-            <Ionicons name="add" size={20} color="#fff" />
-          </TouchableOpacity>
+  const decreaseQuantity = () => {
+    if (itemQuantity > 1) {
+      setItemQuantity((prev) => prev - 1);
+    }
+  };
+
+  const renderMealItem = ({ item }) => {
+    return (
+      <TouchableOpacity
+        style={styles.gridItem}
+        onPress={() => handleItemPress(item)}
+      >
+        <Image source={{ uri: item?.image }} style={styles.gridItemImage} />
+        <View style={styles.gridItemContent}>
+          <Text style={styles.gridItemName} numberOfLines={2}>
+            {item?.name?.en}
+          </Text>
+          <Text style={styles.gridItemPrice}>${item?.price}</Text>
         </View>
-      </View>
-    </View>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   const renderCategoryButton = (category) => {
-    // console.log("category :: ", category?._id);
-
     return (
       <TouchableOpacity
         key={category._id}
@@ -136,7 +166,10 @@ const MenuScreen = ({ navigation }) => {
           styles.categoryButton,
           selectedCategory === category._id && styles.selectedCategoryButton,
         ]}
-        onPress={() => setSelectedCategory(category?._id)}
+        onPress={() => {
+          setSelectedCategory(category._id);
+          loadMeals();
+        }}
       >
         <Text
           style={[
@@ -151,7 +184,7 @@ const MenuScreen = ({ navigation }) => {
     );
   };
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#FF6B6B" />
@@ -215,14 +248,93 @@ const MenuScreen = ({ navigation }) => {
         />
       </View>
 
-      {/* Meals */}
-      <FlatList
-        data={filteredMeals}
-        renderItem={renderMealItem}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={styles.menuList}
-        showsVerticalScrollIndicator={false}
-      />
+      {/* Meals Grid */}
+      {mealsLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6B6B" />
+          <Text style={styles.loadingText}>Loading meals...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredMeals}
+          renderItem={renderMealItem}
+          keyExtractor={(item) => item._id}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.menuGrid}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableOpacity
+          onPress={() => setModalVisible(false)}
+          style={{ flex: 1, backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        />
+
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {/* Close button */}
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Ionicons name="close" size={24} color="#1a1a1a" />
+            </TouchableOpacity>
+
+            {selectedItem && (
+              <>
+                {/* Item image */}
+                <Image
+                  source={{ uri: selectedItem.image }}
+                  style={styles.modalImage}
+                />
+
+                {/* Item name */}
+                <Text style={styles.modalItemName}>{selectedItem.name.en}</Text>
+
+                {/* Bottom section with controls */}
+                <View style={styles.modalBottomSection}>
+                  {/* Quantity controls */}
+                  <View style={styles.quantityContainer}>
+                    <TouchableOpacity
+                      style={styles.quantityButton}
+                      onPress={decreaseQuantity}
+                    >
+                      <Ionicons name="remove" size={20} color="#FF6B6B" />
+                    </TouchableOpacity>
+
+                    <Text style={styles.quantityText}>{itemQuantity}</Text>
+
+                    <TouchableOpacity
+                      style={styles.quantityButton}
+                      onPress={increaseQuantity}
+                    >
+                      <Ionicons name="add" size={20} color="#FF6B6B" />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Add to cart button */}
+                  <TouchableOpacity
+                    style={styles.addToCartButton}
+                    onPress={handleModalAddToCart}
+                  >
+                    <Text style={styles.addToCartText}>
+                      Add to Cart - $
+                      {(selectedItem.price * itemQuantity).toFixed(2)}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -320,11 +432,15 @@ const styles = StyleSheet.create({
   selectedCategoryButtonText: {
     color: "#fff",
   },
-  menuList: {
+  menuGrid: {
     paddingHorizontal: 20,
+    paddingBottom: 20,
   },
-  menuItem: {
-    flexDirection: "row",
+  row: {
+    justifyContent: "space-between",
+  },
+  gridItem: {
+    width: itemWidth,
     backgroundColor: "#fff",
     borderRadius: 12,
     marginBottom: 16,
@@ -334,66 +450,100 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  menuItemImage: {
-    width: 100,
-    // height: 100,
+  gridItemImage: {
+    width: "100%",
+    height: 120,
     borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
+    borderTopRightRadius: 12,
   },
-  menuItemContent: {
-    flex: 1,
-    padding: 16,
+  gridItemContent: {
+    padding: 12,
   },
-  menuItemHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 8,
-  },
-  menuItemName: {
-    fontSize: 18,
+  gridItemName: {
+    fontSize: 16,
     fontWeight: "600",
     color: "#1a1a1a",
-    flex: 1,
+    marginBottom: 8,
+    lineHeight: 20,
   },
-  menuItemPrice: {
-    fontSize: 18,
+  gridItemPrice: {
+    fontSize: 16,
     fontWeight: "bold",
     color: "#FF6B6B",
   },
-  menuItemDescription: {
-    flex: 0.8,
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 12,
-    lineHeight: 20,
-  },
-  menuItemFooter: {
-    flexDirection: "row",
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "flex-end",
-    alignItems: "center",
   },
-  ratingContainer: {
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 10,
+    paddingHorizontal: 20,
+    paddingBottom: 50,
+    minHeight: 400,
+  },
+  closeButton: {
+    alignSelf: "flex-end",
+    padding: 8,
+    marginBottom: 10,
+  },
+  modalImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  modalItemName: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    textAlign: "center",
+    marginBottom: 30,
+  },
+  modalBottomSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: "auto",
+  },
+  quantityContainer: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#f8f9fa",
+    borderRadius: 25,
+    paddingHorizontal: 4,
   },
-  ratingText: {
-    fontSize: 14,
-    color: "#666",
-    marginLeft: 4,
-    marginRight: 4,
-  },
-  reviewCount: {
-    fontSize: 14,
-    color: "#999",
-  },
-  addButton: {
-    backgroundColor: "#FF6B6B",
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  quantityButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
+    margin: 4,
+  },
+  quantityText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    marginHorizontal: 20,
+  },
+  addToCartButton: {
+    backgroundColor: "#FF6B6B",
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 25,
+    flex: 1,
+    marginLeft: 20,
+  },
+  addToCartText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
 
