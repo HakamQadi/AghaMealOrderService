@@ -164,7 +164,7 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#fff",
   },
   header: {
     flexDirection: "row",
@@ -339,7 +339,6 @@ const styles = StyleSheet.create({
   },
   section: {
     paddingHorizontal: 20,
-    marginBottom: 30,
   },
   sectionHeader: {
     flexDirection: "row",

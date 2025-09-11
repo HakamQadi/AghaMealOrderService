@@ -7,6 +7,7 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useOrder } from "../../context/OrderContext";
@@ -70,7 +71,7 @@ const MealModal = ({ visible, onClose, meal }) => {
               onPress={handleAddToCart}
             >
               <Text style={styles.addToCartText}>
-                Add to Cart {(meal.price * quantity).toFixed(2)}JD 
+                Add to Cart {(meal.price * quantity).toFixed(2)}JD
               </Text>
             </TouchableOpacity>
           </View>
@@ -84,11 +85,12 @@ const styles = StyleSheet.create({
   modalOverlay: { flex: 1, justifyContent: "flex-end" },
   modalContent: {
     backgroundColor: "#fff",
+    // backgroundColor: "red",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 10,
     paddingHorizontal: 20,
-    paddingBottom: 50,
+    paddingBottom: Platform.OS == "ios" ? 50 : 25,
     minHeight: 400,
   },
   closeButton: { alignSelf: "flex-end", padding: 8, marginBottom: 10 },
