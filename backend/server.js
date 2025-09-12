@@ -16,6 +16,17 @@ app.get("/", (req, res) => {
 app.use("/admin/meals", MealRouter);
 app.use("/admin/categories", CategoryRouter);
 
+app.get("/ping", (req, res) => {
+  res.send("Pong!");
+});
+setInterval(() => {
+  fetch("https://foodapplication-o93v.onrender.com/ping")
+    .then((res) => res.text())
+    .then((data) => console.log("Self-ping success:", data))
+    .catch((err) => console.error("Self-ping failed:", err));
+}, 14 * 60 * 1000); // every 14 minutes
+// }, 30 * 1000); // every 30 seconds
+
 app.listen(PORT, () => {
   console.log(`started on http://localhost:${PORT}`);
 });
