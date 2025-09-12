@@ -32,6 +32,13 @@ const orderSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    type: {
+      type: String,
+      enum: ["pickup", "delivery"],
+      required: true,
+    },
+
     couponCode: { type: String },
     discountAmount: { type: Number, default: 0 },
 
