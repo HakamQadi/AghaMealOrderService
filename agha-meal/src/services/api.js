@@ -35,6 +35,26 @@ api.interceptors.response.use(
 );
 
 // API functions
+export const login = async (data) => {
+  try {
+    const response = await api.post("/login", data);
+    return response;
+  } catch (error) {
+    console.error("Error login:", error);
+    throw error;
+  }
+};
+
+export const register = async (data) => {
+  try {
+    const response = await api.post("/register", data);
+    return response;
+  } catch (error) {
+    console.error("Error register:", error);
+    throw error;
+  }
+};
+
 export const fetchAllMeals = async () => {
   try {
     const response = await api.get("/admin/meals");

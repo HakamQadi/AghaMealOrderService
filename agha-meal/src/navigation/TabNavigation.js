@@ -1,16 +1,15 @@
 import React from "react";
-import { View, Text, StyleSheet, BackHandler, Alert } from "react-native";
-import { useNavigationState, useFocusEffect } from "@react-navigation/native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { StatusBar } from "expo-status-bar";
 
 // Screens
 import MenuScreen from "../screens/MenuScreen";
 import CartScreen from "../screens/CartScreen";
 import OrderHistoryScreen from "../screens/OrderHistoryScreen";
 import OrderDetailsScreen from "../screens/OrderDetailsScreen";
+import { useAuth } from "../context/AuthContext";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -27,7 +26,7 @@ const MenuStack = () => {
       <Stack.Screen
         name="Cart"
         component={CartScreen}
-        options={{ title: "Your Cart" }}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
@@ -53,12 +52,31 @@ const OrdersStack = () => {
 
 // ✅ Settings Screen
 const SettingsScreen = () => {
+  const { logout, user } = useAuth();
+
+  const handleLogout = () => {
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: logout,
+      },
+    ]);
+  };
+
   return (
     <View style={styles.screenContainer}>
       <Text style={styles.screenTitle}>Settings</Text>
-      <Text style={styles.screenSubtitle}>
-        Settings will be implemented later
-      </Text>
+      {user && (
+        <View style={styles.userInfo}>
+          <Text style={styles.userInfoText}>Welcome, {user.name}</Text>
+          <Text style={styles.userInfoSubtext}>Role: {user.role}</Text>
+        </View>
+      )}
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutButtonText}>Logout</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -175,6 +193,30 @@ const styles = StyleSheet.create({
     color: "#8E8E93",
     textAlign: "center",
   },
+  userInfo: {
+    alignItems: "center",
+    marginBottom: 40,
+  },
+  userInfoText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1C1C1E",
+    marginBottom: 4,
+  },
+  userInfoSubtext: {
+    fontSize: 14,
+    color: "#8E8E93",
+  },
+  logoutButton: {
+    backgroundColor: "#FF3B30",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  logoutButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
 });
-
 export default TabNavigation;

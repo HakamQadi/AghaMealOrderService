@@ -1,48 +1,70 @@
-import createDataContext from "./createDataContext";
+import { createContext, useContext, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const initialState = {
-  token: "",
-  user: null,
-  isAuthenticated: false,
-};
+const AuthContext = createContext();
 
-const authReducer = (state, action) => {
-  const { type, payload } = action;
-
-  switch (type) {
-    case "set_is_authenticated":
-      return { ...state, isAuthenticated: payload };
-    case "set_user_token":
-      return { ...state, token: payload };
-    case "set_user_details":
-      return { ...state, user: payload };
-    case "logout":
-      return initialState;
-    default:
-      return state;
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
   }
+  return context;
 };
 
-const setIsAuthenticated = (dispatch) => {
-  return (payload) => {
-    dispatch({ type: "set_is_authenticated", payload });
+export const AuthProvider = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Check if user is already logged in when app starts
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const storedToken = await AsyncStorage.getItem("token");
+      const storedUser = await AsyncStorage.getItem("user");
+
+      if (storedToken && storedUser) {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+    } finally {
+      setLoading(false);
+    }
   };
-};
 
-const setUserToken = (dispatch) => {
-  return (payload) => {
-    dispatch({ type: "set_user_token", payload });
+  const login = (userToken, userData) => {
+    setToken(userToken);
+    setUser(userData);
+    setIsAuthenticated(true);
   };
-};
 
-const setUserDetails = (dispatch) => {
-  return (payload) => {
-    dispatch({ type: "set_user_details", payload });
+  const logout = async () => {
+    try {
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("user");
+      setToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
   };
-};
 
-export const { Context: AuthContext, Provider } = createDataContext(
-  authReducer,
-  { setIsAuthenticated, setUserDetails, setUserToken },
-  initialState
-);
+  const value = {
+    isAuthenticated,
+    user,
+    token,
+    loading,
+    login,
+    logout,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
