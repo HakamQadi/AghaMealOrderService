@@ -9,7 +9,6 @@ router
   .route("/add")
   .post(upload.single("image"), categoryController.addCategory);
 
-// TODO check if there is already a category in the new name before changing it
 router
   .route("/update/:id")
   .patch(upload.single("image"), categoryController.updateCategory);

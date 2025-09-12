@@ -16,7 +16,7 @@ const getAllMeals = async (req, res) => {
       meals,
     });
   } catch (error) {
-    console.error("Error getting meals:", error);
+    console.error("Error getting meals:", error); 
     res.status(500).json({ message: "Internal server error" });
   }
 };
