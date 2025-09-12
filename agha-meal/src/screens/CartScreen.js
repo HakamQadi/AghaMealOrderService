@@ -24,7 +24,7 @@ const CartScreen = ({ navigation }) => {
   const handleRemoveItem = (itemId, itemName) => {
     Alert.alert(
       "Remove Item",
-      `Are you sure you want to remove ${itemName} from your cart?`,
+      `Are you sure you want to remove ${itemName.en} from your cart?`,
       [
         { text: "Cancel", style: "cancel" },
         {

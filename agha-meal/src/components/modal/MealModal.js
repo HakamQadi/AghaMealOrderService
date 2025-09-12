@@ -22,10 +22,6 @@ const MealModal = ({ visible, onClose, meal }) => {
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) addToCart(meal);
-    Alert.alert(
-      "Added to Cart",
-      `${quantity} x ${meal.name.en} has been added to your cart!`
-    );
     onClose();
     setQuantity(1);
   };

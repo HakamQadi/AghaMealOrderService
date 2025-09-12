@@ -86,15 +86,15 @@ export const fetchCategories = async () => {
 };
 
 // old
-export const fetchMenuItems = async () => {
-  try {
-    const response = await api.get("/menu");
-    return response;
-  } catch (error) {
-    console.error("Error fetching menu items:", error);
-    throw error;
-  }
-};
+// export const fetchMenuItems = async () => {
+//   try {
+//     const response = await api.get("/menu");
+//     return response;
+//   } catch (error) {
+//     console.error("Error fetching menu items:", error);
+//     throw error;
+//   }
+// };
 
 export const fetchOrderHistory = async () => {
   try {
@@ -108,7 +108,7 @@ export const fetchOrderHistory = async () => {
 
 export const createOrder = async (orderData) => {
   try {
-    const response = await api.post("/orders", orderData);
+    const response = await api.post("/admin/orders/add", orderData);
     return response;
   } catch (error) {
     console.error("Error creating order:", error);
