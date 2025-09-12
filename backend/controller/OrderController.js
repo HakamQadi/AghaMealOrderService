@@ -116,6 +116,34 @@ const getAllOrdersAndById = async (req, res) => {
   }
 };
 
+const getOrdersByUserId = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await User.findById(userId).populate({
+      path: "orders",
+      options: { sort: { createdAt: -1 } }, // latest first
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.orders || user.orders.length === 0) {
+      return res.status(200).json({ message: "No orders found", orders: [] });
+    }
+
+    res.status(200).json({
+      message: "Orders retrieved successfully",
+      count: user.orders.length,
+      orders: user.orders,
+    });
+  } catch (error) {
+    console.error("Error getting user orders:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 const updateOrder = async (req, res) => {
   const { id } = req.params;
   const { isDelivered } = req.body;
@@ -166,4 +194,5 @@ export default {
   getAllOrdersAndById,
   updateOrder,
   deleteOrder,
+  getOrdersByUserId
 };

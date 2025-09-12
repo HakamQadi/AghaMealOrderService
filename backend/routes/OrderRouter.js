@@ -3,6 +3,7 @@ import OrderController from "../controller/OrderController.js";
 const orderRoutes = express.Router();
 
 orderRoutes.get("/", OrderController.getAllOrdersAndById);
+orderRoutes.get("/user/:userId", OrderController.getOrdersByUserId);
 
 orderRoutes.post("/add", OrderController.createOrder);
 
