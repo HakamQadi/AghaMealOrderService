@@ -6,10 +6,14 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useOrder } from "../context/OrderContext";
+import { useAuth } from "../context/AuthContext";
+import { useState } from "react";
+import { createOrder } from "../services/api";
 
 const CartScreen = ({ navigation }) => {
   const {
@@ -20,6 +24,9 @@ const CartScreen = ({ navigation }) => {
     addToCart,
     decreaseQuantity,
   } = useOrder();
+
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   const handleRemoveItem = (itemId, itemName) => {
     Alert.alert(
@@ -47,7 +54,7 @@ const CartScreen = ({ navigation }) => {
     );
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cart.length === 0) {
       Alert.alert(
         "Empty Cart",
@@ -55,6 +62,7 @@ const CartScreen = ({ navigation }) => {
       );
       return;
     }
+
     Alert.alert(
       "Checkout",
       `Total: $${getCartTotal().toFixed(2)}\n\nProceed to checkout?`,
@@ -62,10 +70,37 @@ const CartScreen = ({ navigation }) => {
         { text: "Cancel", style: "cancel" },
         {
           text: "Checkout",
-          onPress: () => {
-            Alert.alert("Success", "Order placed successfully!");
-            clearCart();
-            navigation.navigate("Home");
+          onPress: async () => {
+            try {
+              setLoading(true);
+
+              const orderData = {
+                userId: user.id,
+                contact: user.phone,
+                type: "pickup", // or "delivery" if you add option later
+                cartItems: cart.map((item) => ({
+                  name: item.name,
+                  price: item.price,
+                  quantity: item.quantity,
+                })),
+              };
+
+              const response = await createOrder(orderData);
+
+              Alert.alert(
+                "Success",
+                `Order placed successfully!\nOrder ID: ${response.orderId}`
+              );
+              clearCart();
+              navigation.navigate("Menu");
+            } catch (error) {
+              Alert.alert(
+                "Error",
+                error.response?.data?.message || "Failed to place order."
+              );
+            } finally {
+              setLoading(false);
+            }
           },
         },
       ]
@@ -177,7 +212,6 @@ const CartScreen = ({ navigation }) => {
         >
           <Ionicons name="arrow-back" size={24} color="#1a1a1a" />
         </TouchableOpacity>
-
       </View>
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -222,13 +256,22 @@ const CartScreen = ({ navigation }) => {
         </View>
 
         <TouchableOpacity
-          style={styles.checkoutButton}
+          style={[styles.checkoutButton, loading && { opacity: 0.7 }]}
           onPress={handleCheckout}
           activeOpacity={0.8}
+          disabled={loading}
         >
           <View style={styles.checkoutContent}>
-            <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
-            <Ionicons name="arrow-forward" size={22} color="#fff" />
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Text style={styles.checkoutButtonText}>
+                  Proceed to Checkout
+                </Text>
+                <Ionicons name="arrow-forward" size={22} color="#fff" />
+              </>
+            )}
           </View>
         </TouchableOpacity>
       </View>
