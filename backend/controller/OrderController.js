@@ -8,7 +8,7 @@ const createOrder = async (req, res) => {
     userId,
     cartItems,
     discountAmount = 0,
-    // location,
+    location,
     type,
   } = req.body;
 
