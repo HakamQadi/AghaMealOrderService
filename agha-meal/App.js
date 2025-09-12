@@ -1,6 +1,7 @@
 import { StatusBar, StyleSheet } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import AppNavigation from "./src/navigation/AppNavigation";
+import { NavigationContainer } from "@react-navigation/native";
+import TabNavigation from "./src/navigation/TabNavigation";
 import { Provider as OrderDataProvider } from "./src/context/OrderContext";
 
 function App() {
@@ -11,12 +12,14 @@ function App() {
         edges={["right", "bottom", "left"]}
       >
         <StatusBar
-          barStyle="dark-content" 
+          barStyle="dark-content"
           backgroundColor="transparent"
           translucent
         />
         <OrderDataProvider>
-          <AppNavigation />
+          <NavigationContainer>
+            <TabNavigation />
+          </NavigationContainer>
         </OrderDataProvider>
       </SafeAreaView>
     </SafeAreaProvider>
