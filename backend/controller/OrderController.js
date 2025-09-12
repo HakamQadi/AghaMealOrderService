@@ -9,14 +9,28 @@ const createOrder = async (req, res) => {
     discountAmount = 0,
     location,
     userId,
+    type,
   } = req.body;
 
   try {
     // Validate required fields
-    if (!name || !contact || !cartItems || cartItems.length === 0 || !userId) {
-      return res
-        .status(400)
-        .json({ message: "Name, ID, contact, and cartItems are required" });
+    if (
+      !name ||
+      !contact ||
+      !cartItems ||
+      cartItems.length === 0 ||
+      !userId ||
+      !type
+    ) {
+      return res.status(400).json({
+        message: "Name, ID, contact, type,  and cartItems are required",
+      });
+    }
+    // Validate type value
+    if (!["pickup", "delivery"].includes(type)) {
+      return res.status(400).json({
+        message: "Type must be either 'pickup' or 'delivery'",
+      });
     }
 
     // TODO get the user id from token
@@ -60,7 +74,8 @@ const createOrder = async (req, res) => {
       cartItems: formattedCartItems,
       totalPrice: totalPriceNumber,
       discountAmount: discountAmountNumber,
-      location: location || undefined, // optional
+      location: location || undefined, // optional,
+      type,
     });
 
     user.orders.push(newOrder._id);

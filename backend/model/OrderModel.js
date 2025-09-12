@@ -32,14 +32,20 @@ const orderSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    type: {
+      type: String,
+      enum: ["pickup", "delivery"],
+      required: true,
+    },
+
     couponCode: { type: String },
     discountAmount: { type: Number, default: 0 },
 
     location: {
       type: {
         type: String,
-        enum: ["Point"],
-        default: "Point",
+        enum: ["point"],
+        default: "point",
       },
       coordinates: {
         type: [Number], // [lng, lat]
