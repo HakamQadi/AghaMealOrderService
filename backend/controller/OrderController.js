@@ -3,27 +3,28 @@ import { User } from "../model/userModel.js";
 
 const createOrder = async (req, res) => {
   const {
-    name,
-    contact,
+    // name,
+    // contact,
+    userId,
     cartItems,
     discountAmount = 0,
-    location,
-    userId,
+    // location,
     type,
   } = req.body;
 
   try {
     // Validate required fields
     if (
-      !name ||
-      !contact ||
+      // !name ||
+      // !contact ||
       !cartItems ||
       cartItems.length === 0 ||
       !userId ||
       !type
     ) {
       return res.status(400).json({
-        message: "Name, ID, contact, type, and cartItems are required",
+        message: "ID, type, and cartItems are required",
+        // message: "Name, ID, contact, type, and cartItems are required",
       });
     }
 
@@ -59,19 +60,19 @@ const createOrder = async (req, res) => {
 
     const discountAmountNumber = parseFloat(discountAmount) || 0;
 
-    // Final total price after discount
-    totalPriceNumber -= discountAmountNumber;
-
     if (isNaN(totalPriceNumber) || isNaN(discountAmountNumber)) {
       return res
         .status(400)
         .json({ message: "Invalid numeric values for prices" });
     }
 
+    // Final total price after discount
+    totalPriceNumber -= discountAmountNumber;
+
     // Create order
     const newOrder = await Order.create({
-      name,
-      contact,
+      name: user?.name,
+      contact: user?.phone,
       cartItems: formattedCartItems,
       totalPrice: totalPriceNumber,
       discountAmount: discountAmountNumber,
