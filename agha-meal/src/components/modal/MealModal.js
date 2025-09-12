@@ -92,6 +92,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     // paddingBottom: Platform.OS == "ios" ? 50 : 25,
     paddingBottom: 50,
+    marginBottom: 30,
     minHeight: 400,
   },
   closeButton: { alignSelf: "flex-end", padding: 8, marginBottom: 10 },
