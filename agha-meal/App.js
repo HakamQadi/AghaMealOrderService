@@ -11,7 +11,7 @@ function App() {
         edges={["right", "bottom", "left"]}
       >
         <StatusBar
-          barStyle="dark-content"
+          barStyle="dark-content" 
           backgroundColor="transparent"
           translucent
         />
