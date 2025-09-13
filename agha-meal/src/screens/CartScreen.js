@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useOrder } from "../context/OrderContext";
 import { useAuth } from "../context/AuthContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createOrder } from "../services/api";
 import CheckoutModal from "../components/modal/CheckoutModal";
 
@@ -32,6 +32,7 @@ const CartScreen = ({ navigation }) => {
   const [orderType, setOrderType] = useState("pickup"); // default pickup
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
+ 
   const handleRemoveItem = (itemId, itemName) => {
     Alert.alert(
       "Remove Item",

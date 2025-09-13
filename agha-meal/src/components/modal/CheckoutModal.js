@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const CheckoutModal = ({
   visible,
@@ -26,6 +26,13 @@ const CheckoutModal = ({
   const [editablePhone, setEditablePhone] = useState(user?.phone || "");
   const [isNameEditable, setIsNameEditable] = useState(false);
   const [isPhoneEditable, setIsPhoneEditable] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setEditableName(user.name || "");
+      setEditablePhone(user.phone || "");
+    }
+  }, [user]);
 
   const handleConfirm = () => {
     const trimmedName = editableName.trim();

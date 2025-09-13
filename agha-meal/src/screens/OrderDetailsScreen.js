@@ -7,9 +7,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useOrder } from "../context/OrderContext";
 
 const OrderDetailsScreen = ({ route, navigation }) => {
   const { order } = route.params;
+  const { clearCart, addToCart } = useOrder();
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -41,15 +43,60 @@ const OrderDetailsScreen = ({ route, navigation }) => {
     }
   };
 
-  const handleReorder = () => {
-    // Add all items from this order to cart
-    navigation.navigate("Menu");
+  const getOrderTypeIcon = (type) => {
+    return type === "delivery" ? "bicycle" : "bag";
+  };
+
+  // const handleReorder = () => {
+  //   clearCart();
+
+  //   order.cartItems.forEach((item) => {
+  //     console.log("item :::: ", item);
+  //     for (let i = 0; i < item.quantity; i++) {
+  //       addToCart({
+  //         _id: item._id, // required to identify item
+  //         name: item.name, // { en, ar }
+  //         price: item.price,
+  //         image: item.image || "", // in case you need image in CartScreen
+  //       });
+  //     }
+  //   });
+
+  //   navigation.navigate("Cart");
+  // };
+
+  const handleReorder = async () => {
+    // clearCart();
+
+    // for (const item of order.cartItems) {
+    //   try {
+    //     const product = await fetch(
+    //       `http://your-api.com/products/${item._id}`
+    //     );
+        
+
+    //     addToCart({
+    //       _id: product._id,
+    //       name: product.name,
+    //       price: product.price,
+    //       image: product.image,
+    //       quantity: item.quantity,
+    //     });
+    //   } catch (err) {
+    //     console.error("Failed to fetch product", item._id, err);
+    //   }
+    // }
+
+    // navigation.navigate("Cart");
   };
 
   const handleTrackOrder = () => {
     // Navigate to order tracking screen
-    console.log("Track order:", order.id);
+    console.log("Track order:", order._id);
   };
+
+  const deliveryFee = order.orderType === "delivery" ? 1 : 0;
+  const finalTotal = order.totalPrice + deliveryFee;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -69,58 +116,114 @@ const OrderDetailsScreen = ({ route, navigation }) => {
             />
             <Text style={styles.statusText}>{order.status}</Text>
           </View>
-          <Text style={styles.orderNumber}>Order #{order.id}</Text>
-          <Text style={styles.orderDate}>Placed on {order.date}</Text>
-        </View>
+          <Text style={styles.orderNumber}>
+            Order #{order.displayId.toUpperCase()}
+          </Text>
+          <Text style={styles.orderDate}>Placed on {order.formattedDate}</Text>
 
-        {/* Restaurant Info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Restaurant</Text>
-          <View style={styles.restaurantInfo}>
-            <Ionicons name="restaurant" size={20} color="#FF6B6B" />
-            <Text style={styles.restaurantName}>{order.restaurant}</Text>
+          <View style={styles.orderTypeIndicator}>
+            <Ionicons
+              name={getOrderTypeIcon(order.orderType)}
+              size={20}
+              color="#FF6B6B"
+            />
+            <Text style={styles.orderTypeText}>
+              {order.orderType === "delivery"
+                ? "Delivery Order"
+                : "Pickup Order"}
+            </Text>
           </View>
         </View>
 
-        {/* Order Items */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Customer Information</Text>
+          <View style={styles.customerInfo}>
+            <View style={styles.infoRow}>
+              <Ionicons name="person" size={20} color="#FF6B6B" />
+              <Text style={styles.infoText}>{order.name}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="call" size={20} color="#FF6B6B" />
+              <Text style={styles.infoText}>{order.contact}</Text>
+            </View>
+          </View>
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Order Items</Text>
-          {order.items.map((item, index) => (
-            <View key={index} style={styles.orderItem}>
+          {order.cartItems.map((item, index) => (
+            <View key={item._id || index} style={styles.orderItem}>
               <View style={styles.itemInfo}>
-                <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemQuantity}>Qty: {item.quantity}</Text>
+                <Text style={styles.itemName}>{item.name.en}</Text>
+                {/* <Text style={styles.itemNameArabic}>{item.name.ar}</Text> */}
+                <Text style={styles.itemQuantity}>
+                  Quantity: {item.quantity}
+                </Text>
               </View>
-              <Text style={styles.itemPrice}>
-                {/* ${(item.price * item.quantity).toFixed(2)} */}
+              <View style={styles.itemPricing}>
                 <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-              </Text>
+                <Text style={styles.itemTotal}>
+                  ${(item.price * item.quantity).toFixed(2)}
+                </Text>
+              </View>
             </View>
           ))}
         </View>
 
-        {/* Order Summary */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Order Summary</Text>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text style={styles.summaryValue}>${order.total.toFixed(2)}</Text>
+            <Text style={styles.summaryValue}>
+              ${order.totalPrice.toFixed(2)}
+            </Text>
           </View>
-          {/* TODO show it only if order type is delivery and get the amount from the backend */}
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Delivery Fee</Text>
-            <Text style={styles.summaryValue}>$2.99</Text>
-          </View>
-          {/* <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Tax</Text>
-            <Text style={styles.summaryValue}>${(order.total * 0.08).toFixed(2)}</Text>
-          </View> */}
+
+          {order.discountAmount > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, styles.discountLabel]}>
+                Discount
+              </Text>
+              <Text style={[styles.summaryValue, styles.discountValue]}>
+                -${order.discountAmount.toFixed(2)}
+              </Text>
+            </View>
+          )}
+
+          {order.orderType === "delivery" && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Delivery Fee</Text>
+              <Text style={styles.summaryValue}>${deliveryFee.toFixed(2)}</Text>
+            </View>
+          )}
+
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>
-              ${order.total.toFixed(2)}
-              {/* ${(order.total + 2.99 + order.total * 0.08).toFixed(2)} */}
-            </Text>
+            <Text style={styles.totalValue}>${finalTotal.toFixed(2)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Order Details</Text>
+          <View style={styles.metadataContainer}>
+            <View style={styles.metadataRow}>
+              <Text style={styles.metadataLabel}>Order ID:</Text>
+              <Text style={styles.metadataValue}>
+                {order._id.slice(-5).toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.metadataRow}>
+              <Text style={styles.metadataLabel}>Order Type:</Text>
+              <Text style={styles.metadataValue}>
+                {order.orderType === "delivery" ? "Delivery" : "Pickup"}
+              </Text>
+            </View>
+            <View style={styles.metadataRow}>
+              <Text style={styles.metadataLabel}>Created:</Text>
+              <Text style={styles.metadataValue}>
+                {new Date(order.createdAt).toLocaleString()}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -153,13 +256,15 @@ const OrderDetailsScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f8f9fa",
   },
   statusSection: {
     alignItems: "center",
     paddingVertical: 32,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#fff",
     marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
   },
   statusContainer: {
     flexDirection: "row",
@@ -176,7 +281,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   orderNumber: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#1a1a1a",
     marginBottom: 4,
@@ -184,10 +289,27 @@ const styles = StyleSheet.create({
   orderDate: {
     fontSize: 14,
     color: "#666",
+    marginBottom: 12,
+  },
+  orderTypeIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 8,
+  },
+  orderTypeText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FF6B6B",
   },
   section: {
+    backgroundColor: "#fff",
     paddingHorizontal: 20,
-    marginBottom: 24,
+    paddingVertical: 20,
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
@@ -195,37 +317,57 @@ const styles = StyleSheet.create({
     color: "#1a1a1a",
     marginBottom: 16,
   },
-  restaurantInfo: {
+  customerInfo: {
+    gap: 12,
+  },
+  infoRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
-  restaurantName: {
+  infoText: {
     fontSize: 16,
     color: "#1a1a1a",
+    fontWeight: "500",
   },
   orderItem: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 12,
+    alignItems: "flex-start",
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
   itemInfo: {
     flex: 1,
+    marginRight: 16,
   },
   itemName: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "600",
     color: "#1a1a1a",
     marginBottom: 4,
+  },
+  itemNameArabic: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 6,
+    fontStyle: "italic",
   },
   itemQuantity: {
     fontSize: 14,
     color: "#666",
+    fontWeight: "500",
+  },
+  itemPricing: {
+    alignItems: "flex-end",
   },
   itemPrice: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 4,
+  },
+  itemTotal: {
     fontSize: 16,
     fontWeight: "600",
     color: "#FF6B6B",
@@ -243,6 +385,14 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 16,
     color: "#1a1a1a",
+    fontWeight: "500",
+  },
+  discountLabel: {
+    color: "#4CAF50",
+  },
+  discountValue: {
+    color: "#4CAF50",
+    fontWeight: "600",
   },
   totalRow: {
     borderTopWidth: 1,
@@ -256,9 +406,29 @@ const styles = StyleSheet.create({
     color: "#1a1a1a",
   },
   totalValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#FF6B6B",
+  },
+  metadataContainer: {
+    gap: 12,
+  },
+  metadataRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  metadataLabel: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "500",
+  },
+  metadataValue: {
+    fontSize: 14,
+    color: "#1a1a1a",
+    fontWeight: "500",
+    flex: 1,
+    textAlign: "right",
   },
   actionsSection: {
     paddingHorizontal: 20,
