@@ -45,8 +45,8 @@ const orderSchema = new mongoose.Schema(
     location: {
       type: {
         type: String,
-        enum: ["Point"],
-        default: "Point",
+        enum: ["point"],
+        default: "point",
       },
       coordinates: {
         type: [Number], // [lng, lat]

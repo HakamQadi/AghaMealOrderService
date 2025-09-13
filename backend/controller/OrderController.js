@@ -1,5 +1,6 @@
 import { Order } from "../model/OrderModel.js";
 import { User } from "../model/userModel.js";
+import { Meal } from "../model/mealModel.js";
 
 const createOrder = async (req, res) => {
   const {
@@ -189,10 +190,98 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+
+const reorder = async (req, res) => {
+  // const { orderId, userId, type } = req.body;
+  const { orderId, userId, type, location } = req.body;
+
+  try {
+    if (!orderId || !userId) {
+      // if (!orderId || !userId || !type) {
+      return res
+        .status(400)
+        .json({ message: "orderId, userId, and type are required" });
+    }
+
+    if (!["pickup", "delivery"].includes(type)) {
+      return res
+        .status(400)
+        .json({ message: "Type must be either 'pickup' or 'delivery'" });
+    }
+
+    // Find original order
+    const originalOrder = await Order.findById(orderId);
+    if (!originalOrder) {
+      return res.status(404).json({ message: "Original order not found" });
+    }
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ✅ Rebuild cart items from Meal table
+    let totalPrice = 0;
+    const newCartItems = [];
+
+    for (const item of originalOrder.cartItems) {
+      // Try to find meal by English OR Arabic name
+      const meal = await Meal.findOne({
+        $or: [{ "name.en": item.name.en }, { "name.ar": item.name.ar }],
+      });
+
+      if (!meal) {
+        console.warn(`Meal not found for reorder item: ${item.name.en}`);
+        continue; // skip this item if meal no longer exists
+      }
+
+      const qty = item.quantity || 1;
+      totalPrice += meal.price * qty;
+
+      newCartItems.push({
+        name: meal.name,
+        price: meal.price,
+        quantity: qty,
+        image: meal.image,
+      });
+    }
+
+    // Apply discount if original had any
+    const discountAmount = originalOrder.discountAmount || 0;
+    totalPrice -= discountAmount;
+
+    // Create new order
+    const newOrder = await Order.create({
+      name: originalOrder.name,
+      contact: originalOrder.contact,
+      cartItems: newCartItems,
+      totalPrice,
+      discountAmount,
+      type: type || originalOrder.type,
+      location: location || originalOrder.location, // allow override
+    });
+
+    // Attach order to user
+    user.orders.push(newOrder._id);
+    await user.save();
+
+    return res.status(201).json({
+      message: "Reorder created successfully",
+      newOrderId: newOrder._id,
+      order: newOrder,
+    });
+  } catch (error) {
+    console.error("Error creating reorder:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export default {
   createOrder,
   getAllOrdersAndById,
   updateOrder,
   deleteOrder,
-  getOrdersByUserId
+  getOrdersByUserId,
+  reorder
 };
