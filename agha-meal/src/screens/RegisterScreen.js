@@ -170,7 +170,7 @@ const RegisterScreen = ({ navigation, onLogin }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F2F7",
+    backgroundColor: "#fff",
   },
   scrollContent: {
     flexGrow: 1,
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F2F2F7",
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
@@ -221,12 +221,12 @@ const styles = StyleSheet.create({
   },
   roleButton: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F2F2F7",
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E5E5EA",
+    borderColor: "#F2F2F7",
   },
   roleButtonActive: {
     backgroundColor: "#FF6B6B",

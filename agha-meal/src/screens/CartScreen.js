@@ -14,6 +14,7 @@ import { useOrder } from "../context/OrderContext";
 import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
 import { createOrder } from "../services/api";
+import CheckoutModal from "../components/modal/CheckoutModal";
 
 const CartScreen = ({ navigation }) => {
   const {
@@ -25,8 +26,11 @@ const CartScreen = ({ navigation }) => {
     decreaseQuantity,
   } = useOrder();
 
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+
   const [loading, setLoading] = useState(false);
+  const [orderType, setOrderType] = useState("pickup"); // default pickup
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   const handleRemoveItem = (itemId, itemName) => {
     Alert.alert(
@@ -63,48 +67,50 @@ const CartScreen = ({ navigation }) => {
       return;
     }
 
-    Alert.alert(
-      "Checkout",
-      `Total: $${getCartTotal().toFixed(2)}\n\nProceed to checkout?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Checkout",
-          onPress: async () => {
-            try {
-              setLoading(true);
+    if (isAuthenticated) {
+      setShowCheckoutModal(true);
+    } else {
+      Alert.alert("Unauthorized", "Please login to place order.");
+      navigation.navigate("Auth", {
+        screen: "Login",
+        params: { redirectTo: "Cart" },
+      });
+    }
+  };
 
-              const orderData = {
-                userId: user.id,
-                contact: user.phone,
-                type: "pickup", // or "delivery" if you add option later
-                cartItems: cart.map((item) => ({
-                  name: item.name,
-                  price: item.price,
-                  quantity: item.quantity,
-                })),
-              };
+  const handleConfirmOrder = async (customerInfo) => {
+    try {
+      setLoading(true);
 
-              const response = await createOrder(orderData);
+      const orderData = {
+        userId: user.id,
+        contact: customerInfo.phone,
+        name: customerInfo.name,
+        type: orderType,
+        cartItems: cart.map((item) => ({
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+      };
 
-              Alert.alert(
-                "Success",
-                `Order placed successfully!\nOrder ID: ${response.orderId}`
-              );
-              clearCart();
-              navigation.navigate("Menu");
-            } catch (error) {
-              Alert.alert(
-                "Error",
-                error.response?.data?.message || "Failed to place order."
-              );
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
+      const response = await createOrder(orderData);
+
+      Alert.alert(
+        "Success",
+        `Order placed successfully!\nOrder ID: ${response.orderId}`
+      );
+      clearCart();
+      setShowCheckoutModal(false);
+      navigation.navigate("Menu");
+    } catch (error) {
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Failed to place order."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateQuantity = (item, change) => {
@@ -223,7 +229,6 @@ const CartScreen = ({ navigation }) => {
           <Ionicons name="trash-outline" size={24} color="#FF6B6B" />
         </TouchableOpacity>
       </View>
-
       <FlatList
         data={cart}
         renderItem={renderCartItem}
@@ -269,6 +274,16 @@ const CartScreen = ({ navigation }) => {
           </View>
         </TouchableOpacity>
       </View>
+      <CheckoutModal
+        visible={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        onConfirm={handleConfirmOrder}
+        user={user}
+        orderType={orderType}
+        setOrderType={setOrderType}
+        cartTotal={getCartTotal()}
+        loading={loading}
+      />
     </SafeAreaView>
   );
 };
@@ -588,6 +603,26 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginLeft: 8,
   },
+
+  // Type input
+  inputContainer: {
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  label: { fontSize: 16, fontWeight: "600", color: "#1C1C1E", marginBottom: 8 },
+  typeContainer: { flexDirection: "row", gap: 12 },
+  typeButton: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E5E5EA",
+  },
+  typeButtonActive: { backgroundColor: "#FF6B6B", borderColor: "#FF6B6B" },
+  typeButtonText: { fontSize: 16, fontWeight: "600", color: "#8E8E93" },
+  typeButtonTextActive: { color: "#FFFFFF" },
 });
 
 export default CartScreen;

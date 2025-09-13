@@ -36,8 +36,10 @@ api.interceptors.response.use(
 
 // API functions
 export const login = async (data) => {
+
   try {
     const response = await api.post("/login", data);
+
     return response;
   } catch (error) {
     console.error("Error login:", error);

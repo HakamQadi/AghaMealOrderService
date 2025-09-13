@@ -12,22 +12,31 @@ import { Ionicons } from "@expo/vector-icons";
 import { useOrder } from "../context/OrderContext";
 import { getOrderHistory } from "../services/api"; // ✅ your API function
 import { useFocusEffect } from "@react-navigation/native";
+import { useAuth } from "../context/AuthContext";
 
 const OrderHistoryScreen = ({ navigation }) => {
-  const [loading, setLoading] = useState(true);
   const { orders, setOrders } = useOrder();
+  const { user } = useAuth();
+
+  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
+      if (!user?.id) {
+        setIsLoggedIn(false);
+        return;
+      }
       loadOrderHistory();
-    }, [])
+    }, [user])
   );
   const loadOrderHistory = async () => {
     try {
       setLoading(true);
-      // TODO: replace with actual userId (from context/AsyncStorage/etc.)
-      const userId = "68c38c73d2ff845e30439c53";
-      const response = await getOrderHistory(userId);
+      setIsLoggedIn(true);
+
+      const response = await getOrderHistory(user?.id);
+
       if (response?.count > 0) {
         const mappedOrders = response?.orders?.map((order) => ({
           id: order._id.slice(-5),
@@ -115,6 +124,31 @@ const OrderHistoryScreen = ({ navigation }) => {
       </View>
     </TouchableOpacity>
   );
+
+  if (!isLoggedIn) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Ionicons name="person-circle-outline" size={80} color="#ccc" />
+          <Text style={styles.emptyTitle}>Sign in to view orders</Text>
+          <Text style={styles.emptySubtitle}>
+            Your past orders are just a tap away.
+          </Text>
+          <TouchableOpacity
+            style={styles.browseButton}
+            onPress={() =>
+              navigation.navigate("Auth", {
+                screen: "Login",
+                params: { redirectTo: "Orders" },
+              })
+            }
+          >
+            <Text style={styles.browseButtonText}>Login</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (orders.length === 0) {
     return (

@@ -5,9 +5,11 @@ import TabNavigation from "./src/navigation/TabNavigation";
 import AuthNavigation from "./src/navigation/AuthNavigation";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { Provider as OrderDataProvider } from "./src/context/OrderContext";
+import { createStackNavigator } from "@react-navigation/stack";
 
+const RootStack = createStackNavigator();
 const AppContent = () => {
-  const { isAuthenticated, loading, login } = useAuth();
+  const { loading } = useAuth();
 
   if (loading) {
     return (
@@ -19,7 +21,10 @@ const AppContent = () => {
 
   return (
     <NavigationContainer>
-      {isAuthenticated ? <TabNavigation /> : <AuthNavigation onLogin={login} />}
+      <RootStack.Navigator screenOptions={{ headerShown: false }}>
+        <RootStack.Screen name="Main" component={TabNavigation} />
+        <RootStack.Screen name="Auth" component={AuthNavigation} />
+      </RootStack.Navigator>
     </NavigationContainer>
   );
 };

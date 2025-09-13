@@ -14,11 +14,16 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { login } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
-const LoginScreen = ({ navigation, onLogin }) => {
+const LoginScreen = ({ navigation, route }) => {
+  const { login: loginUser } = useAuth();
+
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const redirectTo = route.params?.redirectTo || null;
 
   const handleLogin = async () => {
     if (!phone || !password) {
@@ -32,21 +37,20 @@ const LoginScreen = ({ navigation, onLogin }) => {
       const data = await login({ phone, password });
 
       // Store token and user data
-      await AsyncStorage.setItem("token", data.token);
-      await AsyncStorage.setItem("user", JSON.stringify(data.user));
+      await AsyncStorage.setItem("token", data?.token);
+      await AsyncStorage.setItem("user", JSON.stringify(data?.user));
 
       // Update app state
-      onLogin(data.token, data.user);
-    } catch (error) {
-      // Handle errors
-      if (error.response) {
-        // Server responded with an error
-        const message = error.response.data?.message || "Something went wrong";
-        Alert.alert("Error", message);
+      loginUser(data?.token, data?.user);
+
+      if (redirectTo) {
+        navigation.navigate(redirectTo);
       } else {
-        // Network or other error
-        Alert.alert("Error", "Network error. Please check your connection.");
+        navigation.goBack(); // default: go back to previous screen
       }
+    } catch (error) {
+      Alert.alert("Error", "Something went wrong");
+      console.error("Error", error?.message);
     } finally {
       setLoading(false);
     }
@@ -112,7 +116,7 @@ const LoginScreen = ({ navigation, onLogin }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F2F7",
+    backgroundColor: "#fff",
   },
   content: {
     flex: 1,
@@ -145,7 +149,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F2F2F7",
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
