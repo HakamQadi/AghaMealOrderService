@@ -3,8 +3,8 @@ import { User } from "../model/userModel.js";
 
 const createOrder = async (req, res) => {
   const {
-    // name,
-    // contact,
+    name,
+    contact,
     userId,
     cartItems,
     discountAmount = 0,
@@ -15,16 +15,16 @@ const createOrder = async (req, res) => {
   try {
     // Validate required fields
     if (
-      // !name ||
-      // !contact ||
+      !name ||
+      !contact ||
       !cartItems ||
       cartItems.length === 0 ||
       !userId ||
       !type
     ) {
       return res.status(400).json({
-        message: "ID, type, and cartItems are required",
-        // message: "Name, ID, contact, type, and cartItems are required",
+        // message: "ID, type, and cartItems are required",
+        message: "Name, ID, contact, type, and cartItems are required",
       });
     }
 
@@ -71,8 +71,8 @@ const createOrder = async (req, res) => {
 
     // Create order
     const newOrder = await Order.create({
-      name: user?.name,
-      contact: user?.phone,
+      name,
+      contact,
       cartItems: formattedCartItems,
       totalPrice: totalPriceNumber,
       discountAmount: discountAmountNumber,
