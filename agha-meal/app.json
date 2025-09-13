@@ -2,7 +2,7 @@
   "expo": {
     "name": "agha-meal",
     "slug": "agha-meal",
-    "version": "1.0.0",
+    "version": "2.0.2",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "splash": {
@@ -21,7 +21,8 @@
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.hakamqadi.aghameal"
+      "package": "com.hakamqadi.aghameal",
+      "versionCode": 4
     },
     "web": {
       "favicon": "./src/assets/favicon.png"
@@ -30,6 +31,9 @@
       "eas": {
         "projectId": "ac4cf438-8a19-48ac-b17a-adf46e877257"
       }
-    }
+    },
+    "plugins": [
+      "expo-asset"
+    ]
   }
 }

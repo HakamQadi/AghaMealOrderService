@@ -4,7 +4,6 @@ dotenv.config({ path: "./.env" });
 
 const mealSchema = new mongoose.Schema(
   {
-    //! change meal to name
     name: {
       en: { type: String, required: true },
       ar: { type: String, required: true },
