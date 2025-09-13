@@ -1,6 +1,4 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,32 +10,49 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useOrder } from "../context/OrderContext";
-import { fetchOrderHistory } from "../services/api";
+import { getOrderHistory } from "../services/api"; // ✅ your API function
+import { useFocusEffect } from "@react-navigation/native";
 
 const OrderHistoryScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const { orders, setOrders } = useOrder();
 
-  useEffect(() => {
-    loadOrderHistory();
-  }, []);
-
+  useFocusEffect(
+    useCallback(() => {
+      loadOrderHistory();
+    }, [])
+  );
   const loadOrderHistory = async () => {
     try {
       setLoading(true);
-      // const orderHistory = await fetchOrderHistory();
-      setOrders(mockOrders);
-      // setOrders(orderHistory);
+      // TODO: replace with actual userId (from context/AsyncStorage/etc.)
+      const userId = "68c38c73d2ff845e30439c53";
+      const response = await getOrderHistory(userId);
+      if (response?.count > 0) {
+        const mappedOrders = response?.orders?.map((order) => ({
+          id: order._id.slice(-5),
+          date: new Date(order.createdAt).toLocaleDateString(),
+          status: order.isDelivered ? "Delivered" : "Preparing",
+          total: order.totalPrice,
+          restaurant: "Agha Meal Kitchen", // static since not in API
+          items: order.cartItems.map((item) => ({
+            name: item.name.en,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+        }));
+        setOrders(mappedOrders);
+      } else {
+        setOrders([]); // No orders found
+      }
     } catch (error) {
       console.error("Error loading order history:", error);
-      // Fallback to mock data
-      setOrders(mockOrders);
+      setOrders([]); // fallback empty
     } finally {
       setLoading(false);
     }
   };
 
-  //TODO move to a utils
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case "delivered":
@@ -53,7 +68,6 @@ const OrderHistoryScreen = ({ navigation }) => {
     }
   };
 
-  //TODO move to a utils
   const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
       case "delivered":
@@ -102,15 +116,6 @@ const OrderHistoryScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF6B6B" />
-        <Text style={styles.loadingText}>Loading orders...</Text>
-      </View>
-    );
-  }
-
   if (orders.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
@@ -133,53 +138,46 @@ const OrderHistoryScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <FlatList
-        data={orders}
-        renderItem={renderOrderItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.ordersList}
-        showsVerticalScrollIndicator={false}
-      />
+      {/* Header with Cart */}
+      <View style={styles.header}>
+        <Text style={styles.screenTitle}>Order History</Text>
+      </View>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6B6B" />
+          <Text style={styles.loadingText}>Loading orders...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={orders}
+          renderItem={renderOrderItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.ordersList}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </SafeAreaView>
   );
 };
-
-// Mock data for fallback
-const mockOrders = [
-  {
-    id: 1001,
-    date: "2024-01-15",
-    status: "Delivered",
-    total: 28.97,
-    restaurant: "Agha Meal Kitchen",
-    items: [
-      { name: "Grilled Chicken", quantity: 1, price: 15.99 },
-      { name: "Caesar Salad", quantity: 1, price: 9.99 },
-      { name: "Chocolate Cake", quantity: 1, price: 6.99 },
-    ],
-  },
-  {
-    id: 1002,
-    date: "2024-01-12",
-    status: "Delivered",
-    total: 12.99,
-    restaurant: "Agha Meal Kitchen",
-    items: [{ name: "Beef Burger", quantity: 1, price: 12.99 }],
-  },
-  {
-    id: 1003,
-    date: "2024-01-10",
-    status: "Cancelled",
-    total: 25.98,
-    restaurant: "Agha Meal Kitchen",
-    items: [{ name: "Grilled Chicken", quantity: 2, price: 15.99 }],
-  },
-];
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+  },
+
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1a1a1a",
   },
   loadingContainer: {
     flex: 1,

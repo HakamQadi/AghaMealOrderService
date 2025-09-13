@@ -1,57 +1,72 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { Ionicons } from "@expo/vector-icons"
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
 const OrderDetailsScreen = ({ route, navigation }) => {
-  const { order } = route.params
+  const { order } = route.params;
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case "delivered":
-        return "#4CAF50"
+        return "#4CAF50";
       case "preparing":
-        return "#FF9800"
+        return "#FF9800";
       case "on the way":
-        return "#2196F3"
+        return "#2196F3";
       case "cancelled":
-        return "#F44336"
+        return "#F44336";
       default:
-        return "#666"
+        return "#666";
     }
-  }
+  };
 
   const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
       case "delivered":
-        return "checkmark-circle"
+        return "checkmark-circle";
       case "preparing":
-        return "restaurant"
+        return "restaurant";
       case "on the way":
-        return "car"
+        return "car";
       case "cancelled":
-        return "close-circle"
+        return "close-circle";
       default:
-        return "time"
+        return "time";
     }
-  }
+  };
 
   const handleReorder = () => {
     // Add all items from this order to cart
-    navigation.navigate("Menu")
-  }
+    navigation.navigate("Menu");
+  };
 
   const handleTrackOrder = () => {
     // Navigate to order tracking screen
-    console.log("Track order:", order.id)
-  }
+    console.log("Track order:", order.id);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Order Status */}
         <View style={styles.statusSection}>
-          <View style={[styles.statusContainer, { backgroundColor: getStatusColor(order.status) }]}>
-            <Ionicons name={getStatusIcon(order.status)} size={24} color="#fff" />
+          <View
+            style={[
+              styles.statusContainer,
+              { backgroundColor: getStatusColor(order.status) },
+            ]}
+          >
+            <Ionicons
+              name={getStatusIcon(order.status)}
+              size={24}
+              color="#fff"
+            />
             <Text style={styles.statusText}>{order.status}</Text>
           </View>
           <Text style={styles.orderNumber}>Order #{order.id}</Text>
@@ -76,7 +91,10 @@ const OrderDetailsScreen = ({ route, navigation }) => {
                 <Text style={styles.itemName}>{item.name}</Text>
                 <Text style={styles.itemQuantity}>Qty: {item.quantity}</Text>
               </View>
-              <Text style={styles.itemPrice}>${(item.price * item.quantity).toFixed(2)}</Text>
+              <Text style={styles.itemPrice}>
+                {/* ${(item.price * item.quantity).toFixed(2)} */}
+                <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+              </Text>
             </View>
           ))}
         </View>
@@ -88,38 +106,49 @@ const OrderDetailsScreen = ({ route, navigation }) => {
             <Text style={styles.summaryLabel}>Subtotal</Text>
             <Text style={styles.summaryValue}>${order.total.toFixed(2)}</Text>
           </View>
+          {/* TODO show it only if order type is delivery and get the amount from the backend */}
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Delivery Fee</Text>
             <Text style={styles.summaryValue}>$2.99</Text>
           </View>
-          <View style={styles.summaryRow}>
+          {/* <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Tax</Text>
             <Text style={styles.summaryValue}>${(order.total * 0.08).toFixed(2)}</Text>
-          </View>
+          </View> */}
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>${(order.total + 2.99 + order.total * 0.08).toFixed(2)}</Text>
+            <Text style={styles.totalValue}>
+              ${order.total.toFixed(2)}
+              {/* ${(order.total + 2.99 + order.total * 0.08).toFixed(2)} */}
+            </Text>
           </View>
         </View>
 
         {/* Action Buttons */}
         <View style={styles.actionsSection}>
-          {order.status.toLowerCase() !== "delivered" && order.status.toLowerCase() !== "cancelled" && (
-            <TouchableOpacity style={styles.trackButton} onPress={handleTrackOrder}>
-              <Ionicons name="location" size={20} color="#fff" />
-              <Text style={styles.trackButtonText}>Track Order</Text>
-            </TouchableOpacity>
-          )}
+          {order.status.toLowerCase() !== "delivered" &&
+            order.status.toLowerCase() !== "cancelled" && (
+              <TouchableOpacity
+                style={styles.trackButton}
+                onPress={handleTrackOrder}
+              >
+                <Ionicons name="location" size={20} color="#fff" />
+                <Text style={styles.trackButtonText}>Track Order</Text>
+              </TouchableOpacity>
+            )}
 
-          <TouchableOpacity style={styles.reorderButton} onPress={handleReorder}>
+          <TouchableOpacity
+            style={styles.reorderButton}
+            onPress={handleReorder}
+          >
             <Ionicons name="refresh" size={20} color="#FF6B6B" />
             <Text style={styles.reorderButtonText}>Reorder</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -266,6 +295,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FF6B6B",
   },
-})
+});
 
-export default OrderDetailsScreen
+export default OrderDetailsScreen;

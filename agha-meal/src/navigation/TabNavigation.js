@@ -39,12 +39,12 @@ const OrdersStack = () => {
       <Stack.Screen
         name="Orders"
         component={OrderHistoryScreen}
-        options={{ title: "Order History" }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="OrderDetails"
         component={OrderDetailsScreen}
-        options={{ title: "Order Details" }}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

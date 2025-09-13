@@ -205,28 +205,22 @@ const CartScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.topHeader}>
+      <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <Ionicons name="arrow-back" size={24} color="#1a1a1a" />
         </TouchableOpacity>
-      </View>
-      <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Your Cart</Text>
-          <View style={styles.itemCount}>
-            <Text style={styles.itemCountText}>{cart.length} items</Text>
-          </View>
         </View>
         <TouchableOpacity
           onPress={handleClearCart}
           style={styles.clearButton}
           activeOpacity={0.7}
         >
-          <Ionicons name="trash-outline" size={18} color="#FF6B6B" />
-          <Text style={styles.clearAllText}>Clear All</Text>
+          <Ionicons name="trash-outline" size={24} color="#FF6B6B" />
         </TouchableOpacity>
       </View>
 
@@ -303,19 +297,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
     backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
-  headerContent: {
-    flex: 1,
-  },
+
   headerTitle: {
     fontSize: 24,
     fontWeight: "700",
@@ -335,14 +321,14 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   clearButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: "#fff5f5",
-    borderWidth: 1,
-    borderColor: "#ffe0e0",
+    padding: 12,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   clearAllText: {
     fontSize: 14,

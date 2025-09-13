@@ -116,6 +116,16 @@ export const createOrder = async (orderData) => {
   }
 };
 
+export const getOrderHistory = async (userId) => {
+  try {
+    const response = await api.get(`/admin/orders/user/${userId}`);
+    return response;
+  } catch (error) {
+    console.error("Error getting order history:", error);
+    throw error;
+  }
+};
+
 export const updateOrder = async (orderId, updateData) => {
   try {
     const response = await api.put(`/orders/${orderId}`, updateData);
