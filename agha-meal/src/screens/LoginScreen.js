@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import {
   View,
   Text,
@@ -13,101 +10,120 @@ import {
   Platform,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Formik } from "formik";
+import * as Yup from "yup";
 import { login } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
+const LoginSchema = Yup.object().shape({
+  phone: Yup.string()
+    .trim()
+    .required("Phone number is required")
+    .matches(/^\d{10}$/, "Phone must be exactly 10 digits"),
+  password: Yup.string().trim().required("Password is required"),
+});
+
 const LoginScreen = ({ navigation, route }) => {
   const { login: loginUser } = useAuth();
-
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
   const redirectTo = route.params?.redirectTo || null;
 
-  const handleLogin = async () => {
-    if (!phone || !password) {
-      Alert.alert("Error", "Please fill in all fields");
-      return;
-    }
-
-    setLoading(true);
+  const handleLogin = async (values, { setSubmitting }) => {
     try {
-      // response is already the data because of the interceptor
-      const data = await login({ phone, password });
+      const data = await login(values);
 
-      // Store token and user data
       await AsyncStorage.setItem("token", data?.token);
       await AsyncStorage.setItem("user", JSON.stringify(data?.user));
 
-      // Update app state
       loginUser(data?.token, data?.user);
 
       if (redirectTo) {
         navigation.navigate(redirectTo);
       } else {
-        navigation.goBack(); // default: go back to previous screen
+        navigation.goBack();
       }
     } catch (error) {
       Alert.alert("Error", "Something went wrong");
       console.error("Error", error?.message);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
       <View style={styles.content}>
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>Sign in to your account</Text>
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Phone Number</Text>
-            <TextInput
-              style={styles.input}
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="Enter your phone number"
-              keyboardType="phone-pad"
-              autoCapitalize="none"
-            />
-          </View>
+        <Formik
+          initialValues={{ phone: "", password: "" }}
+          validationSchema={LoginSchema}
+          onSubmit={handleLogin}
+        >
+          {({
+            handleChange,
+            handleBlur,
+            handleSubmit,
+            values,
+            errors,
+            touched,
+            isSubmitting,
+          }) => (
+            <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Phone Number</Text>
+                <TextInput
+                  style={styles.input}
+                  value={values.phone}
+                  onChangeText={handleChange("phone")}
+                  onBlur={handleBlur("phone")}
+                  placeholder="Enter your phone number"
+                  keyboardType="phone-pad"
+                  autoCapitalize="none"
+                />
+                {touched.phone && errors.phone && (
+                  <Text style={styles.errorText}>{errors.phone}</Text>
+                )}
+              </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Enter your password"
-              secureTextEntry
-            />
-          </View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Password</Text>
+                <TextInput
+                  style={styles.input}
+                  value={values.password}
+                  onChangeText={handleChange("password")}
+                  onBlur={handleBlur("password")}
+                  placeholder="Enter your password"
+                  secureTextEntry
+                />
+                {touched.password && errors.password && (
+                  <Text style={styles.errorText}>{errors.password}</Text>
+                )}
+              </View>
 
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
-            )}
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, isSubmitting && styles.buttonDisabled]}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign In</Text>
+                )}
+              </TouchableOpacity>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-              <Text style={styles.linkText}>Sign Up</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Don't have an account? </Text>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("Register")}
+                >
+                  <Text style={styles.linkText}>Sign Up</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </Formik>
       </View>
     </KeyboardAvoidingView>
   );
@@ -156,6 +172,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: "#E5E5EA",
+  },
+  errorText: {
+    color: "#FF3B30",
+    fontSize: 14,
+    marginTop: 4,
   },
   button: {
     backgroundColor: "#FF6B6B",

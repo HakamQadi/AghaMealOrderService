@@ -8,9 +8,23 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
+import { Formik } from "formik";
+import * as Yup from "yup";
+
+const CheckoutSchema = Yup.object().shape({
+  name: Yup.string().trim().required("Name cannot be empty"),
+  phone: Yup.string()
+    .trim()
+    .required("Phone cannot be empty")
+    .length(10, "Phone must be exactly 10 digits"),
+});
 
 const CheckoutModal = ({
   visible,
@@ -22,42 +36,33 @@ const CheckoutModal = ({
   cartTotal,
   loading,
 }) => {
-  const [editableName, setEditableName] = useState(user?.name || "");
-  const [editablePhone, setEditablePhone] = useState(user?.phone || "");
   const [isNameEditable, setIsNameEditable] = useState(false);
   const [isPhoneEditable, setIsPhoneEditable] = useState(false);
 
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
   useEffect(() => {
-    if (user) {
-      setEditableName(user.name || "");
-      setEditablePhone(user.phone || "");
-    }
-  }, [user]);
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      (e) => {
+        setKeyboardVisible(true);
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardVisible(false);
+        setKeyboardHeight(0);
+      }
+    );
 
-  const handleConfirm = () => {
-    const trimmedName = editableName.trim();
-    const trimmedPhone = editablePhone.trim();
-
-    if (!trimmedName) {
-      alert("Name cannot be empty");
-      return;
-    }
-
-    if (!trimmedPhone) {
-      alert("Phone cannot be empty");
-      return;
-    }
-
-    if (trimmedPhone.length !== 10) {
-      alert("Phone must be 10 characters long");
-      return;
-    }
-
-    onConfirm({
-      name: editableName,
-      phone: editablePhone,
-    });
-  };
+    return () => {
+      keyboardDidHideListener?.remove();
+      keyboardDidShowListener?.remove();
+    };
+  }, []);
 
   return (
     <Modal
@@ -66,158 +71,237 @@ const CheckoutModal = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Checkout</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#666" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.modalContent}>
-            {/* Name Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Name</Text>
-              <View style={styles.inputRow}>
-                <TextInput
-                  style={[
-                    styles.input,
-                    !isNameEditable && styles.inputDisabled,
-                  ]}
-                  value={editableName}
-                  onChangeText={setEditableName}
-                  editable={isNameEditable}
-                  placeholder="Enter your name"
-                />
-                <TouchableOpacity
-                  style={styles.editButton}
-                  onPress={() => setIsNameEditable(!isNameEditable)}
-                >
-                  <Ionicons
-                    name={isNameEditable ? "checkmark" : "pencil"}
-                    size={18}
-                    color="#FF6B6B"
-                  />
-                </TouchableOpacity>
-              </View>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        {/* <View style={styles.modalOverlay}> */}
+        <View
+          style={[
+            styles.modalOverlay,
+            keyboardVisible && styles.modalOverlayKeyboard,
+          ]}
+        >
+          {/* <View style={styles.modalContainer}> */}
+          <View
+            style={[
+              styles.modalContainer,
+              keyboardVisible && {
+                maxHeight: "80%",
+                marginBottom: keyboardHeight * 0.1,
+              },
+            ]}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Checkout</Text>
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
             </View>
-
-            {/* Phone Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Phone</Text>
-              <View style={styles.inputRow}>
-                <TextInput
-                  style={[
-                    styles.input,
-                    !isPhoneEditable && styles.inputDisabled,
-                  ]}
-                  value={editablePhone}
-                  onChangeText={setEditablePhone}
-                  editable={isPhoneEditable}
-                  placeholder="Enter your phone number"
-                  keyboardType="phone-pad"
-                />
-                <TouchableOpacity
-                  style={styles.editButton}
-                  onPress={() => setIsPhoneEditable(!isPhoneEditable)}
-                >
-                  <Ionicons
-                    name={isPhoneEditable ? "checkmark" : "pencil"}
-                    size={18}
-                    color="#FF6B6B"
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Order Type */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Order Type</Text>
-              <View style={styles.typeContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    orderType === "pickup" && styles.typeButtonActive,
-                  ]}
-                  onPress={() => setOrderType("pickup")}
-                >
-                  <Text
-                    style={[
-                      styles.typeButtonText,
-                      orderType === "pickup" && styles.typeButtonTextActive,
-                    ]}
-                  >
-                    Pickup
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    orderType === "delivery" && styles.typeButtonActive,
-                  ]}
-                  onPress={() => setOrderType("delivery")}
-                >
-                  <Text
-                    style={[
-                      styles.typeButtonText,
-                      orderType === "delivery" && styles.typeButtonTextActive,
-                    ]}
-                  >
-                    Delivery
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Total */}
-            <View style={styles.totalContainer}>
-              <Text style={styles.totalLabel}>Total Amount</Text>
-              <Text style={styles.totalAmount}>${cartTotal.toFixed(2)}</Text>
-            </View>
-          </View>
-
-          <View style={styles.modalFooter}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={onClose}
-              activeOpacity={0.8}
+            <ScrollView
+              style={styles.scrollContainer}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
+              <Formik
+                enableReinitialize
+                initialValues={{
+                  name: user?.name || "",
+                  phone: user?.phone || "",
+                }}
+                validationSchema={CheckoutSchema}
+                onSubmit={(values) => {
+                  onConfirm(values);
+                }}
+              >
+                {({
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  values,
+                  errors,
+                  touched,
+                }) => (
+                  <View style={styles.modalContent}>
+                    {/* Name Input */}
+                    <View style={styles.inputContainer}>
+                      <Text style={styles.label}>Name</Text>
+                      <View style={styles.inputRow}>
+                        <TextInput
+                          style={[
+                            styles.input,
+                            !isNameEditable && styles.inputDisabled,
+                          ]}
+                          value={values.name}
+                          onChangeText={handleChange("name")}
+                          onBlur={handleBlur("name")}
+                          editable={isNameEditable}
+                          placeholder="Enter your name"
+                        />
+                        <TouchableOpacity
+                          style={styles.editButton}
+                          onPress={() => setIsNameEditable(!isNameEditable)}
+                        >
+                          <Ionicons
+                            name={isNameEditable ? "checkmark" : "pencil"}
+                            size={18}
+                            color="#FF6B6B"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      {errors.name && touched.name && (
+                        <Text style={styles.formikErrorText}>
+                          {errors.name}
+                        </Text>
+                      )}
+                    </View>
 
-            <TouchableOpacity
-              style={[styles.confirmButton, loading && { opacity: 0.7 }]}
-              onPress={handleConfirm}
-              activeOpacity={0.8}
-              disabled={loading}
-            >
-              <View style={styles.confirmButtonContent}>
-                {loading ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <>
-                    <Text style={styles.confirmButtonText}>Place Order</Text>
-                    <Ionicons name="checkmark" size={20} color="#fff" />
-                  </>
+                    {/* Phone Input */}
+                    <View style={styles.inputContainer}>
+                      <Text style={styles.label}>Phone</Text>
+                      <View style={styles.inputRow}>
+                        <TextInput
+                          style={[
+                            styles.input,
+                            !isPhoneEditable && styles.inputDisabled,
+                          ]}
+                          value={values.phone}
+                          onChangeText={handleChange("phone")}
+                          onBlur={handleBlur("phone")}
+                          editable={isPhoneEditable}
+                          placeholder="Enter your phone number"
+                          keyboardType="phone-pad"
+                        />
+                        <TouchableOpacity
+                          style={styles.editButton}
+                          onPress={() => setIsPhoneEditable(!isPhoneEditable)}
+                        >
+                          <Ionicons
+                            name={isPhoneEditable ? "checkmark" : "pencil"}
+                            size={18}
+                            color="#FF6B6B"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      {errors.phone && touched.phone && (
+                        <Text style={styles.formikErrorText}>
+                          {errors.phone}
+                        </Text>
+                      )}
+                    </View>
+
+                    {/* Order Type */}
+                    <View style={styles.inputContainer}>
+                      <Text style={styles.label}>Order Type</Text>
+                      <View style={styles.typeContainer}>
+                        <TouchableOpacity
+                          style={[
+                            styles.typeButton,
+                            orderType === "pickup" && styles.typeButtonActive,
+                          ]}
+                          onPress={() => setOrderType("pickup")}
+                        >
+                          <Text
+                            style={[
+                              styles.typeButtonText,
+                              orderType === "pickup" &&
+                                styles.typeButtonTextActive,
+                            ]}
+                          >
+                            Pickup
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[
+                            styles.typeButton,
+                            orderType === "delivery" && styles.typeButtonActive,
+                          ]}
+                          onPress={() => setOrderType("delivery")}
+                        >
+                          <Text
+                            style={[
+                              styles.typeButtonText,
+                              orderType === "delivery" &&
+                                styles.typeButtonTextActive,
+                            ]}
+                          >
+                            Delivery
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* Total */}
+                    <View style={styles.totalContainer}>
+                      <Text style={styles.totalLabel}>Total Amount</Text>
+                      <Text style={styles.totalAmount}>
+                        ${cartTotal.toFixed(2)}
+                      </Text>
+                    </View>
+
+                    <View style={styles.modalFooter}>
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={onClose}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.confirmButton,
+                          loading && { opacity: 0.7 },
+                        ]}
+                        onPress={handleSubmit}
+                        activeOpacity={0.8}
+                        disabled={loading}
+                      >
+                        <View style={styles.confirmButtonContent}>
+                          {loading ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <>
+                              <Text style={styles.confirmButtonText}>
+                                Place Order
+                              </Text>
+                              <Ionicons
+                                name="checkmark"
+                                size={20}
+                                color="#fff"
+                              />
+                            </>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 )}
-              </View>
-            </TouchableOpacity>
+              </Formik>
+            </ScrollView>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
+  },
+  modalOverlayKeyboard: {
+    justifyContent: "flex-start",
+    paddingTop: 50,
   },
   modalContainer: {
     backgroundColor: "#fff",
@@ -337,7 +421,6 @@ const styles = StyleSheet.create({
   },
   modalFooter: {
     flexDirection: "row",
-    paddingHorizontal: 24,
     paddingBottom: 24,
     paddingTop: 16,
     gap: 12,
@@ -378,6 +461,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#fff",
     marginRight: 8,
+  },
+  formikErrorText: {
+    color: "#FF6B6B",
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });
 
