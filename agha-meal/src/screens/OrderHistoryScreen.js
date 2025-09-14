@@ -91,7 +91,7 @@ const OrderHistoryScreen = ({ navigation }) => {
       <View style={styles.orderHeader}>
         <View style={styles.orderInfo}>
           <View style={styles.orderTitleRow}>
-            <Text style={styles.orderNumber}>Order #{item.displayId}</Text>
+            <Text style={styles.orderNumber}>Order #{item.displayId.slice(-5).toUpperCase()}</Text>
             <View style={styles.orderTypeContainer}>
               <Ionicons name={getOrderTypeIcon(item.orderType)} size={14} color="#666" />
               <Text style={styles.orderTypeText}>{item.orderType === "delivery" ? "Delivery" : "Pickup"}</Text>

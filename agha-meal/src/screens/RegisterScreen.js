@@ -4,7 +4,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   ScrollView,
@@ -14,6 +13,8 @@ import { Formik } from "formik";
 import * as Yup from "yup";
 import { register } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { useState } from "react";
+import InfoDialog from "../components/dialog/infoDialog";
 
 const RegisterSchema = Yup.object().shape({
   name: Yup.string()
@@ -40,6 +41,25 @@ const RegisterSchema = Yup.object().shape({
 const RegisterScreen = ({ navigation }) => {
   const { login: loginUser } = useAuth();
 
+  const [dialogVisible, setDialogVisible] = useState(false);
+
+  const [infoDialogData, setInfoDialogData] = useState({
+    title: "",
+    message: "",
+    type: "info",
+    onClose: null,
+  });
+
+  const showDialog = (title, message, type = "info", onClose = null) => {
+    setInfoDialogData({
+      title,
+      message,
+      type,
+      onClose: onClose || (() => setDialogVisible(false)),
+    });
+    setDialogVisible(true);
+  };
+
   const handleRegister = async (values, { setSubmitting }) => {
     try {
       const data = await register(values);
@@ -47,23 +67,24 @@ const RegisterScreen = ({ navigation }) => {
       await AsyncStorage.setItem("token", data.token);
       await AsyncStorage.setItem("user", JSON.stringify(data.user));
 
-      Alert.alert("Success", data.message || "Registration successful", [
-        {
-          text: "OK",
-          onPress: () => {
-            loginUser(data.token, data.user);
-            navigation.navigate("Menu");
-          },
-        },
-      ]);
+      showDialog("Success", "Registration successful", "success", () => {
+        setDialogVisible(false);
+        loginUser(data.token, data.user);
+        navigation.navigate("Menu");
+      });
     } catch (error) {
       if (error.response) {
-        Alert.alert(
+        showDialog(
           "Error",
-          error.response.data?.message || "Something went wrong"
+          error.response.data?.message || "Something went wrong",
+          "error"
         );
       } else {
-        Alert.alert("Error", "Network error. Please check your connection.");
+        showDialog(
+          "Error",
+          "Network error. Please check your connection",
+          "error"
+        );
       }
     } finally {
       setSubmitting(false);
@@ -170,6 +191,13 @@ const RegisterScreen = ({ navigation }) => {
           </Formik>
         </View>
       </ScrollView>
+      <InfoDialog
+        visible={dialogVisible}
+        title={infoDialogData.title}
+        message={infoDialogData.message}
+        type={infoDialogData.type}
+        onClose={infoDialogData.onClose}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -207,6 +235,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: "#E5E5EA",
+    color: "#1C1C1E",
   },
   errorText: { color: "#FF3B30", fontSize: 14, marginTop: 4 },
   roleContainer: { flexDirection: "row", gap: 12 },

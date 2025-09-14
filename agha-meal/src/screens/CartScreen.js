@@ -5,16 +5,17 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useOrder } from "../context/OrderContext";
 import { useAuth } from "../context/AuthContext";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createOrder } from "../services/api";
 import CheckoutModal from "../components/modal/CheckoutModal";
+import ConfirmDialog from "../components/dialog/ConfirmDialog";
+import InfoDialog from "../components/dialog/infoDialog";
 
 const CartScreen = ({ navigation }) => {
   const {
@@ -32,38 +33,76 @@ const CartScreen = ({ navigation }) => {
   const [orderType, setOrderType] = useState("pickup"); // default pickup
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
- 
+  const [showDialog, setShowDialog] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogType, setDialogType] = useState(null); // 'removeItem' | 'clearCart'
+  const [selectedItemId, setSelectedItemId] = useState(null);
+
+  const [showInfoDialog, setShowInfoDialog] = useState(false);
+  const [infoDialogData, setInfoDialogData] = useState({
+    title: "",
+    message: "",
+    type: "info",
+    onClose: null,
+  });
+
   const handleRemoveItem = (itemId, itemName) => {
-    Alert.alert(
-      "Remove Item",
-      `Are you sure you want to remove ${itemName.en} from your cart?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () => removeFromCart(itemId),
-        },
-      ]
+    setDialogType("removeItem");
+    setSelectedItemId(itemId);
+    setDialogMessage(
+      `Are you sure you want to remove ${itemName.en} from your cart?`
     );
+    setShowDialog(true);
   };
 
+  // For clearing the cart
   const handleClearCart = () => {
-    Alert.alert(
-      "Clear Cart",
-      "Are you sure you want to remove all items from your cart?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Clear All", style: "destructive", onPress: clearCart },
-      ]
+    setDialogType("clearCart");
+    setDialogMessage(
+      "Are you sure you want to remove all items from your cart?"
     );
+    setSelectedItemId(null);
+    setShowDialog(true);
+  };
+
+  const confirmDialog = () => {
+    if (dialogType === "removeItem" && selectedItemId) {
+      removeFromCart(selectedItemId);
+    } else if (dialogType === "clearCart") {
+      clearCart();
+    }
+
+    // Reset dialog state
+    setShowDialog(false);
+    setSelectedItemId(null);
+    setDialogType(null);
+    setDialogMessage("");
+  };
+
+  const cancelDialog = () => {
+    setShowDialog(false);
+    setSelectedItemId(null);
+    setDialogType(null);
+    setDialogMessage("");
+  };
+
+  const showInfo = (title, message, type = "info", onClose = null) => {
+    setInfoDialogData({
+      title,
+      message,
+      type,
+      onClose: onClose || (() => setShowInfoDialog(false)),
+    });
+    setShowInfoDialog(true);
   };
 
   const handleCheckout = async () => {
+    // if (cart.length === 0) {
     if (cart.length === 0) {
-      Alert.alert(
+      showInfo(
         "Empty Cart",
-        "Please add items to your cart before checkout."
+        "Please add items to your cart before checkout.",
+        "info"
       );
       return;
     }
@@ -71,10 +110,12 @@ const CartScreen = ({ navigation }) => {
     if (isAuthenticated) {
       setShowCheckoutModal(true);
     } else {
-      Alert.alert("Unauthorized", "Please login to place order.");
-      navigation.navigate("Auth", {
-        screen: "Login",
-        params: { redirectTo: "Cart" },
+      showInfo("Unauthorized", "Please login to place order.", "info", () => {
+        setShowInfoDialog(false);
+        navigation.navigate("Auth", {
+          screen: "Login",
+          params: { redirectTo: "Cart" },
+        });
       });
     }
   };
@@ -94,20 +135,26 @@ const CartScreen = ({ navigation }) => {
           quantity: item.quantity,
         })),
       };
-
       const response = await createOrder(orderData);
 
-      Alert.alert(
+      showInfo(
         "Success",
-        `Order placed successfully!\nOrder ID: ${response.orderId}`
+        `Order placed successfully!\nOrder ID: ${response?.orderId
+          ?.slice(-5)
+          ?.toUpperCase()}`,
+        "success",
+        () => {
+          setShowInfoDialog(false);
+          clearCart();
+          setShowCheckoutModal(false);
+          navigation.navigate("Menu");
+        }
       );
-      clearCart();
-      setShowCheckoutModal(false);
-      navigation.navigate("Menu");
     } catch (error) {
-      Alert.alert(
+      showInfo(
         "Error",
-        error.response?.data?.message || "Failed to place order."
+        error.response?.data?.message || "Failed to place order.",
+        "error"
       );
     } finally {
       setLoading(false);
@@ -284,6 +331,23 @@ const CartScreen = ({ navigation }) => {
         setOrderType={setOrderType}
         cartTotal={getCartTotal()}
         loading={loading}
+      />
+      <ConfirmDialog
+        visible={showDialog}
+        title={dialogType === "removeItem" ? "Remove Item" : "Clear Cart"}
+        message={dialogMessage}
+        confirmText={dialogType === "removeItem" ? "Remove" : "Clear All"}
+        cancelText="Cancel"
+        confirmStyle="destructive"
+        onConfirm={confirmDialog}
+        onCancel={cancelDialog}
+      />
+      <InfoDialog
+        visible={showInfoDialog}
+        title={infoDialogData.title}
+        message={infoDialogData.message}
+        type={infoDialogData.type}
+        onClose={infoDialogData.onClose}
       />
     </SafeAreaView>
   );
@@ -496,11 +560,6 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 8,
   },
   summaryContainer: {
     marginBottom: 24,

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -10,6 +10,7 @@ import CartScreen from "../screens/CartScreen";
 import OrderHistoryScreen from "../screens/OrderHistoryScreen";
 import OrderDetailsScreen from "../screens/OrderDetailsScreen";
 import { useAuth } from "../context/AuthContext";
+import ConfirmDialog from "../components/dialog/ConfirmDialog";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -51,18 +52,24 @@ const OrdersStack = () => {
 };
 
 // ✅ Settings Screen
-const SettingsScreen = () => {
+const SettingsScreen = ({ navigation }) => {
   const { logout, user } = useAuth();
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: logout,
-      },
-    ]);
+    setShowLogoutDialog(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutDialog(false);
+    logout();
+    navigation.navigate("Auth", {
+      screen: "Login",
+    });
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutDialog(false);
   };
 
   return (
@@ -77,6 +84,17 @@ const SettingsScreen = () => {
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutButtonText}>Logout</Text>
       </TouchableOpacity>
+
+      <ConfirmDialog
+        visible={showLogoutDialog}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        confirmStyle="destructive"
+        onConfirm={confirmLogout}
+        onCancel={cancelLogout}
+      />
     </View>
   );
 };

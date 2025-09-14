@@ -4,16 +4,16 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { login } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { useState } from "react";
+import InfoDialog from "../components/dialog/infoDialog";
 
 const LoginSchema = Yup.object().shape({
   phone: Yup.string()
@@ -26,6 +26,14 @@ const LoginSchema = Yup.object().shape({
 const LoginScreen = ({ navigation, route }) => {
   const { login: loginUser } = useAuth();
   const redirectTo = route.params?.redirectTo || null;
+
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState("");
+
+  const showDialog = (message) => {
+    setDialogMessage(message);
+    setDialogVisible(true);
+  };
 
   const handleLogin = async (values, { setSubmitting }) => {
     try {
@@ -42,7 +50,7 @@ const LoginScreen = ({ navigation, route }) => {
         navigation.goBack();
       }
     } catch (error) {
-      Alert.alert("Error", "Something went wrong");
+      showDialog("Something went wrong");
       console.error("Error", error?.message);
     } finally {
       setSubmitting(false);
@@ -125,6 +133,13 @@ const LoginScreen = ({ navigation, route }) => {
           )}
         </Formik>
       </View>
+      <InfoDialog
+        visible={dialogVisible}
+        title="Error"
+        message={dialogMessage}
+        type="error"
+        onClose={() => setDialogVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -172,6 +187,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: "#E5E5EA",
+    color: "#1C1C1E",
   },
   errorText: {
     color: "#FF3B30",

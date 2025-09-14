@@ -6,8 +6,6 @@ import {
   Modal,
   Image,
   TouchableOpacity,
-  Alert,
-  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useOrder } from "../../context/OrderContext";
