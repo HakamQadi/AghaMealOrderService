@@ -13,8 +13,10 @@ import { Formik } from "formik";
 import * as Yup from "yup";
 import { register } from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import InfoDialog from "../components/dialog/infoDialog";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 
 const RegisterSchema = Yup.object().shape({
   name: Yup.string()
@@ -36,13 +38,15 @@ const RegisterSchema = Yup.object().shape({
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/,
       "Password must be at least 8 characters, include 1 lowercase, 1 uppercase, and 1 special character (!@#$%^&*)"
     ),
+  termsAccepted: Yup.boolean()
+    .oneOf([true], "You must accept the terms and conditions")
+    .required("You must accept the terms and conditions"),
 });
 
 const RegisterScreen = ({ navigation }) => {
   const { login: loginUser } = useAuth();
 
   const [dialogVisible, setDialogVisible] = useState(false);
-
   const [infoDialogData, setInfoDialogData] = useState({
     title: "",
     message: "",
@@ -99,7 +103,13 @@ const RegisterScreen = ({ navigation }) => {
           <Text style={styles.subtitle}>Sign up to get started</Text>
 
           <Formik
-            initialValues={{ name: "", phone: "", password: "", role: "user" }}
+            initialValues={{
+              name: "",
+              phone: "",
+              password: "",
+              role: "user",
+              termsAccepted: false,
+            }}
             validationSchema={RegisterSchema}
             onSubmit={handleRegister}
           >
@@ -112,82 +122,143 @@ const RegisterScreen = ({ navigation }) => {
               touched,
               isSubmitting,
               setFieldValue,
-            }) => (
-              <View style={styles.form}>
-                {/* Full Name */}
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Full Name</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={values.name}
-                    onChangeText={handleChange("name")}
-                    onBlur={handleBlur("name")}
-                    placeholder="Enter your full name"
-                    autoCapitalize="words"
-                  />
-                  {touched.name && errors.name && (
-                    <Text style={styles.errorText}>{errors.name}</Text>
-                  )}
-                </View>
+            }) => {
+              useFocusEffect(
+                useCallback(() => {
+                  const currentRoute = navigation
+                    .getState()
+                    .routes.find((r) => r.name === "Register");
+                  if (currentRoute?.params?.termsAccepted) {
+                    setFieldValue("termsAccepted", true);
+                    navigation.setParams({ termsAccepted: false }); // reset flag
+                  }
+                }, [navigation, setFieldValue])
+              );
 
-                {/* Phone */}
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Phone Number</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={values.phone}
-                    onChangeText={handleChange("phone")}
-                    onBlur={handleBlur("phone")}
-                    placeholder="Enter your phone number"
-                    keyboardType="phone-pad"
-                    autoCapitalize="none"
-                  />
-                  {touched.phone && errors.phone && (
-                    <Text style={styles.errorText}>{errors.phone}</Text>
-                  )}
-                </View>
+              return (
+                <View style={styles.form}>
+                  {/* Full Name */}
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Full Name</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={values.name}
+                      onChangeText={handleChange("name")}
+                      onBlur={handleBlur("name")}
+                      placeholder="Enter your full name"
+                      autoCapitalize="words"
+                    />
+                    {touched.name && errors.name && (
+                      <Text style={styles.errorText}>{errors.name}</Text>
+                    )}
+                  </View>
 
-                {/* Password */}
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Password</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={values.password}
-                    onChangeText={handleChange("password")}
-                    onBlur={handleBlur("password")}
-                    placeholder="Create a password"
-                    secureTextEntry
-                  />
-                  {touched.password && errors.password && (
-                    <Text style={styles.errorText}>{errors.password}</Text>
-                  )}
-                </View>
+                  {/* Phone */}
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Phone Number</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={values.phone}
+                      onChangeText={handleChange("phone")}
+                      onBlur={handleBlur("phone")}
+                      placeholder="Enter your phone number"
+                      keyboardType="phone-pad"
+                      autoCapitalize="none"
+                    />
+                    {touched.phone && errors.phone && (
+                      <Text style={styles.errorText}>{errors.phone}</Text>
+                    )}
+                  </View>
 
-                {/* Submit Button */}
-                <TouchableOpacity
-                  style={[styles.button, isSubmitting && styles.buttonDisabled]}
-                  onPress={handleSubmit}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <ActivityIndicator color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.buttonText}>Create Account</Text>
-                  )}
-                </TouchableOpacity>
+                  {/* Password */}
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Password</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={values.password}
+                      onChangeText={handleChange("password")}
+                      onBlur={handleBlur("password")}
+                      placeholder="Create a password"
+                      secureTextEntry
+                    />
+                    {touched.password && errors.password && (
+                      <Text style={styles.errorText}>{errors.password}</Text>
+                    )}
+                  </View>
 
-                <View style={styles.footer}>
-                  <Text style={styles.footerText}>
-                    Already have an account?{" "}
-                  </Text>
+                  {/* Terms and conditions */}
+                  <View style={styles.termsContainer}>
+                    <TouchableOpacity
+                      style={styles.checkboxContainer}
+                      onPress={() =>
+                        setFieldValue("termsAccepted", !values.termsAccepted)
+                      }
+                    >
+                      <View
+                        style={[
+                          styles.checkbox,
+                          values.termsAccepted && styles.checkboxChecked,
+                        ]}
+                      >
+                        {values.termsAccepted && (
+                          <Ionicons
+                            name="checkmark"
+                            size={16}
+                            color="#FFFFFF"
+                          />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxText}>
+                        I have read and accept the{" "}
+                        <Text
+                          style={{ color: "#FF6B6B", fontWeight: "600" }}
+                          onPress={() =>
+                            navigation.navigate("TermsAndConditions", {
+                              fromRegister: true,
+                            })
+                          }
+                        >
+                          Terms & Conditions
+                        </Text>
+                      </Text>
+                    </TouchableOpacity>
+
+                    {touched.termsAccepted && errors.termsAccepted && (
+                      <Text style={styles.errorText}>
+                        {errors.termsAccepted}
+                      </Text>
+                    )}
+                  </View>
+
+                  {/* Submit Button */}
                   <TouchableOpacity
-                    onPress={() => navigation.navigate("Login")}
+                    style={[
+                      styles.button,
+                      isSubmitting && styles.buttonDisabled,
+                    ]}
+                    onPress={handleSubmit}
+                    disabled={isSubmitting}
                   >
-                    <Text style={styles.linkText}>Sign In</Text>
+                    {isSubmitting ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.buttonText}>Create Account</Text>
+                    )}
                   </TouchableOpacity>
+
+                  <View style={styles.footer}>
+                    <Text style={styles.footerText}>
+                      Already have an account?{" "}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate("Login")}
+                    >
+                      <Text style={styles.linkText}>Sign In</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            )}
+              );
+            }}
           </Formik>
         </View>
       </ScrollView>
@@ -238,6 +309,52 @@ const styles = StyleSheet.create({
     color: "#1C1C1E",
   },
   errorText: { color: "#FF3B30", fontSize: 14, marginTop: 4 },
+  termsContainer: {
+    marginBottom: 20,
+  },
+  termsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F2F2F7",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#E5E5EA",
+  },
+  termsButtonText: {
+    flex: 1,
+    fontSize: 16,
+    color: "#1C1C1E",
+    marginLeft: 12,
+    fontWeight: "500",
+  },
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: "#E5E5EA",
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  checkboxChecked: {
+    backgroundColor: "#FF6B6B",
+    borderColor: "#FF6B6B",
+  },
+  checkboxText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#3C3C43",
+    lineHeight: 20,
+  },
   roleContainer: { flexDirection: "row", gap: 12 },
   roleButton: {
     flex: 1,
