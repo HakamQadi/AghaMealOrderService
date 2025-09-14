@@ -10,6 +10,15 @@ const api = axios.create({
   },
 });
 
+// Response interceptor for handling errors
+api.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    console.error("API Error:", error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
+
 // // Request interceptor for adding auth tokens if needed
 // api.interceptors.request.use(
 //   (config) => {
@@ -25,18 +34,9 @@ const api = axios.create({
 //   }
 // );
 
-// Response interceptor for handling errors
-api.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    console.error("API Error:", error.response?.data || error.message);
-    return Promise.reject(error);
-  }
-);
 
 // API functions
 export const login = async (data) => {
-
   try {
     const response = await api.post("/login", data);
 
@@ -114,6 +114,16 @@ export const createOrder = async (orderData) => {
     return response;
   } catch (error) {
     console.error("Error creating order:", error);
+    throw error;
+  }
+};
+
+export const reorder = async (orderData) => {
+  try {
+    const response = await api.post("/admin/orders/reorder", orderData);
+    return response;
+  } catch (error) {
+    console.error("Error creating new order:", error);
     throw error;
   }
 };

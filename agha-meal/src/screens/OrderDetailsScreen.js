@@ -7,11 +7,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useOrder } from "../context/OrderContext";
+import { reorder } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import ReorderModal from "../components/modal/ReorderModal";
+import { useState } from "react";
 
 const OrderDetailsScreen = ({ route, navigation }) => {
   const { order } = route.params;
-  const { clearCart, addToCart } = useOrder();
+  const { user } = useAuth();
+
+  const [showReorderModal, setShowReorderModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -47,47 +53,23 @@ const OrderDetailsScreen = ({ route, navigation }) => {
     return type === "delivery" ? "bicycle" : "bag";
   };
 
-  // const handleReorder = () => {
-  //   clearCart();
+  const handleReorderConfirm = async ({ type }) => {
+    setLoading(true);
+    try {
+      const orderId = order?._id;
+      const userId = user?.id;
 
-  //   order.cartItems.forEach((item) => {
-  //     console.log("item :::: ", item);
-  //     for (let i = 0; i < item.quantity; i++) {
-  //       addToCart({
-  //         _id: item._id, // required to identify item
-  //         name: item.name, // { en, ar }
-  //         price: item.price,
-  //         image: item.image || "", // in case you need image in CartScreen
-  //       });
-  //     }
-  //   });
+      const response = await reorder({ orderId, userId, type });
+      alert("Reorder created successfully!");
 
-  //   navigation.navigate("Cart");
-  // };
-
-  const handleReorder = async () => {
-    // clearCart();
-
-    // for (const item of order.cartItems) {
-    //   try {
-    //     const product = await fetch(
-    //       `http://your-api.com/products/${item._id}`
-    //     );
-        
-
-    //     addToCart({
-    //       _id: product._id,
-    //       name: product.name,
-    //       price: product.price,
-    //       image: product.image,
-    //       quantity: item.quantity,
-    //     });
-    //   } catch (err) {
-    //     console.error("Failed to fetch product", item._id, err);
-    //   }
-    // }
-
-    // navigation.navigate("Cart");
+      setShowReorderModal(false);
+      navigation.goBack();
+    } catch (err) {
+      console.error("Failed to reorder:", err);
+      alert("Failed to reorder. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTrackOrder = () => {
@@ -101,6 +83,21 @@ const OrderDetailsScreen = ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#1a1a1a" />
+          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <Text style={styles.screenTitle}>Order History</Text>
+          </View>
+
+          <View style={styles.clearButton}></View>
+        </View>
+
         {/* Order Status */}
         <View style={styles.statusSection}>
           <View
@@ -135,6 +132,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
           </View>
         </View>
 
+        {/* Customer Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Customer Information</Text>
           <View style={styles.customerInfo}>
@@ -149,6 +147,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
           </View>
         </View>
 
+        {/* Order Items */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Order Items</Text>
           {order.cartItems.map((item, index) => (
@@ -170,6 +169,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
           ))}
         </View>
 
+        {/* Order Summary */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Order Summary</Text>
           <View style={styles.summaryRow}>
@@ -203,6 +203,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
           </View>
         </View>
 
+        {/* Order Details */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Order Details</Text>
           <View style={styles.metadataContainer}>
@@ -242,13 +243,23 @@ const OrderDetailsScreen = ({ route, navigation }) => {
 
           <TouchableOpacity
             style={styles.reorderButton}
-            onPress={handleReorder}
+            onPress={() => setShowReorderModal(true)}
           >
             <Ionicons name="refresh" size={20} color="#FF6B6B" />
             <Text style={styles.reorderButtonText}>Reorder</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+      {/* Reorder Modal */}
+      {showReorderModal && (
+        <ReorderModal
+          visible={showReorderModal}
+          onClose={() => setShowReorderModal(false)}
+          order={order}
+          loading={loading}
+          onReorderConfirm={handleReorderConfirm}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -257,6 +268,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8f9fa",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+    backgroundColor: "#fff",
+  },
+  backButton: {
+    padding: 8,
+  },
+  clearButton: {
+    padding: 20,
+    borderRadius: 12,
+  },
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+  },
+  headerContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   statusSection: {
     alignItems: "center",
@@ -432,7 +469,7 @@ const styles = StyleSheet.create({
   },
   actionsSection: {
     paddingHorizontal: 20,
-    paddingBottom: 32,
+    paddingVertical: 20,
     gap: 12,
   },
   trackButton: {
