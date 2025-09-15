@@ -1,5 +1,3 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,8 +7,8 @@ import MenuScreen from "../screens/MenuScreen";
 import CartScreen from "../screens/CartScreen";
 import OrderHistoryScreen from "../screens/OrderHistoryScreen";
 import OrderDetailsScreen from "../screens/OrderDetailsScreen";
-import { useAuth } from "../context/AuthContext";
-import ConfirmDialog from "../components/dialog/ConfirmDialog";
+import SettingsScreen from "../screens/SettingsScreen";
+import AboutUsScreen from "../screens/AboutUsScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -33,6 +31,23 @@ const MenuStack = () => {
   );
 };
 
+const SettingsStack = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AboutUs"
+        component={AboutUsScreen}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+  );
+};
+
 // ✅ Orders Stack
 const OrdersStack = () => {
   return (
@@ -48,54 +63,6 @@ const OrdersStack = () => {
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
-  );
-};
-
-// ✅ Settings Screen
-const SettingsScreen = ({ navigation }) => {
-  const { logout, user } = useAuth();
-  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-
-  const handleLogout = () => {
-    setShowLogoutDialog(true);
-  };
-
-  const confirmLogout = () => {
-    setShowLogoutDialog(false);
-    logout();
-    navigation.navigate("Auth", {
-      screen: "Login",
-    });
-  };
-
-  const cancelLogout = () => {
-    setShowLogoutDialog(false);
-  };
-
-  return (
-    <View style={styles.screenContainer}>
-      <Text style={styles.screenTitle}>Settings</Text>
-      {user && (
-        <View style={styles.userInfo}>
-          <Text style={styles.userInfoText}>Welcome, {user.name}</Text>
-          <Text style={styles.userInfoSubtext}>Role: {user.role}</Text>
-        </View>
-      )}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Logout</Text>
-      </TouchableOpacity>
-
-      <ConfirmDialog
-        visible={showLogoutDialog}
-        title="Logout"
-        message="Are you sure you want to logout?"
-        confirmText="Logout"
-        cancelText="Cancel"
-        confirmStyle="destructive"
-        onConfirm={confirmLogout}
-        onCancel={cancelLogout}
-      />
-    </View>
   );
 };
 
@@ -180,7 +147,7 @@ const TabNavigation = () => {
       />
       <Tab.Screen
         name="SettingsTab"
-        component={SettingsScreen}
+        component={SettingsStack}
         options={{
           tabBarLabel: "Settings",
           tabBarIcon: ({ color, size }) => (
@@ -192,49 +159,4 @@ const TabNavigation = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  screenContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F2F2F7",
-    padding: 20,
-  },
-  screenTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#1C1C1E",
-    marginBottom: 8,
-  },
-  screenSubtitle: {
-    fontSize: 16,
-    color: "#8E8E93",
-    textAlign: "center",
-  },
-  userInfo: {
-    alignItems: "center",
-    marginBottom: 40,
-  },
-  userInfoText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1C1C1E",
-    marginBottom: 4,
-  },
-  userInfoSubtext: {
-    fontSize: 14,
-    color: "#8E8E93",
-  },
-  logoutButton: {
-    backgroundColor: "#FF3B30",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  logoutButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
 export default TabNavigation;

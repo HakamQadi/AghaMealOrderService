@@ -161,13 +161,15 @@ const TermsAndConditionsScreen = ({ navigation, route }) => {
       </ScrollView>
 
       {/* Accept Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.acceptButton} onPress={handleAccept}>
-          <Text style={styles.acceptButtonText}>
-            I Accept Terms & Conditions
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {route?.params?.fromRegister && (
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.acceptButton} onPress={handleAccept}>
+            <Text style={styles.acceptButtonText}>
+              I Accept Terms & Conditions
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
