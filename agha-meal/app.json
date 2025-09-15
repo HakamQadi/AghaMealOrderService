@@ -2,7 +2,7 @@
   "expo": {
     "name": "agha-meal",
     "slug": "agha-meal",
-    "version": "2.0.7",
+    "version": "2.0.8",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "splash": {
@@ -22,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.hakamqadi.aghameal",
-      "versionCode": 7
+      "versionCode": 8
     },
     "web": {
       "favicon": "./src/assets/favicon.png"
