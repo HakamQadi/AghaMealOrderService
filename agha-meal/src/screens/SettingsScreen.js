@@ -32,11 +32,11 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   const navigateToTerms = () => {
-    navigation.navigate("Auth", {screen:"TermsAndConditions"});
+    navigation.navigate("Auth", { screen: "TermsAndConditions" });
   };
 
   const navigateToAboutUs = () => {
-    navigation.navigate("AboutUs");
+    navigation.navigate("Auth", { screen: "AboutUs" });
   };
 
   const handleChangeLanguage = () => {

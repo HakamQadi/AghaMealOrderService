@@ -8,7 +8,6 @@ import CartScreen from "../screens/CartScreen";
 import OrderHistoryScreen from "../screens/OrderHistoryScreen";
 import OrderDetailsScreen from "../screens/OrderDetailsScreen";
 import SettingsScreen from "../screens/SettingsScreen";
-import AboutUsScreen from "../screens/AboutUsScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -39,11 +38,11 @@ const SettingsStack = () => {
         component={SettingsScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="AboutUs"
         component={AboutUsScreen}
         options={{ headerShown: false }}
-      />
+      /> */}
     </Stack.Navigator>
   );
 };

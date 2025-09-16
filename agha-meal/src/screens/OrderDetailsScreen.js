@@ -11,6 +11,7 @@ import { reorder } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import ReorderModal from "../components/modal/ReorderModal";
 import { useState } from "react";
+import InfoDialog from "../components/dialog/infoDialog";
 
 const OrderDetailsScreen = ({ route, navigation }) => {
   const { order } = route.params;
@@ -18,6 +19,23 @@ const OrderDetailsScreen = ({ route, navigation }) => {
 
   const [showReorderModal, setShowReorderModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showInfoDialog, setShowInfoDialog] = useState(false);
+  const [infoDialogData, setInfoDialogData] = useState({
+    title: "",
+    message: "",
+    type: "info",
+    onClose: null,
+  });
+
+  const showInfo = (title, message, type = "info", onClose = null) => {
+    setInfoDialogData({
+      title,
+      message,
+      type,
+      onClose: onClose || (() => setShowInfoDialog(false)),
+    });
+    setShowInfoDialog(true);
+  };
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -59,14 +77,16 @@ const OrderDetailsScreen = ({ route, navigation }) => {
       const orderId = order?._id;
       const userId = user?.id;
 
-      const response = await reorder({ orderId, userId, type });
-      alert("Reorder created successfully!");
-
+      await reorder({ orderId, userId, type });
       setShowReorderModal(false);
-      navigation.goBack();
+
+      showInfo("Success", `Reorder created successfully`, "success", () => {
+        setShowInfoDialog(false);
+        navigation.goBack();
+      });
     } catch (err) {
       console.error("Failed to reorder:", err);
-      alert("Failed to reorder. Please try again.");
+      showInfo("Failed to reorder", `Please try again later`, "error");
     } finally {
       setLoading(false);
     }
@@ -260,6 +280,13 @@ const OrderDetailsScreen = ({ route, navigation }) => {
           onReorderConfirm={handleReorderConfirm}
         />
       )}
+      <InfoDialog
+        visible={showInfoDialog}
+        title={infoDialogData.title}
+        message={infoDialogData.message}
+        type={infoDialogData.type}
+        onClose={infoDialogData.onClose}
+      />
     </SafeAreaView>
   );
 };
