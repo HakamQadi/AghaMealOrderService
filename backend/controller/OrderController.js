@@ -10,6 +10,7 @@ const createOrder = async (req, res) => {
     cartItems,
     discountAmount = 0,
     location,
+    userId,
     type,
   } = req.body;
 
@@ -24,11 +25,9 @@ const createOrder = async (req, res) => {
       !type
     ) {
       return res.status(400).json({
-        // message: "ID, type, and cartItems are required",
-        message: "Name, ID, contact, type, and cartItems are required",
+        message: "Name, ID, contact, type,  and cartItems are required",
       });
     }
-
     // Validate type value
     if (!["pickup", "delivery"].includes(type)) {
       return res.status(400).json({

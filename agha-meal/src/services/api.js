@@ -10,6 +10,15 @@ const api = axios.create({
   },
 });
 
+// Response interceptor for handling errors
+api.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    console.error("API Error:", error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
+
 // // Request interceptor for adding auth tokens if needed
 // api.interceptors.request.use(
 //   (config) => {
@@ -25,16 +34,29 @@ const api = axios.create({
 //   }
 // );
 
-// Response interceptor for handling errors
-api.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    console.error("API Error:", error.response?.data || error.message);
-    return Promise.reject(error);
-  }
-);
 
 // API functions
+export const login = async (data) => {
+  try {
+    const response = await api.post("/login", data);
+
+    return response;
+  } catch (error) {
+    console.error("Error login:", error);
+    throw error;
+  }
+};
+
+export const register = async (data) => {
+  try {
+    const response = await api.post("/register", data);
+    return response;
+  } catch (error) {
+    console.error("Error register:", error);
+    throw error;
+  }
+};
+
 export const fetchAllMeals = async () => {
   try {
     const response = await api.get("/admin/meals");
@@ -66,15 +88,15 @@ export const fetchCategories = async () => {
 };
 
 // old
-export const fetchMenuItems = async () => {
-  try {
-    const response = await api.get("/menu");
-    return response;
-  } catch (error) {
-    console.error("Error fetching menu items:", error);
-    throw error;
-  }
-};
+// export const fetchMenuItems = async () => {
+//   try {
+//     const response = await api.get("/menu");
+//     return response;
+//   } catch (error) {
+//     console.error("Error fetching menu items:", error);
+//     throw error;
+//   }
+// };
 
 export const fetchOrderHistory = async () => {
   try {
@@ -88,10 +110,30 @@ export const fetchOrderHistory = async () => {
 
 export const createOrder = async (orderData) => {
   try {
-    const response = await api.post("/orders", orderData);
+    const response = await api.post("/admin/orders/add", orderData);
     return response;
   } catch (error) {
     console.error("Error creating order:", error);
+    throw error;
+  }
+};
+
+export const reorder = async (orderData) => {
+  try {
+    const response = await api.post("/admin/orders/reorder", orderData);
+    return response;
+  } catch (error) {
+    console.error("Error creating new order:", error);
+    throw error;
+  }
+};
+
+export const getOrderHistory = async (userId) => {
+  try {
+    const response = await api.get(`/admin/orders/user/${userId}`);
+    return response;
+  } catch (error) {
+    console.error("Error getting order history:", error);
     throw error;
   }
 };

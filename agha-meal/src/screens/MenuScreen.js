@@ -5,11 +5,8 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Image,
   TextInput,
   ActivityIndicator,
-  Alert,
-  Modal,
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -164,13 +161,6 @@ const MenuScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       {/* Header with Cart */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#1a1a1a" />
-        </TouchableOpacity>
-
         <Text style={styles.screenTitle}>Menu</Text>
 
         <TouchableOpacity
@@ -342,7 +332,7 @@ const styles = StyleSheet.create({
   },
   menuGrid: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    // paddingBottom: 20,
   },
   row: {
     justifyContent: "space-between",

@@ -5,11 +5,17 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useOrder } from "../context/OrderContext";
+import { useAuth } from "../context/AuthContext";
+import { useState } from "react";
+import { createOrder } from "../services/api";
+import CheckoutModal from "../components/modal/CheckoutModal";
+import ConfirmDialog from "../components/dialog/ConfirmDialog";
+import InfoDialog from "../components/dialog/infoDialog";
 
 const CartScreen = ({ navigation }) => {
   const {
@@ -21,55 +27,138 @@ const CartScreen = ({ navigation }) => {
     decreaseQuantity,
   } = useOrder();
 
+  const { user, isAuthenticated } = useAuth();
+
+  const [loading, setLoading] = useState(false);
+  const [orderType, setOrderType] = useState("pickup"); // default pickup
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+
+  const [showDialog, setShowDialog] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogType, setDialogType] = useState(null); // 'removeItem' | 'clearCart'
+  const [selectedItemId, setSelectedItemId] = useState(null);
+
+  const [showInfoDialog, setShowInfoDialog] = useState(false);
+  const [infoDialogData, setInfoDialogData] = useState({
+    title: "",
+    message: "",
+    type: "info",
+    onClose: null,
+  });
+
   const handleRemoveItem = (itemId, itemName) => {
-    Alert.alert(
-      "Remove Item",
-      `Are you sure you want to remove ${itemName} from your cart?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () => removeFromCart(itemId),
-        },
-      ]
+    setDialogType("removeItem");
+    setSelectedItemId(itemId);
+    setDialogMessage(
+      `Are you sure you want to remove ${itemName.en} from your cart?`
     );
+    setShowDialog(true);
   };
 
+  // For clearing the cart
   const handleClearCart = () => {
-    Alert.alert(
-      "Clear Cart",
-      "Are you sure you want to remove all items from your cart?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Clear All", style: "destructive", onPress: clearCart },
-      ]
+    setDialogType("clearCart");
+    setDialogMessage(
+      "Are you sure you want to remove all items from your cart?"
     );
+    setSelectedItemId(null);
+    setShowDialog(true);
   };
 
-  const handleCheckout = () => {
+  const confirmDialog = () => {
+    if (dialogType === "removeItem" && selectedItemId) {
+      removeFromCart(selectedItemId);
+    } else if (dialogType === "clearCart") {
+      clearCart();
+    }
+
+    // Reset dialog state
+    setShowDialog(false);
+    setSelectedItemId(null);
+    setDialogType(null);
+    setDialogMessage("");
+  };
+
+  const cancelDialog = () => {
+    setShowDialog(false);
+    setSelectedItemId(null);
+    setDialogType(null);
+    setDialogMessage("");
+  };
+
+  const showInfo = (title, message, type = "info", onClose = null) => {
+    setInfoDialogData({
+      title,
+      message,
+      type,
+      onClose: onClose || (() => setShowInfoDialog(false)),
+    });
+    setShowInfoDialog(true);
+  };
+
+  const handleCheckout = async () => {
+    // if (cart.length === 0) {
     if (cart.length === 0) {
-      Alert.alert(
+      showInfo(
         "Empty Cart",
-        "Please add items to your cart before checkout."
+        "Please add items to your cart before checkout.",
+        "info"
       );
       return;
     }
-    Alert.alert(
-      "Checkout",
-      `Total: $${getCartTotal().toFixed(2)}\n\nProceed to checkout?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Checkout",
-          onPress: () => {
-            Alert.alert("Success", "Order placed successfully!");
-            clearCart();
-            navigation.navigate("Home");
-          },
-        },
-      ]
-    );
+
+    if (isAuthenticated) {
+      setShowCheckoutModal(true);
+    } else {
+      showInfo("Unauthorized", "Please login to place order.", "info", () => {
+        setShowInfoDialog(false);
+        navigation.navigate("Auth", {
+          screen: "Login",
+          params: { redirectTo: "Cart" },
+        });
+      });
+    }
+  };
+
+  const handleConfirmOrder = async (customerInfo) => {
+    try {
+      setLoading(true);
+
+      const orderData = {
+        userId: user.id,
+        contact: customerInfo.phone,
+        name: customerInfo.name,
+        type: orderType,
+        cartItems: cart.map((item) => ({
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+      };
+      const response = await createOrder(orderData);
+
+      showInfo(
+        "Success",
+        `Order placed successfully!\nOrder ID: ${response?.orderId
+          ?.slice(-5)
+          ?.toUpperCase()}`,
+        "success",
+        () => {
+          setShowInfoDialog(false);
+          clearCart();
+          setShowCheckoutModal(false);
+          navigation.navigate("Menu");
+        }
+      );
+    } catch (error) {
+      showInfo(
+        "Error",
+        error.response?.data?.message || "Failed to place order.",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateQuantity = (item, change) => {
@@ -170,36 +259,24 @@ const CartScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.topHeader}>
+      <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <Ionicons name="arrow-back" size={24} color="#1a1a1a" />
         </TouchableOpacity>
-
-        <Text style={styles.screenTitle}>Cart</Text>
-        <View style={{ padding: 12 }}>
-          <View style={{ width: 24, height: 24 }} />
-        </View>
-      </View>
-      <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Your Cart</Text>
-          <View style={styles.itemCount}>
-            <Text style={styles.itemCountText}>{cart.length} items</Text>
-          </View>
         </View>
         <TouchableOpacity
           onPress={handleClearCart}
           style={styles.clearButton}
           activeOpacity={0.7}
         >
-          <Ionicons name="trash-outline" size={18} color="#FF6B6B" />
-          <Text style={styles.clearAllText}>Clear All</Text>
+          <Ionicons name="trash-outline" size={24} color="#FF6B6B" />
         </TouchableOpacity>
       </View>
-
       <FlatList
         data={cart}
         renderItem={renderCartItem}
@@ -226,16 +303,52 @@ const CartScreen = ({ navigation }) => {
         </View>
 
         <TouchableOpacity
-          style={styles.checkoutButton}
+          style={[styles.checkoutButton, loading && { opacity: 0.7 }]}
           onPress={handleCheckout}
           activeOpacity={0.8}
+          disabled={loading}
         >
           <View style={styles.checkoutContent}>
-            <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
-            <Ionicons name="arrow-forward" size={22} color="#fff" />
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Text style={styles.checkoutButtonText}>
+                  Proceed to Checkout
+                </Text>
+                <Ionicons name="arrow-forward" size={22} color="#fff" />
+              </>
+            )}
           </View>
         </TouchableOpacity>
       </View>
+      <CheckoutModal
+        visible={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        onConfirm={handleConfirmOrder}
+        user={user}
+        orderType={orderType}
+        setOrderType={setOrderType}
+        cartTotal={getCartTotal()}
+        loading={loading}
+      />
+      <ConfirmDialog
+        visible={showDialog}
+        title={dialogType === "removeItem" ? "Remove Item" : "Clear Cart"}
+        message={dialogMessage}
+        confirmText={dialogType === "removeItem" ? "Remove" : "Clear All"}
+        cancelText="Cancel"
+        confirmStyle="destructive"
+        onConfirm={confirmDialog}
+        onCancel={cancelDialog}
+      />
+      <InfoDialog
+        visible={showInfoDialog}
+        title={infoDialogData.title}
+        message={infoDialogData.message}
+        type={infoDialogData.type}
+        onClose={infoDialogData.onClose}
+      />
     </SafeAreaView>
   );
 };
@@ -243,15 +356,13 @@ const CartScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#fff",
   },
   topHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom: 20,
   },
   backButton: {
     padding: 8,
@@ -266,19 +377,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
     backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
-  headerContent: {
-    flex: 1,
-  },
+
   headerTitle: {
     fontSize: 24,
     fontWeight: "700",
@@ -298,14 +401,14 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   clearButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: "#fff5f5",
-    borderWidth: 1,
-    borderColor: "#ffe0e0",
+    padding: 12,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   clearAllText: {
     fontSize: 14,
@@ -457,11 +560,6 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 8,
   },
   summaryContainer: {
     marginBottom: 24,
@@ -565,6 +663,26 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginLeft: 8,
   },
+
+  // Type input
+  inputContainer: {
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  label: { fontSize: 16, fontWeight: "600", color: "#1C1C1E", marginBottom: 8 },
+  typeContainer: { flexDirection: "row", gap: 12 },
+  typeButton: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E5E5EA",
+  },
+  typeButtonActive: { backgroundColor: "#FF6B6B", borderColor: "#FF6B6B" },
+  typeButtonText: { fontSize: 16, fontWeight: "600", color: "#8E8E93" },
+  typeButtonTextActive: { color: "#FFFFFF" },
 });
 
 export default CartScreen;

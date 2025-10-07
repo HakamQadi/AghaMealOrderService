@@ -32,7 +32,6 @@ const orderSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-
     type: {
       type: String,
       enum: ["pickup", "delivery"],

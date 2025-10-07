@@ -6,8 +6,6 @@ import {
   Modal,
   Image,
   TouchableOpacity,
-  Alert,
-  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useOrder } from "../../context/OrderContext";
@@ -22,10 +20,6 @@ const MealModal = ({ visible, onClose, meal }) => {
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) addToCart(meal);
-    Alert.alert(
-      "Added to Cart",
-      `${quantity} x ${meal.name.en} has been added to your cart!`
-    );
     onClose();
     setQuantity(1);
   };
@@ -91,7 +85,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingHorizontal: 20,
     // paddingBottom: Platform.OS == "ios" ? 50 : 25,
-    paddingBottom: 50,
+    paddingBottom: 40,
     marginBottom: 30,
     minHeight: 400,
   },
