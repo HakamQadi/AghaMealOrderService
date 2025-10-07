@@ -1,10 +1,12 @@
 import { Order } from "../model/OrderModel.js";
 import { User } from "../model/userModel.js";
+import { Meal } from "../model/mealModel.js";
 
 const createOrder = async (req, res) => {
   const {
     name,
     contact,
+    userId,
     cartItems,
     discountAmount = 0,
     location,
@@ -58,14 +60,14 @@ const createOrder = async (req, res) => {
 
     const discountAmountNumber = parseFloat(discountAmount) || 0;
 
-    // Final total price after discount
-    totalPriceNumber -= discountAmountNumber;
-
     if (isNaN(totalPriceNumber) || isNaN(discountAmountNumber)) {
       return res
         .status(400)
         .json({ message: "Invalid numeric values for prices" });
     }
+
+    // Final total price after discount
+    totalPriceNumber -= discountAmountNumber;
 
     // Create order
     const newOrder = await Order.create({
@@ -110,6 +112,34 @@ const getAllOrdersAndById = async (req, res) => {
     });
   } catch (error) {
     console.error("Error getting orders:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getOrdersByUserId = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await User.findById(userId).populate({
+      path: "orders",
+      options: { sort: { createdAt: -1 } }, // latest first
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.orders || user.orders.length === 0) {
+      return res.status(200).json({ message: "No orders found", orders: [] });
+    }
+
+    res.status(200).json({
+      message: "Orders retrieved successfully",
+      count: user.orders.length,
+      orders: user.orders,
+    });
+  } catch (error) {
+    console.error("Error getting user orders:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -159,9 +189,98 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+
+const reorder = async (req, res) => {
+  // const { orderId, userId, type } = req.body;
+  const { orderId, userId, type, location } = req.body;
+
+  try {
+    if (!orderId || !userId) {
+      // if (!orderId || !userId || !type) {
+      return res
+        .status(400)
+        .json({ message: "orderId, userId, and type are required" });
+    }
+
+    if (!["pickup", "delivery"].includes(type)) {
+      return res
+        .status(400)
+        .json({ message: "Type must be either 'pickup' or 'delivery'" });
+    }
+
+    // Find original order
+    const originalOrder = await Order.findById(orderId);
+    if (!originalOrder) {
+      return res.status(404).json({ message: "Original order not found" });
+    }
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ✅ Rebuild cart items from Meal table
+    let totalPrice = 0;
+    const newCartItems = [];
+
+    for (const item of originalOrder.cartItems) {
+      // Try to find meal by English OR Arabic name
+      const meal = await Meal.findOne({
+        $or: [{ "name.en": item.name.en }, { "name.ar": item.name.ar }],
+      });
+
+      if (!meal) {
+        console.warn(`Meal not found for reorder item: ${item.name.en}`);
+        continue; // skip this item if meal no longer exists
+      }
+
+      const qty = item.quantity || 1;
+      totalPrice += meal.price * qty;
+
+      newCartItems.push({
+        name: meal.name,
+        price: meal.price,
+        quantity: qty,
+        image: meal.image,
+      });
+    }
+
+    // Apply discount if original had any
+    const discountAmount = originalOrder.discountAmount || 0;
+    totalPrice -= discountAmount;
+
+    // Create new order
+    const newOrder = await Order.create({
+      name: originalOrder.name,
+      contact: originalOrder.contact,
+      cartItems: newCartItems,
+      totalPrice,
+      discountAmount,
+      type: type || originalOrder.type,
+      location: location || originalOrder.location, // allow override
+    });
+
+    // Attach order to user
+    user.orders.push(newOrder._id);
+    await user.save();
+
+    return res.status(201).json({
+      message: "Reorder created successfully",
+      newOrderId: newOrder._id,
+      order: newOrder,
+    });
+  } catch (error) {
+    console.error("Error creating reorder:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export default {
   createOrder,
   getAllOrdersAndById,
   updateOrder,
   deleteOrder,
+  getOrdersByUserId,
+  reorder
 };
