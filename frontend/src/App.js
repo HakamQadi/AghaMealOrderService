@@ -29,7 +29,7 @@ import Meal from "./pages/Meal/Meal";
 import PrivateRoute from "./routes/PrivateRoute";
 import Home from "./pages/Home/Home";
 
-function App() {
+function App() { 
   return (
     <Routes>
       {/* <Route path="/login" element={<Login />} /> */}
