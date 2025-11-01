@@ -1,68 +1,110 @@
-import { useEffect, useRef, useState } from "react"
-import axios from "axios"
-import Modal from "../../components/Modal/PopupModal"
-import Button from "../../components/ui/Button"
-import Input from "../../components/ui/Input"
-import Table from "../../components/ui/Table"
-import { Plus, ImageIcon, Tag, FileText } from "lucide-react"
+import { useEffect, useRef, useState } from "react";
+import axios from "axios";
+import Modal from "../../components/Modal/PopupModal";
+import Button from "../../components/ui/Button";
+import Input from "../../components/ui/Input";
+import Table from "../../components/ui/Table";
+import { Plus, ImageIcon, Tag, FileText } from "lucide-react";
 
 function Category() {
-  const [categories, setCategories] = useState([])
-  const [isModalopen, setModalOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [categories, setCategories] = useState([]);
+  const [isModalopen, setModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [nameEn, setNameEn] = useState("")
-  const [nameAr, setNameAr] = useState("")
-  const [descEn, setDescEn] = useState("")
-  const [descAr, setDescAr] = useState("")
-  const [categoryImage, setCategoryImage] = useState(null)
+  const [nameEn, setNameEn] = useState("");
+  const [nameAr, setNameAr] = useState("");
+  const [descEn, setDescEn] = useState("");
+  const [descAr, setDescAr] = useState("");
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [categoryImage, setCategoryImage] = useState(null);
 
-  const fileInputRef = useRef(null)
+  const fileInputRef = useRef(null);
 
   const fetchCategoriesData = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/categories`)
-      setCategories(response.data.categories)
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/admin/categories`
+      );
+      setCategories(response.data.categories);
     } catch (error) {
-      console.error("ERROR :: ", error)
+      console.error("ERROR :: ", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const closeFunction = () => {
-    setModalOpen(false)
+    setModalOpen(false);
+    setEditingCategoryId(null);
     // Reset form
-    setNameEn("")
-    setNameAr("")
-    setDescEn("")
-    setDescAr("")
-    setCategoryImage(null)
-  }
+    setNameEn("");
+    setNameAr("");
+    setDescEn("");
+    setDescAr("");
+    setCategoryImage(null);
+  };
+
 
   const handleAddCategory = async () => {
-    const formData = new FormData()
-    formData.append("name.en", nameEn)
-    formData.append("name.ar", nameAr)
-    formData.append("description.en", descEn)
-    formData.append("description.ar", descAr)
-    formData.append("image", categoryImage)
+    const formData = new FormData();
+    formData.append("name.en", nameEn);
+    formData.append("name.ar", nameAr);
+    formData.append("description.en", descEn);
+    formData.append("description.ar", descAr);
+    formData.append("image", categoryImage);
 
     try {
-      await axios.post(`${process.env.REACT_APP_API_BASE_URL}/admin/categories/add`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      closeFunction()
-      fetchCategoriesData()
+      if (editingCategoryId) {
+        await axios.patch(
+          `${process.env.REACT_APP_API_BASE_URL}/admin/categories/update/${editingCategoryId}`,
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+      } else {
+        await axios.post(
+          `${process.env.REACT_APP_API_BASE_URL}/admin/categories/add`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+      }
+      closeFunction();
+      fetchCategoriesData();
     } catch (error) {
-      console.error("ERROR :: ", error)
+      console.error("ERROR :: ", error);
     }
-  }
+  };
+
+  const handleEditCategory = (category) => {
+    setNameEn(category?.name?.en || "");
+    setNameAr(category?.name?.ar || "");
+    setDescEn(category?.description?.en || "");
+    setDescAr(category?.description?.ar || "");
+    setCategoryImage(null);
+    setModalOpen(true);
+    // Optionally, store ID to know which category to update later
+    setEditingCategoryId(category._id);
+  };
+
+  const handleDeleteCategory = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this category?"))
+      return;
+
+    try {
+      await axios.delete(
+        `${process.env.REACT_APP_API_BASE_URL}/admin/categories/delete/${id}`
+      );
+      fetchCategoriesData();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+    }
+  };
 
   useEffect(() => {
-    fetchCategoriesData()
-  }, [])
+    fetchCategoriesData();
+  }, []);
 
   return (
     <main className="bg-slate-900 min-h-screen">
@@ -87,11 +129,16 @@ function Category() {
           {isModalopen && (
             <Modal onClose={closeFunction} size="lg">
               <div className="p-6">
+                {/* Dynamic title and icon */}
                 <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-3 mb-6">
                   <div className="p-1 bg-cyan-500/20 border border-cyan-500/30 rounded">
-                    <Plus className="w-5 h-5 text-cyan-400" />
+                    {editingCategoryId ? (
+                      <FileText className="w-5 h-5 text-cyan-400" />
+                    ) : (
+                      <Plus className="w-5 h-5 text-cyan-400" />
+                    )}
                   </div>
-                  Add New Category
+                  {editingCategoryId ? "Edit Category" : "Add New Category"}
                 </h2>
 
                 <div className="space-y-6">
@@ -154,23 +201,35 @@ function Category() {
                       onChange={(e) => setCategoryImage(e.target.files[0])}
                       className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-xl text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-600 file:text-white hover:file:bg-cyan-700 transition-all duration-200"
                     />
-                    {categoryImage && (
+
+                    {(categoryImage || editingCategoryId) && (
                       <div className="relative pt-2">
                         <img
-                          src={URL.createObjectURL(categoryImage) || "/placeholder.svg"}
+                          src={
+                            categoryImage
+                              ? URL.createObjectURL(categoryImage)
+                              : categories.find(
+                                  (cat) => cat._id === editingCategoryId
+                                )?.image || "/placeholder.svg"
+                          }
                           alt="Preview"
                           className="w-full h-48 object-cover rounded-xl border border-slate-600/50"
                         />
                         <button
                           onClick={() => {
-                            setCategoryImage(null)
+                            setCategoryImage(null);
                             if (fileInputRef.current) {
-                              fileInputRef.current.value = ""
+                              fileInputRef.current.value = "";
                             }
                           }}
                           className="absolute top-4 right-2 p-2 rounded-full bg-red-600/90 text-white shadow-md hover:bg-red-700 hover:shadow-lg transform hover:scale-110 transition-all duration-200"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -183,8 +242,12 @@ function Category() {
                     )}
                   </div>
 
-                  <Button onClick={handleAddCategory} className="w-full" size="lg">
-                    Add Category
+                  <Button
+                    onClick={handleAddCategory}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {editingCategoryId ? "Update Category" : "Add Category"}
                   </Button>
                 </div>
               </div>
@@ -194,7 +257,7 @@ function Category() {
           {/* Categories Table */}
           <Table>
             <Table.Header>
-              <div className="grid grid-cols-2 gap-4 font-semibold text-slate-200">
+              <div className="grid grid-cols-3 gap-4 font-semibold text-slate-200">
                 <div className="flex items-center gap-2">
                   <ImageIcon className="w-4 h-4" />
                   <span>Image</span>
@@ -202,6 +265,10 @@ function Category() {
                 <div className="flex items-center gap-2">
                   <Tag className="w-4 h-4" />
                   <span>Name</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Tag className="w-4 h-4" />
+                  <span>Actions</span>
                 </div>
               </div>
             </Table.Header>
@@ -220,7 +287,7 @@ function Category() {
               ) : (
                 categories.map((category) => (
                   <Table.Row key={category._id}>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <div className="flex items-center">
                         <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-600/50 flex items-center justify-center border border-slate-500/30">
                           {category?.image ? (
@@ -239,6 +306,22 @@ function Category() {
                           {category?.name?.en || "Unnamed Category"}
                         </span>
                       </div>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          onClick={() => handleEditCategory(category)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                          onClick={() => handleDeleteCategory(category._id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                   </Table.Row>
                 ))
@@ -248,7 +331,7 @@ function Category() {
         </div>
       </section>
     </main>
-  )
+  );
 }
 
-export default Category
+export default Category;
