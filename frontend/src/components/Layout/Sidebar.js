@@ -11,15 +11,15 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: HomeIcon },
   { name: "Category", href: "/category", icon: TagIcon },
   { name: "Meal", href: "/meal", icon: CubeIcon },
-  // { name: "Orders", href: "/dashboard/orders", icon: ShoppingBagIcon },
+  { name: "Orders", href: "/orders", icon: ShoppingBagIcon },
 ];
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("username");
     navigate("/login");
   };
 
