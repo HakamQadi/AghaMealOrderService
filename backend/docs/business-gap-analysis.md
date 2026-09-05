@@ -55,6 +55,21 @@ The checkout modal collects name, phone, and pickup/delivery only ([CheckoutModa
 
 **Business consequence:** every delivery order arrives with no address. Staff must phone each customer to ask where to deliver — which is the single largest hidden operating cost in the current flow, and it scales linearly with order volume. The `Order` schema has a full GeoJSON `location` block ready and unused.
 
+### C4 — Anyone could grant themselves an admin account
+
+> Found during implementation, after the original analysis was written.
+
+`register` read `role` straight from the request body and passed it to `User.create`:
+
+```js
+const { name, phone, password, role } = req.body;   // UserController.js:11
+role: role || "user",                               // UserController.js:26
+```
+
+`/register` is public and unauthenticated. A single request with `{"role":"admin"}` created a full admin account — no existing credentials needed.
+
+**Business consequence:** strictly worse than C3, which at least required knowing a registered phone number. This was self-service admin access for anyone who could reach the API. Fixed: `role` is no longer read from the body and every registration is created as `"user"`.
+
 ### C3 — Password reset returns the reset token to the caller
 
 ```js
@@ -160,7 +175,7 @@ No feedback loop from customers, no way to feature or promote a meal, no loyalty
 
 | Severity | Count | Theme |
 |---|---|---|
-| Critical | 3 | Client-set prices, missing delivery address, reset-token disclosure |
+| Critical | 4 | Client-set prices, missing delivery address, reset-token disclosure, self-service admin registration |
 | Operational | 8 | No auth, single-boolean lifecycle, no notifications, no availability, no hours, no fees, no coupons, no payment |
 | Analytics/product | 6 | Vanity metrics, no customer view, broken endpoints, currency |
 | Hygiene | 10 | Secrets in git, config, dead code, no tests |

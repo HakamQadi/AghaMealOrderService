@@ -1,17 +1,19 @@
 import express from "express";
-const router = express.Router();
 import mealController from "../controller/MealsController.js";
 import upload from "../utils/Multer.js";
+import { requireAdmin } from "../middleware/auth.js";
 
+const router = express.Router();
+
+// Public — the customer app's menu depends on these.
 router.route("/").get(mealController.getAllMeals);
 router.route("/category/:categoryId").get(mealController.getMealByCategory);
 
-router.route("/add").post(upload.single("image"), mealController.addMeal);
-
+// Staff only.
+router.route("/add").post(requireAdmin, upload.single("image"), mealController.addMeal);
 router
   .route("/update/:id")
-  .patch(upload.single("image"), mealController.updateMeal);
-
-router.route("/delete/:id").delete(mealController.deleteMeal);
+  .patch(requireAdmin, upload.single("image"), mealController.updateMeal);
+router.route("/delete/:id").delete(requireAdmin, mealController.deleteMeal);
 
 export default router;

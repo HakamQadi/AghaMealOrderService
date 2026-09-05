@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import axios from "axios"
+import api from "../../services/api"
 import Modal from "../../components/Modal/PopupModal"
 import Button from "../../components/ui/Button"
 import Input from "../../components/ui/Input"
@@ -23,7 +23,7 @@ export default function Meal() {
   const fetchMealsData = async () => {
     setLoading(true)
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/meals`)
+      const response = await api.get(`/admin/meals`)
       setMeals(response?.data?.meals)
     } catch (error) {
       console.error("ERROR :: ", error)
@@ -34,7 +34,7 @@ export default function Meal() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/categories`)
+      const response = await api.get(`/admin/categories`)
       setCategories(response.data.categories)
     } catch (error) {
       console.error("ERROR fetching categories:", error)
@@ -60,7 +60,7 @@ export default function Meal() {
     formData.append("image", mealImage)
 
     try {
-      await axios.post(`${process.env.REACT_APP_API_BASE_URL}/admin/meals/add`, formData, {
+      await api.post(`/admin/meals/add`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       })
       closeFunction()

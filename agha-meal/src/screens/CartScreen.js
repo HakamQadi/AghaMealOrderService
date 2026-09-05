@@ -129,9 +129,11 @@ const CartScreen = ({ navigation }) => {
         contact: customerInfo.phone,
         name: customerInfo.name,
         type: orderType,
+        // Send what we want, not what we think it costs — the server prices
+        // the cart from the menu and ignores any price sent from here.
         cartItems: cart.map((item) => ({
+          mealId: item._id,
           name: item.name,
-          price: item.price,
           quantity: item.quantity,
         })),
       };

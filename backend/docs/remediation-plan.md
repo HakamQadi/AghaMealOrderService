@@ -5,6 +5,25 @@
 
 ---
 
+## Implementation status
+
+_Last updated 2026-09-06._
+
+| Item | Status |
+|---|---|
+| 0.1 Rotate leaked credentials | ⚠️ **Blocked — needs you.** Repo side done (`.gitignore`, `.env.example`); the Atlas / Render / ImageKit console rotations require your access |
+| 0.2 Server-authoritative pricing | ✅ Done, tested |
+| 0.3 Password reset disclosure | ✅ Done (token no longer returned, stored hashed, 10-min TTL). SMS delivery still outstanding — codes are logged server-side as a stopgap |
+| 0.4 Auth + authorization | ✅ Done, tested |
+| 0.5 Duplicate admin account | ⚠️ **Needs your decision** — `07789718044` still exists; deleting it is a production write |
+| Privilege escalation via `register` | ✅ Done — **new gap, not in the original analysis** (see C4) |
+| Hygiene items | ✅ Done (see below) |
+| Phase 1 onward | Not started |
+
+**Not yet done in Phase 0:** SMS provider (0.3), request-validation layer, Sentry.
+
+---
+
 ## Sequencing principle
 
 Phases are ordered by *business risk removed per unit of work*, not by feature appeal. Phase 0 stops active bleeding. Phase 1 makes delivery actually operable. Phase 2 gives staff a real workflow. Phase 3 and beyond are growth.

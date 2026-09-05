@@ -6,10 +6,6 @@ const getAllMeals = async (req, res) => {
   try {
     const meals = await Meal.find().populate("category");
 
-    if (!meals || meals.length === 0) {
-      return res.status(404).json({ message: "Meals not found" });
-    }
-
     res.status(200).json({
       message: "Meals found successfully",
       count: meals.length,

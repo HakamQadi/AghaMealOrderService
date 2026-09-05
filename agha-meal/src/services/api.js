@@ -1,4 +1,5 @@
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "@env";
 
 // Create axios instance with base configuration
@@ -19,20 +20,22 @@ api.interceptors.response.use(
   }
 );
 
-// // Request interceptor for adding auth tokens if needed
-// api.interceptors.request.use(
-//   (config) => {
-//     // Add auth token if available
-//     // const token = await AsyncStorage.getItem('authToken')
-//     // if (token) {
-//     //   config.headers.Authorization = `Bearer ${token}`
-//     // }
-//     return config;
-//   },
-//   (error) => {
-//     return Promise.reject(error);
-//   }
-// );
+// Attach the stored JWT to every request. The API requires it for placing
+// orders and for reading order history.
+api.interceptors.request.use(
+  async (config) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (error) {
+      console.warn("Could not read auth token:", error.message);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 
 // API functions
@@ -98,16 +101,6 @@ export const fetchCategories = async () => {
 //   }
 // };
 
-export const fetchOrderHistory = async () => {
-  try {
-    const response = await api.get("/orders");
-    return response;
-  } catch (error) {
-    console.error("Error fetching order history:", error);
-    throw error;
-  }
-};
-
 export const createOrder = async (orderData) => {
   try {
     const response = await api.post("/admin/orders/add", orderData);
@@ -140,7 +133,10 @@ export const getOrderHistory = async (userId) => {
 
 export const updateOrder = async (orderId, updateData) => {
   try {
-    const response = await api.put(`/orders/${orderId}`, updateData);
+    const response = await api.patch(
+      `/admin/orders/update/${orderId}`,
+      updateData
+    );
     return response;
   } catch (error) {
     console.error("Error updating order:", error);
@@ -150,7 +146,7 @@ export const updateOrder = async (orderId, updateData) => {
 
 export const cancelOrder = async (orderId) => {
   try {
-    const response = await api.delete(`/orders/${orderId}`);
+    const response = await api.delete(`/admin/orders/delete/${orderId}`);
     return response;
   } catch (error) {
     console.error("Error cancelling order:", error);

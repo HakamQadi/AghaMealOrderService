@@ -1,279 +1,223 @@
 import { Order } from "../model/OrderModel.js";
 import { User } from "../model/userModel.js";
-import { Meal } from "../model/mealModel.js";
+import { priceCart, computeTotals } from "../services/priceCart.js";
+import { asyncHandler } from "../middleware/errorHandler.js";
+import { badRequest, notFound, forbidden } from "../utils/HttpError.js";
 
-const createOrder = async (req, res) => {
-  const {
+const ORDER_TYPES = ["pickup", "delivery"];
+
+/**
+ * The user an order is being placed for. Taken from the verified token when
+ * one is present; falls back to the body only while ALLOW_LEGACY_UNAUTHED_ORDERS
+ * is set, so published app builds that send no token keep working during a
+ * rollout.
+ */
+const resolveOrderUserId = (req) => {
+  if (req.user?.id) return req.user.id;
+  if (process.env.ALLOW_LEGACY_UNAUTHED_ORDERS === "true") {
+    return req.body.userId;
+  }
+  return undefined;
+};
+
+const assertValidType = (type) => {
+  if (!ORDER_TYPES.includes(type)) {
+    throw badRequest(`type must be one of: ${ORDER_TYPES.join(", ")}`);
+  }
+};
+
+const createOrder = asyncHandler(async (req, res) => {
+  const { name, contact, cartItems, location, type } = req.body;
+
+  if (!name || !contact) {
+    throw badRequest("name and contact are required");
+  }
+  assertValidType(type);
+
+  const userId = resolveOrderUserId(req);
+  if (!userId) throw badRequest("userId is required");
+
+  const user = await User.findById(userId);
+  if (!user) throw notFound("User not found");
+
+  // Prices come from the Meal documents, never from the request body.
+  const { items, subtotal, unavailable } = await priceCart(cartItems);
+
+  // discountAmount is intentionally NOT read from the body. Until the coupon
+  // engine exists (Phase 3.2) there is no trusted source for a discount, so it
+  // is always zero rather than whatever the caller claims.
+  const totals = computeTotals({ subtotal, discountAmount: 0, deliveryFee: 0 });
+
+  const hasCoordinates = Array.isArray(location?.coordinates)
+    ? location.coordinates.length === 2
+    : false;
+
+  const newOrder = await Order.create({
     name,
     contact,
-    userId,
-    cartItems,
-    discountAmount = 0,
-    location,
+    user: user._id,
+    cartItems: items,
+    ...totals,
+    location: hasCoordinates ? location : undefined,
     type,
-  } = req.body;
+  });
 
-  try {
-    // Validate required fields
-    if (
-      !name ||
-      !contact ||
-      !cartItems ||
-      cartItems.length === 0 ||
-      !userId ||
-      !type
-    ) {
-      return res.status(400).json({
-        message: "Name, ID, contact, type,  and cartItems are required",
-      });
-    }
-    // Validate type value
-    if (!["pickup", "delivery"].includes(type)) {
-      return res.status(400).json({
-        message: "Type must be either 'pickup' or 'delivery'",
-      });
-    }
+  user.orders.push(newOrder._id);
+  await user.save();
 
-    // TODO get the user id from token
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+  res.status(201).json({
+    message: "Order created successfully",
+    orderId: newOrder._id,
+    order: newOrder,
+    // Tell the client when the server priced the cart differently from what it
+    // displayed, so it can show "prices have changed" instead of silently
+    // charging a different amount.
+    ...(unavailable.length ? { unavailableItems: unavailable } : {}),
+  });
+});
 
-    // Ensure numeric values
-    // Format cart items and calculate totalPrice
-    let totalPriceNumber = 0;
-    const formattedCartItems = cartItems.map((item) => {
-      const quantity = item.quantity || 1;
-      const price = parseFloat(item.price);
-      if (isNaN(price)) {
-        throw new Error("Invalid price in cart item");
-      }
-      totalPriceNumber += price * quantity;
-      return {
-        name: item.name,
-        price,
-        quantity,
-      };
-    });
-
-    const discountAmountNumber = parseFloat(discountAmount) || 0;
-
-    if (isNaN(totalPriceNumber) || isNaN(discountAmountNumber)) {
-      return res
-        .status(400)
-        .json({ message: "Invalid numeric values for prices" });
-    }
-
-    // Final total price after discount
-    totalPriceNumber -= discountAmountNumber;
-
-    // Create order
-    const newOrder = await Order.create({
-      name,
-      contact,
-      cartItems: formattedCartItems,
-      totalPrice: totalPriceNumber,
-      discountAmount: discountAmountNumber,
-      location: location || undefined, // optional,
-      type,
-    });
-
-    user.orders.push(newOrder._id);
-    await user.save();
-
-    res.status(201).json({
-      message: "Order created successfully",
-      orderId: newOrder._id,
-    });
-  } catch (error) {
-    console.error("Error creating order:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-const getAllOrdersAndById = async (req, res) => {
+const getAllOrdersAndById = asyncHandler(async (req, res) => {
   const { orderId } = req.query;
-  try {
-    if (orderId) {
-      const order = await Order.findById(orderId);
-      if (!order) {
-        return res.status(404).json({ message: "Order not found" });
-      }
-      return res.status(200).json({ message: "Order found", order });
-    }
 
-    const orders = await Order.find().sort({ createdAt: -1 });
-    res.status(200).json({
-      message: "Orders retrieved successfully",
-      count: orders.length,
-      orders,
-    });
-  } catch (error) {
-    console.error("Error getting orders:", error);
-    res.status(500).json({ message: "Internal server error" });
+  if (orderId) {
+    const order = await Order.findById(orderId);
+    if (!order) throw notFound("Order not found");
+    return res.status(200).json({ message: "Order found", order });
   }
-};
 
-const getOrdersByUserId = async (req, res) => {
+  const limit = Math.min(Number.parseInt(req.query.limit, 10) || 100, 500);
+  const skip = Math.max(Number.parseInt(req.query.skip, 10) || 0, 0);
+
+  const [orders, total] = await Promise.all([
+    Order.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Order.estimatedDocumentCount(),
+  ]);
+
+  res.status(200).json({
+    message: "Orders retrieved successfully",
+    count: orders.length,
+    total,
+    orders,
+  });
+});
+
+const getOrdersByUserId = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
-  try {
-    const user = await User.findById(userId).populate({
-      path: "orders",
-      options: { sort: { createdAt: -1 } }, // latest first
-    });
+  const user = await User.findById(userId).populate({
+    path: "orders",
+    options: { sort: { createdAt: -1 } },
+  });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+  if (!user) throw notFound("User not found");
 
-    if (!user.orders || user.orders.length === 0) {
-      return res.status(200).json({ message: "No orders found", orders: [] });
-    }
+  res.status(200).json({
+    message: "Orders retrieved successfully",
+    count: user.orders?.length ?? 0,
+    orders: user.orders ?? [],
+  });
+});
 
-    res.status(200).json({
-      message: "Orders retrieved successfully",
-      count: user.orders.length,
-      orders: user.orders,
-    });
-  } catch (error) {
-    console.error("Error getting user orders:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-const updateOrder = async (req, res) => {
+const updateOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { isDelivered } = req.body;
 
-  try {
-    if (typeof isDelivered !== "boolean") {
-      return res.status(400).json({ message: "Invalid delivery status" });
-    }
-
-    const updatedOrder = await Order.findByIdAndUpdate(
-      id,
-      { isDelivered },
-      { new: true }
-    );
-
-    if (!updatedOrder) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    res.status(200).json({
-      message: "Order updated successfully",
-      order: updatedOrder,
-    });
-  } catch (error) {
-    console.error("Error updating order:", error);
-    res.status(500).json({ message: "Internal server error" });
+  if (typeof isDelivered !== "boolean") {
+    throw badRequest("isDelivered must be a boolean");
   }
-};
 
-const deleteOrder = async (req, res) => {
+  const updatedOrder = await Order.findByIdAndUpdate(
+    id,
+    { isDelivered },
+    { new: true }
+  );
+
+  if (!updatedOrder) throw notFound("Order not found");
+
+  res.status(200).json({
+    message: "Order updated successfully",
+    order: updatedOrder,
+  });
+});
+
+const deleteOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  try {
-    const deleted = await Order.findByIdAndDelete(id);
-    if (!deleted) {
-      return res.status(404).json({ message: "Order not found" });
-    }
+  const deleted = await Order.findByIdAndDelete(id);
+  if (!deleted) throw notFound("Order not found");
 
-    res.status(200).json({ message: "Order deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting order:", error);
-    res.status(500).json({ message: "Internal server error" });
+  // Keep User.orders consistent — previously the id was left dangling and
+  // populate() silently dropped it.
+  await User.updateMany({ orders: deleted._id }, { $pull: { orders: deleted._id } });
+
+  res.status(200).json({ message: "Order deleted successfully" });
+});
+
+const reorder = asyncHandler(async (req, res) => {
+  const { orderId, type, location } = req.body;
+
+  if (!orderId) throw badRequest("orderId is required");
+
+  const userId = resolveOrderUserId(req);
+  if (!userId) throw badRequest("userId is required");
+
+  const originalOrder = await Order.findById(orderId);
+  if (!originalOrder) throw notFound("Original order not found");
+
+  const user = await User.findById(userId);
+  if (!user) throw notFound("User not found");
+
+  // A customer may only reorder their own order. Orders placed before the
+  // `user` field existed have no owner recorded, so fall back to the user's
+  // own order list.
+  const ownsOrder = originalOrder.user
+    ? String(originalOrder.user) === String(user._id)
+    : user.orders.some((id) => String(id) === String(originalOrder._id));
+
+  if (!ownsOrder && req.user?.role !== "admin") {
+    throw forbidden("You can only reorder your own orders");
   }
-};
 
+  const orderType = type ?? originalOrder.type;
+  assertValidType(orderType);
 
-const reorder = async (req, res) => {
-  // const { orderId, userId, type } = req.body;
-  const { orderId, userId, type, location } = req.body;
+  // Re-price against the current menu rather than copying historic prices.
+  const { items, subtotal, unavailable } = await priceCart(
+    originalOrder.cartItems.map((item) => ({
+      mealId: item.meal ? String(item.meal) : undefined,
+      name: item.name,
+      quantity: item.quantity,
+    }))
+  );
 
-  try {
-    if (!orderId || !userId) {
-      // if (!orderId || !userId || !type) {
-      return res
-        .status(400)
-        .json({ message: "orderId, userId, and type are required" });
-    }
+  const totals = computeTotals({ subtotal, discountAmount: 0, deliveryFee: 0 });
 
-    if (!["pickup", "delivery"].includes(type)) {
-      return res
-        .status(400)
-        .json({ message: "Type must be either 'pickup' or 'delivery'" });
-    }
+  const resolvedLocation =
+    location ??
+    (originalOrder.location?.coordinates?.length
+      ? originalOrder.location.toObject?.() ?? originalOrder.location
+      : undefined);
 
-    // Find original order
-    const originalOrder = await Order.findById(orderId);
-    if (!originalOrder) {
-      return res.status(404).json({ message: "Original order not found" });
-    }
+  const newOrder = await Order.create({
+    name: originalOrder.name,
+    contact: originalOrder.contact,
+    user: user._id,
+    cartItems: items,
+    ...totals,
+    type: orderType,
+    location: resolvedLocation,
+  });
 
-    // Find user
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+  user.orders.push(newOrder._id);
+  await user.save();
 
-    // ✅ Rebuild cart items from Meal table
-    let totalPrice = 0;
-    const newCartItems = [];
-
-    for (const item of originalOrder.cartItems) {
-      // Try to find meal by English OR Arabic name
-      const meal = await Meal.findOne({
-        $or: [{ "name.en": item.name.en }, { "name.ar": item.name.ar }],
-      });
-
-      if (!meal) {
-        console.warn(`Meal not found for reorder item: ${item.name.en}`);
-        continue; // skip this item if meal no longer exists
-      }
-
-      const qty = item.quantity || 1;
-      totalPrice += meal.price * qty;
-
-      newCartItems.push({
-        name: meal.name,
-        price: meal.price,
-        quantity: qty,
-        image: meal.image,
-      });
-    }
-
-    // Apply discount if original had any
-    const discountAmount = originalOrder.discountAmount || 0;
-    totalPrice -= discountAmount;
-
-    // Create new order
-    const newOrder = await Order.create({
-      name: originalOrder.name,
-      contact: originalOrder.contact,
-      cartItems: newCartItems,
-      totalPrice,
-      discountAmount,
-      type: type || originalOrder.type,
-      location: location || originalOrder.location, // allow override
-    });
-
-    // Attach order to user
-    user.orders.push(newOrder._id);
-    await user.save();
-
-    return res.status(201).json({
-      message: "Reorder created successfully",
-      newOrderId: newOrder._id,
-      order: newOrder,
-    });
-  } catch (error) {
-    console.error("Error creating reorder:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
+  res.status(201).json({
+    message: "Reorder created successfully",
+    newOrderId: newOrder._id,
+    order: newOrder,
+    ...(unavailable.length ? { unavailableItems: unavailable } : {}),
+  });
+});
 
 export default {
   createOrder,
@@ -281,5 +225,5 @@ export default {
   updateOrder,
   deleteOrder,
   getOrdersByUserId,
-  reorder
+  reorder,
 };

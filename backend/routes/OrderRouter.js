@@ -1,16 +1,45 @@
 import express from "express";
 import OrderController from "../controller/OrderController.js";
+import {
+  requireAdmin,
+  requireAuth,
+  requireSelfOrAdmin,
+  optionalAuth,
+} from "../middleware/auth.js";
+
 const orderRoutes = express.Router();
 
-orderRoutes.get("/", OrderController.getAllOrdersAndById);
-orderRoutes.get("/user/:userId", OrderController.getOrdersByUserId);
+/**
+ * Order creation accepts a token when the client sends one. Published app
+ * builds do not yet, so during the rollout window
+ * ALLOW_LEGACY_UNAUTHED_ORDERS=true lets them through on optionalAuth; with
+ * the flag unset (the default) the request is rejected outright.
+ *
+ * The flag is read per request rather than once at import time: ES module
+ * imports are hoisted, so this module is evaluated before server.js gets to
+ * call dotenv.config() — reading it here at module scope would always see
+ * undefined regardless of what .env says.
+ */
+const orderAuth = (req, res, next) =>
+  process.env.ALLOW_LEGACY_UNAUTHED_ORDERS === "true"
+    ? optionalAuth(req, res, next)
+    : requireAuth(req, res, next);
 
-orderRoutes.post("/add", OrderController.createOrder);
-orderRoutes.post("/reorder", OrderController.reorder);
+// Staff: the full order list.
+orderRoutes.get("/", requireAdmin, OrderController.getAllOrdersAndById);
 
+// A customer's own history — or any history, for staff.
+orderRoutes.get(
+  "/user/:userId",
+  requireSelfOrAdmin("userId"),
+  OrderController.getOrdersByUserId
+);
 
-orderRoutes.patch("/update/:id", OrderController.updateOrder);
+orderRoutes.post("/add", orderAuth, OrderController.createOrder);
+orderRoutes.post("/reorder", orderAuth, OrderController.reorder);
 
-orderRoutes.delete("/delete/:id", OrderController.deleteOrder);
+// Staff only.
+orderRoutes.patch("/update/:id", requireAdmin, OrderController.updateOrder);
+orderRoutes.delete("/delete/:id", requireAdmin, OrderController.deleteOrder);
 
 export default orderRoutes;

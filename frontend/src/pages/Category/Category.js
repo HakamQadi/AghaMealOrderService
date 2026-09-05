@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
+import api from "../../services/api";
 import Modal from "../../components/Modal/PopupModal";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
@@ -23,8 +23,8 @@ function Category() {
   const fetchCategoriesData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/categories`
+      const response = await api.get(
+        `/admin/categories`
       );
       setCategories(response.data.categories);
     } catch (error) {
@@ -56,14 +56,14 @@ function Category() {
 
     try {
       if (editingCategoryId) {
-        await axios.patch(
-          `${process.env.REACT_APP_API_BASE_URL}/admin/categories/update/${editingCategoryId}`,
+        await api.patch(
+          `/admin/categories/update/${editingCategoryId}`,
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
       } else {
-        await axios.post(
-          `${process.env.REACT_APP_API_BASE_URL}/admin/categories/add`,
+        await api.post(
+          `/admin/categories/add`,
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },
@@ -93,8 +93,8 @@ function Category() {
       return;
 
     try {
-      await axios.delete(
-        `${process.env.REACT_APP_API_BASE_URL}/admin/categories/delete/${id}`
+      await api.delete(
+        `/admin/categories/delete/${id}`
       );
       fetchCategoriesData();
     } catch (error) {

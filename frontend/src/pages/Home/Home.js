@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import axios from "axios"
+import api from "../../services/api"
 import { Utensils, Tag, ShoppingBag, TrendingUp } from "lucide-react"
 import StatCard from "../../components/ui/StatCard"
 
@@ -11,7 +11,7 @@ export default function Home() {
 
   const fetchMealsData = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/meals`)
+      const response = await api.get(`/admin/meals`)
       setMealsLength(response?.data?.count)
     } catch (error) {
       console.error("ERROR :: ", error.response || error.message)
@@ -20,7 +20,7 @@ export default function Home() {
 
   const fetchCategoriesData = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/categories`)
+      const response = await api.get(`/admin/categories`)
       setCategoriesLength(response?.data?.count)
     } catch (error) {
       console.error("ERROR :: ", error.response || error.message)
@@ -29,7 +29,7 @@ export default function Home() {
 
   const fetchOrdersData = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/orders`)
+      const response = await api.get(`/admin/orders`)
       setOrdersLength(response?.data?.count)
     } catch (error) {
       console.error("ERROR :: ", error.response || error.message)

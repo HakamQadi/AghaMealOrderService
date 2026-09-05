@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import axios from "axios"
+import api from "../services/api"
 import Modal from "../components/Modal/PopupModal"
 import Button from "../components/ui/Button"
 import Table from "../components/ui/Table"
@@ -18,7 +18,7 @@ export default function Orders() {
   const fetchOrdersData = async () => {
     setLoading(true)
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/admin/orders`)
+      const response = await api.get(`/admin/orders`)
       setOrders(response?.data?.orders || [])
     } catch (error) {
       console.error("ERROR fetching orders:", error)
@@ -34,7 +34,7 @@ export default function Orders() {
 
   const handleToggleDeliveryStatus = async (orderId, currentStatus) => {
     try {
-      await axios.patch(`${process.env.REACT_APP_API_BASE_URL}/admin/orders/update/${orderId}`, {
+      await api.patch(`/admin/orders/update/${orderId}`, {
         isDelivered: !currentStatus,
       })
       fetchOrdersData()
@@ -49,7 +49,7 @@ export default function Orders() {
   const handleDeleteOrder = async (orderId) => {
     if (window.confirm("Are you sure you want to delete this order?")) {
       try {
-        await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/admin/orders/delete/${orderId}`)
+        await api.delete(`/admin/orders/delete/${orderId}`)
         fetchOrdersData()
         setIsViewModalOpen(false)
       } catch (error) {

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Lock, LogIn, Utensils, Phone } from "lucide-react";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
-import axios from "axios";
+import api from "../services/api";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { useState } from "react";
@@ -16,8 +16,8 @@ const Login = () => {
     phone: Yup.string()
       .required("Phone number is required")
       .matches(
-        /^(077|078|079)\d{7}$/,
-        "Phone must start with 077, 078, or 079 and be 10 digits long"
+        /^(077|078|079)\d{7,8}$/,
+        "Phone must start with 077, 078, or 079"
       ),
     password: Yup.string().required("Password is required"),
   });
@@ -26,22 +26,28 @@ const Login = () => {
     setError("");
 
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_BASE_URL}/login`,
-        {
-          phone: values.phone,
-          password: values.password,
-        }
-      );
+      const response = await api.post("/login", {
+        phone: values.phone,
+        password: values.password,
+      });
 
-      if (response?.data?.token && response?.data?.user?.name) {
-        // Store token & username in localStorage
-        localStorage.setItem("authToken", response?.data?.token);
-        localStorage.setItem("username", response?.data?.user?.name);
-        navigate("/"); // redirect to home/dashboard
-      } else {
+      const { token, user } = response?.data ?? {};
+
+      if (!token || !user?.name) {
         setError("Invalid login credentials.");
+        return;
       }
+
+      // This dashboard is staff-only. Without this check any customer account
+      // could sign in, because the token itself is valid either way.
+      if (user.role !== "admin") {
+        setError("This account does not have dashboard access.");
+        return;
+      }
+
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("username", user.name);
+      navigate("/");
     } catch (err) {
       if (err.response?.data?.message) {
         setError(err.response.data.message);
@@ -140,12 +146,16 @@ const Login = () => {
           </Formik>
 
           <div className="mt-6 text-center">
-            <a
-              href="#"
-              className="text-cyan-400 hover:text-cyan-300 text-sm transition-colors duration-200"
+            {/* Not wired up yet — the API exposes /request-reset and
+                /reset-password, but the dashboard has no screen for them. */}
+            <button
+              type="button"
+              disabled
+              title="Password reset is not available in the dashboard yet"
+              className="text-cyan-400 text-sm transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-transparent border-0 p-0"
             >
               Forgot your password?
-            </a>
+            </button>
           </div>
         </div>
 
