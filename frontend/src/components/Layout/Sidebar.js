@@ -6,13 +6,17 @@ import {
   ArrowRightOnRectangleIcon,
   HomeIcon,
   Cog6ToothIcon,
+  RectangleStackIcon,
+  UsersIcon,
 } from "@heroicons/react/24/outline";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: HomeIcon },
   { name: "Category", href: "/category", icon: TagIcon },
   { name: "Meal", href: "/meal", icon: CubeIcon },
+  { name: "Order Board", href: "/board", icon: RectangleStackIcon },
   { name: "Orders", href: "/orders", icon: ShoppingBagIcon },
+  { name: "Customers", href: "/customers", icon: UsersIcon },
   { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
 ];
 

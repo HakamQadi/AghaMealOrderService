@@ -101,6 +101,26 @@ export const fetchCategories = async () => {
 //   }
 // };
 
+export const registerPushToken = async (pushToken) => {
+  try {
+    const response = await api.post("/push-token", { pushToken });
+    return response;
+  } catch (error) {
+    console.error("Error registering push token:", error);
+    throw error;
+  }
+};
+
+export const cancelOwnOrder = async (orderId, reason) => {
+  try {
+    const response = await api.post(`/admin/orders/${orderId}/cancel`, { reason });
+    return response;
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    throw error;
+  }
+};
+
 export const fetchSettings = async () => {
   try {
     const response = await api.get("/settings");
@@ -150,16 +170,6 @@ export const updateOrder = async (orderId, updateData) => {
     return response;
   } catch (error) {
     console.error("Error updating order:", error);
-    throw error;
-  }
-};
-
-export const cancelOrder = async (orderId) => {
-  try {
-    const response = await api.delete(`/admin/orders/delete/${orderId}`);
-    return response;
-  } catch (error) {
-    console.error("Error cancelling order:", error);
     throw error;
   }
 };

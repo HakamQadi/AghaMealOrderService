@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ORDER_STATUSES } from "../services/orderStatus.js";
 
 const orderSchema = new mongoose.Schema(
   {
@@ -54,10 +55,24 @@ const orderSchema = new mongoose.Schema(
       min: 0,
     },
 
-    isDelivered: {
-      type: Boolean,
-      default: false,
+    status: {
+      type: String,
+      enum: ORDER_STATUSES,
+      default: "placed",
+      index: true,
     },
+
+    // Append-only audit of every status change: what, when, and who.
+    statusHistory: [
+      {
+        status: { type: String, enum: ORDER_STATUSES, required: true },
+        at: { type: Date, default: Date.now },
+        by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        reason: { type: String },
+      },
+    ],
+
+    cancellationReason: { type: String },
     type: {
       type: String,
       enum: ["pickup", "delivery"],
@@ -91,7 +106,20 @@ const orderSchema = new mongoose.Schema(
 );
 
 orderSchema.index({ createdAt: -1 });
-orderSchema.index({ isDelivered: 1, createdAt: -1 });
+orderSchema.index({ status: 1, createdAt: -1 });
+
+/**
+ * `isDelivered` was the entire fulfilment model before the status enum
+ * existed. Kept as a virtual for one release so already-published app builds
+ * and any un-migrated dashboard code keep reading something sensible.
+ * Remove once every client reads `status`.
+ */
+orderSchema.virtual("isDelivered").get(function () {
+  return this.status === "completed";
+});
+
+orderSchema.set("toJSON", { virtuals: true });
+orderSchema.set("toObject", { virtuals: true });
 
 const Order = mongoose.model("Order", orderSchema);
 export { Order };

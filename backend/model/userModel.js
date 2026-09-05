@@ -24,6 +24,9 @@ const userSchema = new mongoose.Schema(
 
     // Addresses the customer has chosen to keep, so a returning customer
     // picks one instead of retyping it at every checkout.
+    // Expo push tokens, one per device the customer has signed in on.
+    pushTokens: [{ type: String }],
+
     savedAddresses: [
       {
         label: { type: String, trim: true },

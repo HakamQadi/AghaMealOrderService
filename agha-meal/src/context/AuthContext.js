@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { registerForPushNotifications } from "../utils/push";
 
 const AuthContext = createContext();
 
@@ -31,6 +32,8 @@ export const AuthProvider = ({ children }) => {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
         setIsAuthenticated(true);
+        // Re-register on every launch: Expo tokens can rotate.
+        registerForPushNotifications().catch(() => {});
       }
     } catch (error) {
       console.error("Error checking auth status:", error);
@@ -43,6 +46,8 @@ export const AuthProvider = ({ children }) => {
     setToken(userToken);
     setUser(userData);
     setIsAuthenticated(true);
+    // Fire and forget — a customer who declines notifications still gets to order.
+    registerForPushNotifications().catch(() => {});
   };
 
   const logout = async () => {

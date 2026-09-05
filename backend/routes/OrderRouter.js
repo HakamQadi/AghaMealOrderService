@@ -38,8 +38,12 @@ orderRoutes.get(
 orderRoutes.post("/add", orderAuth, OrderController.createOrder);
 orderRoutes.post("/reorder", orderAuth, OrderController.reorder);
 
+// A customer may pull out before the kitchen commits; staff may always cancel.
+orderRoutes.post("/:id/cancel", requireAuth, OrderController.cancelOwnOrder);
+
 // Staff only.
 orderRoutes.patch("/update/:id", requireAdmin, OrderController.updateOrder);
+orderRoutes.patch("/:id/status", requireAdmin, OrderController.updateOrder);
 orderRoutes.delete("/delete/:id", requireAdmin, OrderController.deleteOrder);
 
 export default orderRoutes;

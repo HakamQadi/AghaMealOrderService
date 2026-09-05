@@ -151,4 +151,112 @@ const resetPassword = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Password has been reset" });
 });
 
-export { register, login, requestPasswordReset, resetPassword };
+/** Register (or refresh) this device's Expo push token for the signed-in user. */
+const registerPushToken = asyncHandler(async (req, res) => {
+  const { pushToken } = req.body;
+
+  if (!pushToken || typeof pushToken !== "string") {
+    throw badRequest("pushToken is required");
+  }
+
+  // addToSet keeps one entry per device without needing a read first.
+  await User.updateOne(
+    { _id: req.user.id },
+    { $addToSet: { pushTokens: pushToken } }
+  );
+
+  res.status(200).json({ message: "Push token registered" });
+});
+
+/** Staff: paginated customer list with lifetime value, for support calls. */
+const listUsers = asyncHandler(async (req, res) => {
+  const limit = Math.min(Number.parseInt(req.query.limit, 10) || 50, 200);
+  const skip = Math.max(Number.parseInt(req.query.skip, 10) || 0, 0);
+  const search = String(req.query.search ?? "").trim();
+
+  const filter = search
+    ? {
+        $or: [
+          { phone: { $regex: search, $options: "i" } },
+          { name: { $regex: search, $options: "i" } },
+        ],
+      }
+    : {};
+
+  const [users, total] = await Promise.all([
+    User.find(filter)
+      .select("-password -resetToken -resetTokenExpiration -pushTokens")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate({ path: "orders", select: "totalPrice status createdAt" }),
+    User.countDocuments(filter),
+  ]);
+
+  res.status(200).json({
+    total,
+    count: users.length,
+    users: users.map((user) => {
+      const orders = user.orders ?? [];
+      const completed = orders.filter((o) => o.status === "completed");
+      return {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        role: user.role,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt,
+        orderCount: orders.length,
+        completedCount: completed.length,
+        lifetimeValue:
+          Math.round(completed.reduce((sum, o) => sum + (o.totalPrice ?? 0), 0) * 1000) /
+          1000,
+        savedAddresses: user.savedAddresses ?? [],
+      };
+    }),
+  });
+});
+
+/** Staff: block or unblock a customer. */
+const setUserActive = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { isActive } = req.body;
+
+  if (typeof isActive !== "boolean") throw badRequest("isActive must be a boolean");
+
+  // Refuse to lock out the last remaining admin.
+  if (isActive === false) {
+    const target = await User.findById(id);
+    if (!target) throw badRequest("User not found");
+    if (target.role === "admin") {
+      const activeAdmins = await User.countDocuments({
+        role: "admin",
+        isActive: { $ne: false },
+      });
+      if (activeAdmins <= 1) {
+        throw badRequest("Cannot deactivate the last active admin account");
+      }
+    }
+  }
+
+  const user = await User.findByIdAndUpdate(id, { isActive }, { new: true }).select(
+    "-password -resetToken -resetTokenExpiration"
+  );
+  if (!user) throw badRequest("User not found");
+
+  res.status(200).json({
+    message: isActive ? "Account reactivated" : "Account deactivated",
+    user,
+  });
+});
+
+export {
+  register,
+  login,
+  requestPasswordReset,
+  resetPassword,
+  registerPushToken,
+  listUsers,
+  setUserActive,
+};

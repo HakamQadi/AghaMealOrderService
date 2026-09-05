@@ -8,6 +8,14 @@ import {
   assertMinimumOrder,
 } from "../services/delivery.js";
 import { assertOpen } from "../services/businessHours.js";
+import { notifyOrderStatus, notifyOrderPlaced } from "../services/notifications.js";
+import {
+  assertTransition,
+  nextStatuses,
+  statusFromLegacy,
+  CUSTOMER_CANCELLABLE,
+  TERMINAL_STATUSES,
+} from "../services/orderStatus.js";
 import { asyncHandler } from "../middleware/errorHandler.js";
 import { badRequest, notFound, forbidden } from "../utils/HttpError.js";
 
@@ -83,6 +91,8 @@ const createOrder = asyncHandler(async (req, res) => {
     ...totals,
     location: deliveryLocation,
     type,
+    status: "placed",
+    statusHistory: [{ status: "placed", at: new Date(), by: user._id }],
   });
 
   user.orders.push(newOrder._id);
@@ -102,6 +112,9 @@ const createOrder = asyncHandler(async (req, res) => {
   }
 
   await user.save();
+
+  // Fire-and-forget: a notification failure must never fail the order.
+  notifyOrderPlaced(newOrder, user).catch(() => {});
 
   res.status(201).json({
     message: "Order created successfully",
@@ -126,15 +139,28 @@ const getAllOrdersAndById = asyncHandler(async (req, res) => {
   const limit = Math.min(Number.parseInt(req.query.limit, 10) || 100, 500);
   const skip = Math.max(Number.parseInt(req.query.skip, 10) || 0, 0);
 
-  const [orders, total] = await Promise.all([
-    Order.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
-    Order.estimatedDocumentCount(),
+  // The order board asks for one status at a time, or for everything still
+  // in play ("active"), so it does not have to pull the full history.
+  const filter = {};
+  if (req.query.status) {
+    const requested = String(req.query.status).split(",").map((s) => s.trim());
+    filter.status = { $in: requested };
+  } else if (req.query.active === "true") {
+    filter.status = { $nin: TERMINAL_STATUSES };
+  }
+
+  const [orders, total, counts] = await Promise.all([
+    Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Order.countDocuments(filter),
+    // Per-status tallies for the board's column headers.
+    Order.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
   ]);
 
   res.status(200).json({
     message: "Orders retrieved successfully",
     count: orders.length,
     total,
+    statusCounts: Object.fromEntries(counts.map((c) => [c._id ?? "placed", c.count])),
     orders,
   });
 });
@@ -156,26 +182,90 @@ const getOrdersByUserId = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * Staff status change. Accepts either the new `status` field or the legacy
+ * `isDelivered` boolean, so an un-updated dashboard keeps working.
+ */
 const updateOrder = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { isDelivered } = req.body;
+  const { status, isDelivered, reason } = req.body;
 
-  if (typeof isDelivered !== "boolean") {
-    throw badRequest("isDelivered must be a boolean");
+  const target =
+    status !== undefined
+      ? status
+      : typeof isDelivered === "boolean"
+      ? statusFromLegacy(isDelivered)
+      : undefined;
+
+  if (target === undefined) {
+    throw badRequest("status is required");
   }
 
-  const updatedOrder = await Order.findByIdAndUpdate(
-    id,
-    { isDelivered },
-    { new: true }
-  );
+  const order = await Order.findById(id);
+  if (!order) throw notFound("Order not found");
 
-  if (!updatedOrder) throw notFound("Order not found");
+  assertTransition(order.status, target);
+
+  order.status = target;
+  order.statusHistory.push({
+    status: target,
+    at: new Date(),
+    by: req.user?.id,
+    reason,
+  });
+  if (target === "cancelled" || target === "rejected") {
+    order.cancellationReason = reason;
+  }
+  await order.save();
+
+  const customer = order.user ? await User.findById(order.user) : null;
+  notifyOrderStatus(order, customer).catch(() => {});
 
   res.status(200).json({
-    message: "Order updated successfully",
-    order: updatedOrder,
+    message: `Order marked ${target}`,
+    order,
+    nextStatuses: nextStatuses(order.status),
   });
+});
+
+/** Customer-initiated cancellation, allowed only before the kitchen commits. */
+const cancelOwnOrder = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body ?? {};
+
+  const order = await Order.findById(id);
+  if (!order) throw notFound("Order not found");
+
+  const isOwner = order.user && String(order.user) === String(req.user?.id);
+  if (!isOwner && req.user?.role !== "admin") {
+    throw forbidden("You can only cancel your own orders");
+  }
+
+  if (TERMINAL_STATUSES.includes(order.status)) {
+    throw badRequest(`This order is already ${order.status}`);
+  }
+  if (!CUSTOMER_CANCELLABLE.includes(order.status) && req.user?.role !== "admin") {
+    throw badRequest(
+      "This order is already being prepared. Please call the restaurant to cancel."
+    );
+  }
+
+  assertTransition(order.status, "cancelled");
+
+  order.status = "cancelled";
+  order.cancellationReason = reason || "Cancelled by customer";
+  order.statusHistory.push({
+    status: "cancelled",
+    at: new Date(),
+    by: req.user?.id,
+    reason: order.cancellationReason,
+  });
+  await order.save();
+
+  const owner = order.user ? await User.findById(order.user) : null;
+  notifyOrderStatus(order, owner).catch(() => {});
+
+  res.status(200).json({ message: "Order cancelled", order });
 });
 
 const deleteOrder = asyncHandler(async (req, res) => {
@@ -223,12 +313,15 @@ const reorder = asyncHandler(async (req, res) => {
   assertOpen(settings);
 
   // Re-price against the current menu rather than copying historic prices.
+  // Lenient: a meal discontinued since the original order should not block
+  // repeating the rest of it. The dropped items come back in the response.
   const { items, subtotal, unavailable } = await priceCart(
     originalOrder.cartItems.map((item) => ({
       mealId: item.meal ? String(item.meal) : undefined,
       name: item.name,
       quantity: item.quantity,
-    }))
+    })),
+    { strict: false }
   );
 
   assertMinimumOrder(subtotal, orderType, settings);
@@ -259,6 +352,8 @@ const reorder = asyncHandler(async (req, res) => {
     ...totals,
     type: orderType,
     location: resolvedLocation,
+    status: "placed",
+    statusHistory: [{ status: "placed", at: new Date(), by: user._id }],
   });
 
   user.orders.push(newOrder._id);
@@ -276,6 +371,7 @@ export default {
   createOrder,
   getAllOrdersAndById,
   updateOrder,
+  cancelOwnOrder,
   deleteOrder,
   getOrdersByUserId,
   reorder,

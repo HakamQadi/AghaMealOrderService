@@ -25,9 +25,14 @@ const normaliseQuantity = (raw) => {
  *   - { mealId, quantity }                 <- current clients
  *   - { name: { en, ar }, quantity }       <- legacy clients, resolved by name
  *
+ * @param {object}  [options]
+ * @param {boolean} [options.strict=true]  Reject the whole cart if any line is
+ *   unavailable. New orders are strict — the customer should decide rather
+ *   than discover a missing item at the door. Reorders are lenient, so one
+ *   discontinued meal does not block repeating a months-old order.
  * @returns {Promise<{items: Array, subtotal: number, unavailable: Array}>}
  */
-export const priceCart = async (cartItems) => {
+export const priceCart = async (cartItems, { strict = true } = {}) => {
   if (!Array.isArray(cartItems) || cartItems.length === 0) {
     throw badRequest("cartItems is required and cannot be empty");
   }
@@ -43,10 +48,15 @@ export const priceCart = async (cartItems) => {
       ].filter(Boolean)
     );
 
+  // Only meals the kitchen can actually serve are priceable. Hiding a meal
+  // removed it from the menu but a stale cart could still order it, which
+  // defeated the point of the availability switch.
+  const available = { isAvailable: { $ne: false } };
+
   // One query for ids, one for legacy name lookups — not one per line item.
   const [byIdDocs, byNameDocs] = await Promise.all([
-    ids.length ? Meal.find({ _id: { $in: ids } }) : [],
-    nameClauses.length ? Meal.find({ $or: nameClauses }) : [],
+    ids.length ? Meal.find({ _id: { $in: ids }, ...available }) : [],
+    nameClauses.length ? Meal.find({ $and: [{ $or: nameClauses }, available] }) : [],
   ]);
 
   const byId = new Map(byIdDocs.map((m) => [String(m._id), m]));
@@ -94,6 +104,13 @@ export const priceCart = async (cartItems) => {
   if (items.length === 0) {
     throw notFound(
       `None of the items in the cart are available any more: ${unavailable.join(", ")}`
+    );
+  }
+
+  if (strict && unavailable.length > 0) {
+    throw badRequest(
+      `No longer available: ${unavailable.join(", ")}. Please update your cart.`,
+      { unavailable }
     );
   }
 

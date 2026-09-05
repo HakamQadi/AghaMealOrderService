@@ -22,9 +22,20 @@ _Last updated 2026-09-06._
 | **1.2 Delivery fee, minimum order, radius** | ✅ Done, tested |
 | **1.3 Currency configuration** | ✅ Done |
 | **1.4 Business hours + pause switch** | ✅ Done, tested |
-| Phase 2 onward | Not started |
+| **2.1 Order lifecycle** | ✅ Done, tested, 60 orders migrated |
+| **2.2 Live order board** | ✅ Done |
+| **2.3 Notifications** | ✅ Push + status alerts done; SMS driver written but needs a provider |
+| **2.4 Menu availability** | ✅ Done, tested |
+| **2.5 Customer management** | ✅ Done |
+| Phase 3 onward | Not started |
 
 **Not yet done in Phase 0:** SMS provider (0.3), request-validation layer, Sentry.
+
+**Phase 2 needs your attention:** the status migration mapped the 56 orders
+that were never marked delivered to `placed`, which is literally what they
+were — but they now all appear as "New" on the order board. If they are dead
+historical records, bulk-cancel them; I did not, because silently rewriting 56
+real order records is your call, not mine.
 
 **Phase 1 needs your input:** the restaurant's real coordinates and opening hours
 are not known to me, so Settings ships with delivery radius enforcement **off**

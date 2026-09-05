@@ -25,6 +25,19 @@ const mealSchema = new mongoose.Schema(
         required: true,
       },
     ],
+
+    // Kitchen ran out. Hides the meal from customers without deleting it —
+    // deleting also destroyed the ImageKit images and broke reorder matching.
+    isAvailable: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+
+    // Cleared automatically at the next opening, for "sold out for today".
+    unavailableUntil: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
@@ -48,6 +61,12 @@ const categorySchema = new mongoose.Schema(
     description: {
       en: { type: String, required: false },
       ar: { type: String, required: false },
+    },
+
+    // Hides a whole section from customers without deleting it.
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }

@@ -9,27 +9,31 @@ const BURGER = id("aaaaaaaaaaaaaaaaaaaaaaaa");
 const WRAP = id("bbbbbbbbbbbbbbbbbbbbbbbb");
 
 const MENU = [
-  { _id: BURGER, name: { en: "Burger", ar: "برجر" }, price: 5 },
-  { _id: WRAP, name: { en: "Wrap", ar: "راب" }, price: 2.5 },
+  { _id: BURGER, name: { en: "Burger", ar: "برجر" }, price: 5, isAvailable: true },
+  { _id: WRAP, name: { en: "Wrap", ar: "راب" }, price: 2.5, isAvailable: true },
 ];
 
 /** Stub Meal.find so the pricing logic can be tested without a database. */
 const withMenu = (menu = MENU) => {
   const original = Meal.find;
   Meal.find = async (query = {}) => {
+    // Mirror the { isAvailable: { $ne: false } } filter the service applies.
+    const servable = menu.filter((m) => m.isAvailable !== false);
+
     if (query._id?.$in) {
       const wanted = query._id.$in.map(String);
-      return menu.filter((m) => wanted.includes(String(m._id)));
+      return servable.filter((m) => wanted.includes(String(m._id)));
     }
-    if (query.$or) {
-      return menu.filter((m) =>
-        query.$or.some(
+    const orClauses = query.$or ?? query.$and?.find((c) => c.$or)?.$or;
+    if (orClauses) {
+      return servable.filter((m) =>
+        orClauses.some(
           (clause) =>
             clause["name.en"] === m.name.en || clause["name.ar"] === m.name.ar
         )
       );
     }
-    return menu;
+    return servable;
   };
   return () => {
     Meal.find = original;
@@ -83,17 +87,53 @@ test("clamps quantity to a sane range", async (t) => {
   assert.equal(nonsense.items[0].quantity, 1);
 });
 
-test("reports items that no longer exist instead of pricing them", async (t) => {
+test("a new order is rejected when any line is unavailable", async (t) => {
   t.after(withMenu());
 
-  const { items, subtotal, unavailable } = await priceCart([
-    { mealId: String(BURGER), quantity: 1 },
-    { mealId: String(id("cccccccccccccccccccccccc")), quantity: 1 },
-  ]);
+  // Strict by default: the customer decides, rather than finding an item
+  // missing at the door.
+  await assert.rejects(
+    () =>
+      priceCart([
+        { mealId: String(BURGER), quantity: 1 },
+        { mealId: String(id("cccccccccccccccccccccccc")), quantity: 1 },
+      ]),
+    /No longer available/
+  );
+});
 
-  assert.equal(items.length, 1);
+test("a reorder drops unavailable lines and reports them", async (t) => {
+  t.after(withMenu());
+
+  const { items, subtotal, unavailable } = await priceCart(
+    [
+      { mealId: String(BURGER), quantity: 1 },
+      { mealId: String(id("cccccccccccccccccccccccc")), quantity: 1 },
+    ],
+    { strict: false }
+  );
+
+  assert.equal(items.length, 1, "the still-available line is kept");
   assert.equal(subtotal, 5);
   assert.equal(unavailable.length, 1);
+});
+
+test("a meal marked unavailable cannot be ordered from a stale cart", async (t) => {
+  t.after(
+    withMenu([
+      { _id: BURGER, name: { en: "Burger", ar: "برجر" }, price: 5, isAvailable: false },
+      { _id: WRAP, name: { en: "Wrap", ar: "راب" }, price: 2.5, isAvailable: true },
+    ])
+  );
+
+  await assert.rejects(
+    () => priceCart([{ mealId: String(BURGER), quantity: 1 }]),
+    /available any more/,
+    "sold-out meals must not be priceable"
+  );
+
+  const { subtotal } = await priceCart([{ mealId: String(WRAP), quantity: 1 }]);
+  assert.equal(subtotal, 2.5, "available meals are unaffected");
 });
 
 test("rejects an empty cart", async () => {

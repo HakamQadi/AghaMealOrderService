@@ -4,8 +4,12 @@ import {
   register,
   requestPasswordReset,
   resetPassword,
+  registerPushToken,
+  listUsers,
+  setUserActive,
 } from "../controller/UserController.js";
 import { rateLimit, phoneKey } from "../middleware/rateLimit.js";
+import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
 const userRouter = express.Router();
 
@@ -18,5 +22,12 @@ userRouter.post("/register", authLimiter, register);
 userRouter.post("/login", authLimiter, login);
 userRouter.post("/request-reset", resetLimiter, requestPasswordReset);
 userRouter.post("/reset-password", resetLimiter, resetPassword);
+
+// Signed-in customer: register this device for push notifications.
+userRouter.post("/push-token", requireAuth, registerPushToken);
+
+// Staff: customer management.
+userRouter.get("/admin/users", requireAdmin, listUsers);
+userRouter.patch("/admin/users/:id/active", requireAdmin, setUserActive);
 
 export default userRouter;

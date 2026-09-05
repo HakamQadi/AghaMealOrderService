@@ -6,9 +6,13 @@ import AuthNavigation from "./src/navigation/AuthNavigation";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { Provider as OrderDataProvider } from "./src/context/OrderContext";
 import { SettingsProvider } from "./src/context/SettingsContext";
+import { configureNotificationHandler } from "./src/utils/push";
 import { createStackNavigator } from "@react-navigation/stack";
 
 const RootStack = createStackNavigator();
+
+// Show order updates even while the app is open.
+configureNotificationHandler();
 const AppContent = () => {
   const { loading } = useAuth();
 

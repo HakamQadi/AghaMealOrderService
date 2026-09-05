@@ -8,10 +8,12 @@ import Table from "../components/ui/Table"
 import Badge from "../components/ui/Badge"
 import Card from "../components/ui/Card"
 import { ShoppingBag, Eye, Trash2, Package, Phone, Calendar, MapPin } from "lucide-react"
+import { STATUS_LABELS, STATUS_STYLES, nextStatuses } from "../utils/orderStatus"
 
 export default function Orders() {
   const [orders, setOrders] = useState([])
   const [selectedOrder, setSelectedOrder] = useState(null)
+  const [error, setError] = useState(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -32,17 +34,15 @@ export default function Orders() {
     setIsViewModalOpen(true)
   }
 
-  const handleToggleDeliveryStatus = async (orderId, currentStatus) => {
+  const handleChangeStatus = async (orderId, status) => {
     try {
-      await api.patch(`/admin/orders/update/${orderId}`, {
-        isDelivered: !currentStatus,
-      })
-      fetchOrdersData()
-      if (selectedOrder?._id === orderId) {
-        setSelectedOrder({ ...selectedOrder, isDelivered: !currentStatus })
-      }
-    } catch (error) {
-      console.error("ERROR updating order:", error)
+      const response = await api.patch(`/admin/orders/${orderId}/status`, { status })
+      const updated = response?.data?.order
+      setOrders((prev) => prev.map((o) => (o._id === orderId ? updated : o)))
+      if (selectedOrder?._id === orderId) setSelectedOrder(updated)
+      setError(null)
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not update the order.")
     }
   }
 
@@ -76,6 +76,11 @@ export default function Orders() {
     <main className="bg-slate-900 min-h-screen">
       <section className="w-full max-w-7xl mx-auto">
         <div className="p-4 md:p-6">
+          {error && (
+            <div className="bg-red-500/10 text-red-300 rounded-lg px-4 py-3 text-sm mb-4">
+              {error}
+            </div>
+          )}
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div className="flex items-center gap-3 hover:scale-105 transform transition-all duration-200">
@@ -103,9 +108,11 @@ export default function Orders() {
                     </div>
                     Order Details
                   </h2>
-                  <Badge variant={selectedOrder.isDelivered ? "success" : "warning"}>
-                    {selectedOrder.isDelivered ? "Delivered" : "Pending"}
-                  </Badge>
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[selectedOrder.status] ?? ""}`}
+                  >
+                    {STATUS_LABELS[selectedOrder.status] ?? selectedOrder.status}
+                  </span>
                 </div>
 
                 <div className="space-y-6">
@@ -238,13 +245,28 @@ export default function Orders() {
 
                   {/* Actions */}
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <Button
-                      variant={selectedOrder.isDelivered ? "secondary" : "success"}
-                      className="flex-1"
-                      onClick={() => handleToggleDeliveryStatus(selectedOrder._id, selectedOrder.isDelivered)}
-                    >
-                      {selectedOrder.isDelivered ? "Mark as Pending" : "Mark as Delivered"}
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      {nextStatuses(selectedOrder.status).length === 0 ? (
+                        <p className="text-slate-500 text-sm">
+                          This order is {STATUS_LABELS[selectedOrder.status]?.toLowerCase()} and can no longer change.
+                        </p>
+                      ) : (
+                        nextStatuses(selectedOrder.status).map((status) => (
+                          <Button
+                            key={status}
+                            size="sm"
+                            variant={
+                              status === "cancelled" || status === "rejected"
+                                ? "danger"
+                                : "success"
+                            }
+                            onClick={() => handleChangeStatus(selectedOrder._id, status)}
+                          >
+                            {STATUS_LABELS[status]}
+                          </Button>
+                        ))
+                      )}
+                    </div>
                     <Button
                       variant="danger"
                       className="flex-1"
@@ -321,9 +343,11 @@ export default function Orders() {
                       </div>
 
                       <div className="flex items-center">
-                        <Badge variant={order.isDelivered ? "success" : "warning"}>
-                          {order.isDelivered ? "Delivered" : "Pending"}
-                        </Badge>
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[order.status] ?? ""}`}
+                        >
+                          {STATUS_LABELS[order.status] ?? order.status}
+                        </span>
                       </div>
                     </div>
                   </Table.Row>

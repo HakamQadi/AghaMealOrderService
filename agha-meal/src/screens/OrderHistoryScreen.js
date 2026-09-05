@@ -6,6 +6,7 @@ import { useOrder } from "../context/OrderContext"
 import { getOrderHistory } from "../services/api"
 import { useFocusEffect } from "@react-navigation/native"
 import { useAuth } from "../context/AuthContext"
+import { STATUS_LABELS, STATUS_COLORS, STATUS_ICONS, statusOf } from "../utils/orderStatus"
 
 const OrderHistoryScreen = ({ navigation }) => {
   const { orders, setOrders } = useOrder()
@@ -36,7 +37,7 @@ const OrderHistoryScreen = ({ navigation }) => {
           ...order, // Keep all original fields
           displayId: order._id.slice(-5), // Short ID for display
           formattedDate: new Date(order.createdAt).toLocaleDateString(),
-          status: order.isDelivered ? "Delivered" : "Preparing",
+          status: statusOf(order),
           itemCount: order.cartItems.length,
           orderType: order.type, // delivery or pickup
         }))
@@ -52,35 +53,11 @@ const OrderHistoryScreen = ({ navigation }) => {
     }
   }
 
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case "delivered":
-        return "#4CAF50"
-      case "preparing":
-        return "#FF9800"
-      case "on the way":
-        return "#2196F3"
-      case "cancelled":
-        return "#F44336"
-      default:
-        return "#666"
-    }
-  }
-
-  const getStatusIcon = (status) => {
-    switch (status.toLowerCase()) {
-      case "delivered":
-        return "checkmark-circle"
-      case "preparing":
-        return "restaurant"
-      case "on the way":
-        return "car"
-      case "cancelled":
-        return "close-circle"
-      default:
-        return "time"
-    }
-  }
+  // These used to be switch statements over strings the backend could never
+  // produce, because the only fulfilment field was an isDelivered boolean.
+  const getStatusColor = (status) => STATUS_COLORS[status] ?? "#666"
+  const getStatusIcon = (status) => STATUS_ICONS[status] ?? "time"
+  const getStatusLabel = (status) => STATUS_LABELS[status] ?? "Placed"
 
   const getOrderTypeIcon = (type) => {
     return type === "delivery" ? "bicycle" : "bag"
@@ -102,7 +79,7 @@ const OrderHistoryScreen = ({ navigation }) => {
         </View>
         <View style={[styles.statusContainer, { backgroundColor: getStatusColor(item.status) }]}>
           <Ionicons name={getStatusIcon(item.status)} size={16} color="#fff" />
-          <Text style={styles.statusText}>{item.status}</Text>
+          <Text style={styles.statusText}>{getStatusLabel(item.status)}</Text>
         </View>
       </View>
 

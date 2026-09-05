@@ -1,10 +1,17 @@
 import { Category, Meal } from "../model/mealModel.js";
 import imagekit from "../utils/Imagekit.js";
 
+/**
+ * Customers see only what the kitchen can actually serve; staff see
+ * everything so they can toggle it back on.
+ */
+const visibilityFilter = (req) =>
+  req.user?.role === "admin" ? {} : { isAvailable: { $ne: false } };
+
 // GET
 const getAllMeals = async (req, res) => {
   try {
-    const meals = await Meal.find().populate("category");
+    const meals = await Meal.find(visibilityFilter(req)).populate("category");
 
     res.status(200).json({
       message: "Meals found successfully",
@@ -26,7 +33,10 @@ const getMealByCategory = async (req, res) => {
       return res.status(404).json({ message: "Category not found" });
     }
 
-    const meals = await Meal.find({ category: categoryDoc._id });
+    const meals = await Meal.find({
+      category: categoryDoc._id,
+      ...visibilityFilter(req),
+    });
 
     res.status(200).json({
       message: "Meals found successfully",
@@ -213,8 +223,36 @@ const deleteMeal = async (req, res) => {
   }
 };
 
+// PATCH availability — the one-click "we ran out" control.
+const setAvailability = async (req, res) => {
+  const { id } = req.params;
+  const { isAvailable } = req.body;
+
+  if (typeof isAvailable !== "boolean") {
+    return res.status(400).json({ message: "isAvailable must be a boolean" });
+  }
+
+  try {
+    const meal = await Meal.findByIdAndUpdate(
+      id,
+      { isAvailable, ...(isAvailable ? { unavailableUntil: null } : {}) },
+      { new: true }
+    );
+    if (!meal) return res.status(404).json({ message: "Meal not found" });
+
+    return res.status(200).json({
+      message: isAvailable ? "Meal is available again" : "Meal marked unavailable",
+      meal,
+    });
+  } catch (error) {
+    console.error("Error setting meal availability:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export default {
   getAllMeals,
+  setAvailability,
   getMealByCategory,
   addMeal,
   updateMeal,

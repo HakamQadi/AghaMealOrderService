@@ -7,17 +7,27 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { reorder } from "../services/api";
+import { reorder, cancelOwnOrder } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useSettings } from "../context/SettingsContext";
+import {
+  STATUS_LABELS,
+  STATUS_COLORS,
+  STATUS_ICONS,
+  statusOf,
+  canCancel,
+} from "../utils/orderStatus";
 import ReorderModal from "../components/modal/ReorderModal";
 import { useState } from "react";
 import InfoDialog from "../components/dialog/infoDialog";
 
 const OrderDetailsScreen = ({ route, navigation }) => {
-  const { order } = route.params;
   const { user } = useAuth();
   const { format } = useSettings();
+
+  const [order, setOrder] = useState(route.params.order);
+  const currentStatus = statusOf(order);
+
 
   const [showReorderModal, setShowReorderModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -39,35 +49,26 @@ const OrderDetailsScreen = ({ route, navigation }) => {
     setShowInfoDialog(true);
   };
 
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case "delivered":
-        return "#4CAF50";
-      case "preparing":
-        return "#FF9800";
-      case "on the way":
-        return "#2196F3";
-      case "cancelled":
-        return "#F44336";
-      default:
-        return "#666";
+  const handleCancelOrder = async () => {
+    try {
+      setLoading(true);
+      const response = await cancelOwnOrder(order._id);
+      setOrder(response.order ?? { ...order, status: "cancelled" });
+      showInfo("Order cancelled", "Your order has been cancelled.", "success");
+    } catch (error) {
+      showInfo(
+        "Could not cancel",
+        error.response?.data?.message ||
+          "This order can no longer be cancelled. Please call the restaurant.",
+        "error"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getStatusIcon = (status) => {
-    switch (status.toLowerCase()) {
-      case "delivered":
-        return "checkmark-circle";
-      case "preparing":
-        return "restaurant";
-      case "on the way":
-        return "car";
-      case "cancelled":
-        return "close-circle";
-      default:
-        return "time";
-    }
-  };
+  const getStatusColor = (status) => STATUS_COLORS[status] ?? "#666";
+  const getStatusIcon = (status) => STATUS_ICONS[status] ?? "time";
 
   const getOrderTypeIcon = (type) => {
     return type === "delivery" ? "bicycle" : "bag";
@@ -129,15 +130,15 @@ const OrderDetailsScreen = ({ route, navigation }) => {
           <View
             style={[
               styles.statusContainer,
-              { backgroundColor: getStatusColor(order.status) },
+              { backgroundColor: getStatusColor(currentStatus) },
             ]}
           >
             <Ionicons
-              name={getStatusIcon(order.status)}
+              name={getStatusIcon(currentStatus)}
               size={24}
               color="#fff"
             />
-            <Text style={styles.statusText}>{order.status}</Text>
+            <Text style={styles.statusText}>{STATUS_LABELS[currentStatus]}</Text>
           </View>
           <Text style={styles.orderNumber}>
             Order #{order.displayId.toUpperCase()}
@@ -271,16 +272,16 @@ const OrderDetailsScreen = ({ route, navigation }) => {
 
         {/* Action Buttons */}
         <View style={styles.actionsSection}>
-          {order.status.toLowerCase() !== "delivered" &&
-            order.status.toLowerCase() !== "cancelled" && (
-              <TouchableOpacity
-                style={styles.trackButton}
-                onPress={handleTrackOrder}
-              >
-                <Ionicons name="location" size={20} color="#fff" />
-                <Text style={styles.trackButtonText}>Track Order</Text>
-              </TouchableOpacity>
-            )}
+          {canCancel(currentStatus) && (
+            <TouchableOpacity
+              style={styles.cancelOrderButton}
+              onPress={handleCancelOrder}
+              disabled={loading}
+            >
+              <Ionicons name="close-circle-outline" size={20} color="#fff" />
+              <Text style={styles.trackButtonText}>Cancel Order</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={styles.reorderButton}
@@ -531,6 +532,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     gap: 12,
+  },
+  cancelOrderButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#F44336",
+    borderRadius: 12,
+    paddingVertical: 16,
+    marginBottom: 12,
   },
   trackButton: {
     backgroundColor: "#FF6B6B",
