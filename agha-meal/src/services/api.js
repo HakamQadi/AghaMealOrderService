@@ -101,6 +101,16 @@ export const fetchCategories = async () => {
 //   }
 // };
 
+export const fetchSettings = async () => {
+  try {
+    const response = await api.get("/settings");
+    return response;
+  } catch (error) {
+    console.error("Error fetching settings:", error);
+    throw error;
+  }
+};
+
 export const createOrder = async (orderData) => {
   try {
     const response = await api.post("/admin/orders/add", orderData);

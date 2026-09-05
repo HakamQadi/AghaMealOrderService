@@ -14,7 +14,10 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Agha Meal uses your location to set the delivery address for your order."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +25,11 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.hakamqadi.aghameal",
-      "versionCode": 9
+      "versionCode": 9,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./src/assets/favicon.png"
@@ -33,7 +40,13 @@
       }
     },
     "plugins": [
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Agha Meal uses your location to set the delivery address for your order."
+        }
+      ]
     ]
   }
 }

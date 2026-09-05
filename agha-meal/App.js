@@ -5,6 +5,7 @@ import TabNavigation from "./src/navigation/TabNavigation";
 import AuthNavigation from "./src/navigation/AuthNavigation";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { Provider as OrderDataProvider } from "./src/context/OrderContext";
+import { SettingsProvider } from "./src/context/SettingsContext";
 import { createStackNavigator } from "@react-navigation/stack";
 
 const RootStack = createStackNavigator();
@@ -41,11 +42,13 @@ function App() {
           backgroundColor="transparent"
           translucent
         />
-        <AuthProvider>
-          <OrderDataProvider>
-            <AppContent />
-          </OrderDataProvider>
-        </AuthProvider>
+        <SettingsProvider>
+          <AuthProvider>
+            <OrderDataProvider>
+              <AppContent />
+            </OrderDataProvider>
+          </AuthProvider>
+        </SettingsProvider>
       </SafeAreaView>
     </SafeAreaProvider>
   );

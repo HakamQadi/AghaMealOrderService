@@ -5,6 +5,7 @@ import MealRouter from "./routes/MealsRouter.js";
 import CategoryRouter from "./routes/CategoryRouter.js";
 import orderRoutes from "./routes/OrderRouter.js";
 import userRouter from "./routes/UserRoutes.js";
+import settingsRouter from "./routes/SettingsRouter.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
 /**
@@ -31,6 +32,7 @@ export const createApp = () => {
   app.use(["/meals", "/admin/meals"], MealRouter);
   app.use(["/categories", "/admin/categories"], CategoryRouter);
   app.use("/admin/orders", orderRoutes);
+  app.use("/settings", settingsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

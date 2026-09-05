@@ -79,6 +79,10 @@ const orderSchema = new mongoose.Schema(
       address: {
         type: String,
       },
+      // Free-text delivery instruction, e.g. "call on arrival".
+      note: {
+        type: String,
+      },
     },
   },
   {

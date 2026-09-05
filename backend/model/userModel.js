@@ -22,6 +22,18 @@ const userSchema = new mongoose.Schema(
     resetToken: { type: String },
     resetTokenExpiration: { type: Date },
 
+    // Addresses the customer has chosen to keep, so a returning customer
+    // picks one instead of retyping it at every checkout.
+    savedAddresses: [
+      {
+        label: { type: String, trim: true },
+        address: { type: String, required: true, trim: true },
+        note: { type: String, trim: true },
+        coordinates: { type: [Number], required: true }, // [lng, lat]
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+
     orders: [
       {
         type: mongoose.Schema.Types.ObjectId,

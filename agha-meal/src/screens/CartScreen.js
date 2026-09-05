@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useOrder } from "../context/OrderContext";
+import { useSettings } from "../context/SettingsContext";
 import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
 import { createOrder } from "../services/api";
@@ -28,6 +29,7 @@ const CartScreen = ({ navigation }) => {
   } = useOrder();
 
   const { user, isAuthenticated } = useAuth();
+  const { format } = useSettings();
 
   const [loading, setLoading] = useState(false);
   const [orderType, setOrderType] = useState("pickup"); // default pickup
@@ -136,6 +138,14 @@ const CartScreen = ({ navigation }) => {
           name: item.name,
           quantity: item.quantity,
         })),
+        // Present for delivery orders only; the server rejects a delivery
+        // order that arrives without one.
+        ...(customerInfo.location
+          ? {
+              location: customerInfo.location,
+              saveAddress: customerInfo.saveAddress,
+            }
+          : {}),
       };
       const response = await createOrder(orderData);
 
@@ -186,7 +196,7 @@ const CartScreen = ({ navigation }) => {
               {item.name.en}
             </Text>
             <View style={styles.priceRow}>
-              <Text style={styles.cartItemPrice}>${item.price}</Text>
+              <Text style={styles.cartItemPrice}>{format(item.price)}</Text>
               <Text style={styles.priceLabel}>per item</Text>
             </View>
           </View>
@@ -227,7 +237,7 @@ const CartScreen = ({ navigation }) => {
           <View style={styles.cartItemTotal}>
             <Text style={styles.totalLabel}>Total</Text>
             <Text style={styles.cartItemTotalText}>
-              ${(item.price * item.quantity).toFixed(2)}
+              {format(item.price * item.quantity)}
             </Text>
           </View>
         </View>
@@ -295,12 +305,12 @@ const CartScreen = ({ navigation }) => {
               Subtotal ({cart.length} items)
             </Text>
             <Text style={styles.summaryValue}>
-              ${getCartTotal().toFixed(2)}
+              {format(getCartTotal())}
             </Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total Amount</Text>
-            <Text style={styles.totalAmount}>${getCartTotal().toFixed(2)}</Text>
+            <Text style={styles.totalAmount}>{format(getCartTotal())}</Text>
           </View>
         </View>
 
@@ -333,6 +343,7 @@ const CartScreen = ({ navigation }) => {
         setOrderType={setOrderType}
         cartTotal={getCartTotal()}
         loading={loading}
+        savedAddresses={user?.savedAddresses ?? []}
       />
       <ConfirmDialog
         visible={showDialog}

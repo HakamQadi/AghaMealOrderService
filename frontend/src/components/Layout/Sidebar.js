@@ -5,6 +5,7 @@ import {
   ShoppingBagIcon,
   ArrowRightOnRectangleIcon,
   HomeIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 
 const navigation = [
@@ -12,6 +13,7 @@ const navigation = [
   { name: "Category", href: "/category", icon: TagIcon },
   { name: "Meal", href: "/meal", icon: CubeIcon },
   { name: "Orders", href: "/orders", icon: ShoppingBagIcon },
+  { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
 ];
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {

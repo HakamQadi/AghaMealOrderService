@@ -7,7 +7,7 @@ import Button from "../components/ui/Button"
 import Table from "../components/ui/Table"
 import Badge from "../components/ui/Badge"
 import Card from "../components/ui/Card"
-import { ShoppingBag, Eye, Trash2, Package, Phone, Calendar } from "lucide-react"
+import { ShoppingBag, Eye, Trash2, Package, Phone, Calendar, MapPin } from "lucide-react"
 
 export default function Orders() {
   const [orders, setOrders] = useState([])
@@ -150,6 +150,46 @@ export default function Orders() {
                             <p className="text-slate-200 font-medium">{formatDate(selectedOrder.createdAt)}</p>
                           </div>
                         </div>
+
+                        {/* Delivery address. Orders placed before address
+                            capture existed have none, hence the fallback. */}
+                        {selectedOrder.type === "delivery" && (
+                          <div className="flex items-start gap-3 sm:col-span-2">
+                            <div className="p-2 bg-slate-600/50 rounded-lg">
+                              <MapPin className="w-4 h-4 text-cyan-400" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-slate-400 text-sm">Delivery Address</p>
+                              {selectedOrder.location?.address ? (
+                                <>
+                                  <p className="text-slate-200 font-medium">
+                                    {selectedOrder.location.address}
+                                  </p>
+                                  {selectedOrder.location.note && (
+                                    <p className="text-slate-400 text-sm italic mt-1">
+                                      Note: {selectedOrder.location.note}
+                                    </p>
+                                  )}
+                                  {selectedOrder.location.coordinates?.length === 2 && (
+                                    <a
+                                      href={`https://www.google.com/maps/search/?api=1&query=${selectedOrder.location.coordinates[1]},${selectedOrder.location.coordinates[0]}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-sm mt-2"
+                                    >
+                                      <MapPin className="w-3 h-3" />
+                                      Open in Maps
+                                    </a>
+                                  )}
+                                </>
+                              ) : (
+                                <p className="text-amber-400 text-sm">
+                                  No address recorded — placed before address capture. Call the customer.
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </Card.Body>
                   </Card>
@@ -170,6 +210,18 @@ export default function Orders() {
                         ))}
                       </div>
                       <div className="mt-4 pt-4 border-t border-slate-600">
+                        {selectedOrder.subtotal != null && (
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-slate-400 text-sm">Subtotal</span>
+                            <span className="text-slate-300 text-sm">{selectedOrder.subtotal} JOD</span>
+                          </div>
+                        )}
+                        {selectedOrder.deliveryFee > 0 && (
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-slate-400 text-sm">Delivery Fee</span>
+                            <span className="text-slate-300 text-sm">{selectedOrder.deliveryFee} JOD</span>
+                          </div>
+                        )}
                         <div className="flex justify-between items-center">
                           <span className="text-slate-300 font-semibold text-lg">Total Price</span>
                           <span className="text-emerald-400 font-bold text-2xl">{selectedOrder.totalPrice} JOD</span>

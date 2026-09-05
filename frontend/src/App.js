@@ -6,6 +6,7 @@ import Orders from "./pages/Orders";
 import Login from "./pages/Login";
 import PrivateRoute from "./routes/PrivateRoute";
 import Home from "./pages/Home/Home";
+import Settings from "./pages/Settings/Settings";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="category" element={<Category />} />
           <Route path="meal" element={<Meal />} />
           <Route path="orders" element={<Orders />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Route>
     </Routes>

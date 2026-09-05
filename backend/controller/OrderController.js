@@ -1,6 +1,13 @@
 import { Order } from "../model/OrderModel.js";
 import { User } from "../model/userModel.js";
 import { priceCart, computeTotals } from "../services/priceCart.js";
+import { getSettings } from "../model/SettingsModel.js";
+import {
+  validateDeliveryLocation,
+  deliveryFeeFor,
+  assertMinimumOrder,
+} from "../services/delivery.js";
+import { assertOpen } from "../services/businessHours.js";
 import { asyncHandler } from "../middleware/errorHandler.js";
 import { badRequest, notFound, forbidden } from "../utils/HttpError.js";
 
@@ -27,12 +34,21 @@ const assertValidType = (type) => {
 };
 
 const createOrder = asyncHandler(async (req, res) => {
-  const { name, contact, cartItems, location, type } = req.body;
+  const { name, contact, cartItems, location, type, saveAddress } = req.body;
 
   if (!name || !contact) {
     throw badRequest("name and contact are required");
   }
   assertValidType(type);
+
+  // Reject an obviously malformed request before spending a database round
+  // trip on settings and the user lookup.
+  if (!Array.isArray(cartItems) || cartItems.length === 0) {
+    throw badRequest("cartItems is required and cannot be empty");
+  }
+
+  const settings = await getSettings();
+  assertOpen(settings);
 
   const userId = resolveOrderUserId(req);
   if (!userId) throw badRequest("userId is required");
@@ -43,14 +59,21 @@ const createOrder = asyncHandler(async (req, res) => {
   // Prices come from the Meal documents, never from the request body.
   const { items, subtotal, unavailable } = await priceCart(cartItems);
 
+  assertMinimumOrder(subtotal, type, settings);
+
+  // A delivery order without a usable address is rejected rather than stored
+  // for staff to chase by phone.
+  const deliveryLocation =
+    type === "delivery" ? validateDeliveryLocation(location, settings) : undefined;
+
   // discountAmount is intentionally NOT read from the body. Until the coupon
   // engine exists (Phase 3.2) there is no trusted source for a discount, so it
   // is always zero rather than whatever the caller claims.
-  const totals = computeTotals({ subtotal, discountAmount: 0, deliveryFee: 0 });
-
-  const hasCoordinates = Array.isArray(location?.coordinates)
-    ? location.coordinates.length === 2
-    : false;
+  const totals = computeTotals({
+    subtotal,
+    discountAmount: 0,
+    deliveryFee: deliveryFeeFor(type, settings),
+  });
 
   const newOrder = await Order.create({
     name,
@@ -58,11 +81,26 @@ const createOrder = asyncHandler(async (req, res) => {
     user: user._id,
     cartItems: items,
     ...totals,
-    location: hasCoordinates ? location : undefined,
+    location: deliveryLocation,
     type,
   });
 
   user.orders.push(newOrder._id);
+
+  if (saveAddress && deliveryLocation) {
+    const alreadySaved = user.savedAddresses?.some(
+      (saved) => saved.address === deliveryLocation.address
+    );
+    if (!alreadySaved) {
+      user.savedAddresses.push({
+        label: typeof saveAddress === "string" ? saveAddress : undefined,
+        address: deliveryLocation.address,
+        note: deliveryLocation.note,
+        coordinates: deliveryLocation.coordinates,
+      });
+    }
+  }
+
   await user.save();
 
   res.status(201).json({
@@ -181,6 +219,9 @@ const reorder = asyncHandler(async (req, res) => {
   const orderType = type ?? originalOrder.type;
   assertValidType(orderType);
 
+  const settings = await getSettings();
+  assertOpen(settings);
+
   // Re-price against the current menu rather than copying historic prices.
   const { items, subtotal, unavailable } = await priceCart(
     originalOrder.cartItems.map((item) => ({
@@ -190,13 +231,25 @@ const reorder = asyncHandler(async (req, res) => {
     }))
   );
 
-  const totals = computeTotals({ subtotal, discountAmount: 0, deliveryFee: 0 });
+  assertMinimumOrder(subtotal, orderType, settings);
+
+  // Reuse the original address unless a new one was supplied, then hold it to
+  // the same standard as a fresh order — an old order may predate address
+  // capture, or the delivery area may have changed since.
+  const previousLocation = originalOrder.location?.coordinates?.length
+    ? originalOrder.location.toObject?.() ?? originalOrder.location
+    : undefined;
 
   const resolvedLocation =
-    location ??
-    (originalOrder.location?.coordinates?.length
-      ? originalOrder.location.toObject?.() ?? originalOrder.location
-      : undefined);
+    orderType === "delivery"
+      ? validateDeliveryLocation(location ?? previousLocation, settings)
+      : undefined;
+
+  const totals = computeTotals({
+    subtotal,
+    discountAmount: 0,
+    deliveryFee: deliveryFeeFor(orderType, settings),
+  });
 
   const newOrder = await Order.create({
     name: originalOrder.name,

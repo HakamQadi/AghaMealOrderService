@@ -18,9 +18,20 @@ _Last updated 2026-09-06._
 | 0.5 Duplicate admin account | ⚠️ **Needs your decision** — `07789718044` still exists; deleting it is a production write |
 | Privilege escalation via `register` | ✅ Done — **new gap, not in the original analysis** (see C4) |
 | Hygiene items | ✅ Done (see below) |
-| Phase 1 onward | Not started |
+| **1.1 Delivery address capture** | ✅ Done, tested |
+| **1.2 Delivery fee, minimum order, radius** | ✅ Done, tested |
+| **1.3 Currency configuration** | ✅ Done |
+| **1.4 Business hours + pause switch** | ✅ Done, tested |
+| Phase 2 onward | Not started |
 
 **Not yet done in Phase 0:** SMS provider (0.3), request-validation layer, Sentry.
+
+**Phase 1 needs your input:** the restaurant's real coordinates and opening hours
+are not known to me, so Settings ships with delivery radius enforcement **off**
+and hours set to open 24/7 — deliberately permissive, so nothing that works
+today stops working. Set both on the dashboard's new Settings page, then switch
+radius enforcement on. Delivery fee and minimum order are both 0 until you set
+them.
 
 ---
 

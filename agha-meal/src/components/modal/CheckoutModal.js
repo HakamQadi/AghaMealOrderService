@@ -17,14 +17,26 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
+import AddressPicker from "../AddressPicker";
+import { useSettings } from "../../context/SettingsContext";
 
-const CheckoutSchema = Yup.object().shape({
-  name: Yup.string().trim().required("Name cannot be empty"),
-  phone: Yup.string()
-    .trim()
-    .required("Phone cannot be empty")
-    .length(10, "Phone must be exactly 10 digits"),
-});
+const buildCheckoutSchema = (orderType) =>
+  Yup.object().shape({
+    name: Yup.string().trim().required("Name cannot be empty"),
+    phone: Yup.string()
+      .trim()
+      .required("Phone cannot be empty")
+      .length(10, "Phone must be exactly 10 digits"),
+    // A delivery order without a written address is what forced staff to ring
+    // every customer, so it is required rather than optional.
+    address:
+      orderType === "delivery"
+        ? Yup.string()
+            .trim()
+            .min(5, "Please include building, floor and a nearby landmark")
+            .required("Delivery address is required")
+        : Yup.string(),
+  });
 
 const CheckoutModal = ({
   visible,
@@ -35,9 +47,29 @@ const CheckoutModal = ({
   setOrderType,
   cartTotal,
   loading,
+  savedAddresses = [],
 }) => {
+  const { format, deliveryFee, minimumOrder, isOpen, closedReason, nextOpen } =
+    useSettings();
+
   const [isNameEditable, setIsNameEditable] = useState(false);
   const [isPhoneEditable, setIsPhoneEditable] = useState(false);
+
+  const [coordinates, setCoordinates] = useState(null);
+  const [note, setNote] = useState("");
+  const [saveForNextTime, setSaveForNextTime] = useState(false);
+  const [locationError, setLocationError] = useState("");
+
+  const isDelivery = orderType === "delivery";
+  const fee = isDelivery ? deliveryFee : 0;
+  const total = cartTotal + fee;
+  const belowMinimum = isDelivery && minimumOrder > 0 && cartTotal < minimumOrder;
+
+  const selectSavedAddress = (saved, setFieldValue) => {
+    setFieldValue("address", saved.address);
+    setCoordinates(saved.coordinates);
+    if (saved.note) setNote(saved.note);
+  };
 
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -109,16 +141,40 @@ const CheckoutModal = ({
                 initialValues={{
                   name: user?.name || "",
                   phone: user?.phone || "",
+                  address: "",
                 }}
-                validationSchema={CheckoutSchema}
+                validationSchema={buildCheckoutSchema(orderType)}
                 onSubmit={(values) => {
-                  onConfirm(values);
+                  // A pinned location is required for delivery: the written
+                  // line tells the driver where to knock, the pin tells them
+                  // which part of town to drive to.
+                  if (isDelivery && !coordinates) {
+                    setLocationError(
+                      "Please pin your location so the driver can find you."
+                    );
+                    return;
+                  }
+                  setLocationError("");
+                  onConfirm({
+                    ...values,
+                    ...(isDelivery
+                      ? {
+                          location: {
+                            coordinates,
+                            address: values.address.trim(),
+                            note: note.trim() || undefined,
+                          },
+                          saveAddress: saveForNextTime,
+                        }
+                      : {}),
+                  });
                 }}
               >
                 {({
                   handleChange,
                   handleBlur,
                   handleSubmit,
+                  setFieldValue,
                   values,
                   errors,
                   touched,
@@ -233,13 +289,60 @@ const CheckoutModal = ({
                       </View>
                     </View>
 
-                    {/* Total */}
-                    <View style={styles.totalContainer}>
-                      <Text style={styles.totalLabel}>Total Amount</Text>
-                      <Text style={styles.totalAmount}>
-                        ${cartTotal.toFixed(2)}
-                      </Text>
+                    {isDelivery && (
+                      <AddressPicker
+                        address={values.address}
+                        onAddressChange={handleChange("address")}
+                        note={note}
+                        onNoteChange={setNote}
+                        coordinates={coordinates}
+                        onCoordinatesChange={setCoordinates}
+                        savedAddresses={savedAddresses}
+                        onSelectSaved={(saved) =>
+                          selectSavedAddress(saved, setFieldValue)
+                        }
+                        saveForNextTime={saveForNextTime}
+                        onToggleSave={() => setSaveForNextTime((v) => !v)}
+                        error={
+                          (touched.address && errors.address) || locationError
+                        }
+                      />
+                    )}
+
+                    {/* Totals — shown broken down so the delivery fee is not a
+                        surprise at the door. */}
+                    <View style={styles.summaryContainer}>
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Subtotal</Text>
+                        <Text style={styles.summaryValue}>
+                          {format(cartTotal)}
+                        </Text>
+                      </View>
+                      {isDelivery && (
+                        <View style={styles.summaryRow}>
+                          <Text style={styles.summaryLabel}>Delivery fee</Text>
+                          <Text style={styles.summaryValue}>{format(fee)}</Text>
+                        </View>
+                      )}
+                      <View style={styles.totalContainer}>
+                        <Text style={styles.totalLabel}>Total Amount</Text>
+                        <Text style={styles.totalAmount}>{format(total)}</Text>
+                      </View>
                     </View>
+
+                    {belowMinimum && (
+                      <Text style={styles.warningText}>
+                        Minimum order for delivery is {format(minimumOrder)}.
+                        Add {format(minimumOrder - cartTotal)} more to continue.
+                      </Text>
+                    )}
+
+                    {!isOpen && (
+                      <Text style={styles.warningText}>
+                        {closedReason || "We are closed right now."}
+                        {nextOpen ? ` Opens ${nextOpen}.` : ""}
+                      </Text>
+                    )}
 
                     <View style={styles.modalFooter}>
                       <TouchableOpacity
@@ -253,11 +356,11 @@ const CheckoutModal = ({
                       <TouchableOpacity
                         style={[
                           styles.confirmButton,
-                          loading && { opacity: 0.7 },
+                          (loading || belowMinimum || !isOpen) && { opacity: 0.5 },
                         ]}
                         onPress={handleSubmit}
                         activeOpacity={0.8}
-                        disabled={loading}
+                        disabled={loading || belowMinimum || !isOpen}
                       >
                         <View style={styles.confirmButtonContent}>
                           {loading ? (
@@ -398,6 +501,25 @@ const styles = StyleSheet.create({
   },
   typeButtonTextActive: {
     color: "#FFFFFF",
+  },
+  summaryContainer: {
+    marginTop: 10,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  summaryLabel: { fontSize: 15, color: "#666" },
+  summaryValue: { fontSize: 15, fontWeight: "600", color: "#1a1a1a" },
+  warningText: {
+    color: "#E65100",
+    backgroundColor: "#FFF3E0",
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 13,
+    marginTop: 12,
   },
   totalContainer: {
     flexDirection: "row",

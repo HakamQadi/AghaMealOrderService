@@ -9,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { reorder } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { useSettings } from "../context/SettingsContext";
 import ReorderModal from "../components/modal/ReorderModal";
 import { useState } from "react";
 import InfoDialog from "../components/dialog/infoDialog";
@@ -16,6 +17,7 @@ import InfoDialog from "../components/dialog/infoDialog";
 const OrderDetailsScreen = ({ route, navigation }) => {
   const { order } = route.params;
   const { user } = useAuth();
+  const { format } = useSettings();
 
   const [showReorderModal, setShowReorderModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -97,8 +99,12 @@ const OrderDetailsScreen = ({ route, navigation }) => {
     console.log("Track order:", order._id);
   };
 
-  const deliveryFee = order.orderType === "delivery" ? 1 : 0;
-  const finalTotal = order.totalPrice + deliveryFee;
+  // The fee used to be a hardcoded 1 keyed off `order.orderType` — a field
+  // that does not exist on an order (it is `type`) — so it was always 0 and
+  // never matched what the server stored. Both now come from the order.
+  const deliveryFee = order.deliveryFee ?? 0;
+  const subtotal = order.subtotal ?? order.totalPrice;
+  const finalTotal = order.totalPrice;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -140,12 +146,12 @@ const OrderDetailsScreen = ({ route, navigation }) => {
 
           <View style={styles.orderTypeIndicator}>
             <Ionicons
-              name={getOrderTypeIcon(order.orderType)}
+              name={getOrderTypeIcon(order.type)}
               size={20}
               color="#FF6B6B"
             />
             <Text style={styles.orderTypeText}>
-              {order.orderType === "delivery"
+              {order.type === "delivery"
                 ? "Delivery Order"
                 : "Pickup Order"}
             </Text>
@@ -180,9 +186,9 @@ const OrderDetailsScreen = ({ route, navigation }) => {
                 </Text>
               </View>
               <View style={styles.itemPricing}>
-                <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+                <Text style={styles.itemPrice}>{format(item.price)}</Text>
                 <Text style={styles.itemTotal}>
-                  ${(item.price * item.quantity).toFixed(2)}
+                  {format(item.price * item.quantity)}
                 </Text>
               </View>
             </View>
@@ -195,7 +201,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
             <Text style={styles.summaryValue}>
-              ${order.totalPrice.toFixed(2)}
+              {format(subtotal)}
             </Text>
           </View>
 
@@ -205,23 +211,38 @@ const OrderDetailsScreen = ({ route, navigation }) => {
                 Discount
               </Text>
               <Text style={[styles.summaryValue, styles.discountValue]}>
-                -${order.discountAmount.toFixed(2)}
+                -{format(order.discountAmount)}
               </Text>
             </View>
           )}
 
-          {order.orderType === "delivery" && (
+          {order.type === "delivery" && (
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Delivery Fee</Text>
-              <Text style={styles.summaryValue}>${deliveryFee.toFixed(2)}</Text>
+              <Text style={styles.summaryValue}>{format(deliveryFee)}</Text>
             </View>
           )}
 
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>${finalTotal.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>{format(finalTotal)}</Text>
           </View>
         </View>
+
+        {order.type === "delivery" && order.location?.address && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Delivery Address</Text>
+            <View style={styles.addressBox}>
+              <Ionicons name="location-outline" size={18} color="#FF6B6B" />
+              <View style={styles.addressTextWrap}>
+                <Text style={styles.addressText}>{order.location.address}</Text>
+                {!!order.location.note && (
+                  <Text style={styles.addressNote}>{order.location.note}</Text>
+                )}
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Order Details */}
         <View style={styles.section}>
@@ -236,7 +257,7 @@ const OrderDetailsScreen = ({ route, navigation }) => {
             <View style={styles.metadataRow}>
               <Text style={styles.metadataLabel}>Order Type:</Text>
               <Text style={styles.metadataValue}>
-                {order.orderType === "delivery" ? "Delivery" : "Pickup"}
+                {order.type === "delivery" ? "Delivery" : "Pickup"}
               </Text>
             </View>
             <View style={styles.metadataRow}>
@@ -436,6 +457,18 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FF6B6B",
   },
+  addressBox: {
+    flexDirection: "row",
+    gap: 10,
+    backgroundColor: "#fff5f5",
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#ffe0e0",
+  },
+  addressTextWrap: { flex: 1 },
+  addressText: { fontSize: 14, color: "#1a1a1a", lineHeight: 20 },
+  addressNote: { fontSize: 12, color: "#8E8E93", marginTop: 4, fontStyle: "italic" },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
