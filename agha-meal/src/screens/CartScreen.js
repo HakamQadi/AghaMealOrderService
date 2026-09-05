@@ -140,6 +140,7 @@ const CartScreen = ({ navigation }) => {
         })),
         // Present for delivery orders only; the server rejects a delivery
         // order that arrives without one.
+        ...(customerInfo.couponCode ? { couponCode: customerInfo.couponCode } : {}),
         ...(customerInfo.location
           ? {
               location: customerInfo.location,

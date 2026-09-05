@@ -80,6 +80,22 @@ const orderSchema = new mongoose.Schema(
     },
 
     couponCode: { type: String },
+    coupon: { type: mongoose.Schema.Types.ObjectId, ref: "Coupon" },
+
+    // Cash on delivery is the norm here, but recording it is what makes a
+    // shift reconcilable — "what did we take today" was unanswerable before.
+    paymentMethod: {
+      type: String,
+      enum: ["cash", "card", "online"],
+      default: "cash",
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "refunded"],
+      default: "pending",
+      index: true,
+    },
+    paidAt: { type: Date },
     discountAmount: { type: Number, default: 0, min: 0 },
 
     location: {

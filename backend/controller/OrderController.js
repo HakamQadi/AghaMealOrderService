@@ -9,6 +9,7 @@ import {
 } from "../services/delivery.js";
 import { assertOpen } from "../services/businessHours.js";
 import { notifyOrderStatus, notifyOrderPlaced } from "../services/notifications.js";
+import { validateCoupon, redeemCoupon } from "../services/coupons.js";
 import {
   assertTransition,
   nextStatuses,
@@ -42,7 +43,16 @@ const assertValidType = (type) => {
 };
 
 const createOrder = asyncHandler(async (req, res) => {
-  const { name, contact, cartItems, location, type, saveAddress } = req.body;
+  const {
+    name,
+    contact,
+    cartItems,
+    location,
+    type,
+    saveAddress,
+    couponCode,
+    paymentMethod,
+  } = req.body;
 
   if (!name || !contact) {
     throw badRequest("name and contact are required");
@@ -74,12 +84,19 @@ const createOrder = asyncHandler(async (req, res) => {
   const deliveryLocation =
     type === "delivery" ? validateDeliveryLocation(location, settings) : undefined;
 
-  // discountAmount is intentionally NOT read from the body. Until the coupon
-  // engine exists (Phase 3.2) there is no trusted source for a discount, so it
-  // is always zero rather than whatever the caller claims.
+  // discountAmount is never read from the body. A discount exists only if a
+  // coupon validates, and the server computes how much it is worth.
+  let appliedCoupon = null;
+  let discountAmount = 0;
+  if (couponCode) {
+    const result = await validateCoupon(couponCode, subtotal, user._id);
+    appliedCoupon = result.coupon;
+    discountAmount = result.discountAmount;
+  }
+
   const totals = computeTotals({
     subtotal,
-    discountAmount: 0,
+    discountAmount,
     deliveryFee: deliveryFeeFor(type, settings),
   });
 
@@ -91,6 +108,12 @@ const createOrder = asyncHandler(async (req, res) => {
     ...totals,
     location: deliveryLocation,
     type,
+    ...(appliedCoupon
+      ? { coupon: appliedCoupon._id, couponCode: appliedCoupon.code }
+      : {}),
+    paymentMethod: ["cash", "card", "online"].includes(paymentMethod)
+      ? paymentMethod
+      : "cash",
     status: "placed",
     statusHistory: [{ status: "placed", at: new Date(), by: user._id }],
   });
@@ -112,6 +135,15 @@ const createOrder = asyncHandler(async (req, res) => {
   }
 
   await user.save();
+
+  if (appliedCoupon) {
+    await redeemCoupon({
+      coupon: appliedCoupon,
+      user: user._id,
+      order: newOrder._id,
+      discountAmount: totals.discountAmount,
+    });
+  }
 
   // Fire-and-forget: a notification failure must never fail the order.
   notifyOrderPlaced(newOrder, user).catch(() => {});
@@ -226,6 +258,42 @@ const updateOrder = asyncHandler(async (req, res) => {
     order,
     nextStatuses: nextStatuses(order.status),
   });
+});
+
+/**
+ * Staff: record that an order was paid, or refunded.
+ *
+ * Cash on delivery is the norm, but without recording it there was no way to
+ * reconcile a shift's takings.
+ */
+const updatePayment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { paymentStatus, paymentMethod } = req.body;
+
+  const VALID_STATUS = ["pending", "paid", "refunded"];
+  const VALID_METHOD = ["cash", "card", "online"];
+
+  if (paymentStatus !== undefined && !VALID_STATUS.includes(paymentStatus)) {
+    throw badRequest(`paymentStatus must be one of: ${VALID_STATUS.join(", ")}`);
+  }
+  if (paymentMethod !== undefined && !VALID_METHOD.includes(paymentMethod)) {
+    throw badRequest(`paymentMethod must be one of: ${VALID_METHOD.join(", ")}`);
+  }
+  if (paymentStatus === undefined && paymentMethod === undefined) {
+    throw badRequest("paymentStatus or paymentMethod is required");
+  }
+
+  const order = await Order.findById(id);
+  if (!order) throw notFound("Order not found");
+
+  if (paymentMethod !== undefined) order.paymentMethod = paymentMethod;
+  if (paymentStatus !== undefined) {
+    order.paymentStatus = paymentStatus;
+    order.paidAt = paymentStatus === "paid" ? new Date() : undefined;
+  }
+  await order.save();
+
+  res.status(200).json({ message: "Payment updated", order });
 });
 
 /** Customer-initiated cancellation, allowed only before the kitchen commits. */
@@ -371,6 +439,7 @@ export default {
   createOrder,
   getAllOrdersAndById,
   updateOrder,
+  updatePayment,
   cancelOwnOrder,
   deleteOrder,
   getOrdersByUserId,

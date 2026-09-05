@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import AddressPicker from "../AddressPicker";
+import { validateCoupon } from "../../services/api";
 import { useSettings } from "../../context/SettingsContext";
 
 const buildCheckoutSchema = (orderType) =>
@@ -60,9 +61,42 @@ const CheckoutModal = ({
   const [saveForNextTime, setSaveForNextTime] = useState(false);
   const [locationError, setLocationError] = useState("");
 
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [checkingCoupon, setCheckingCoupon] = useState(false);
+
+  const applyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code) return;
+
+    setCheckingCoupon(true);
+    setCouponError("");
+    try {
+      // The server computes the discount; this is only a preview so the
+      // customer sees the price before committing.
+      const result = await validateCoupon(code, cartTotal);
+      setAppliedCoupon({ code: result.code, discountAmount: result.discountAmount });
+    } catch (error) {
+      setAppliedCoupon(null);
+      setCouponError(
+        error.response?.data?.message || "That code could not be applied."
+      );
+    } finally {
+      setCheckingCoupon(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+  };
+
   const isDelivery = orderType === "delivery";
   const fee = isDelivery ? deliveryFee : 0;
-  const total = cartTotal + fee;
+  const discount = appliedCoupon?.discountAmount ?? 0;
+  const total = Math.max(0, cartTotal - discount + fee);
   const belowMinimum = isDelivery && minimumOrder > 0 && cartTotal < minimumOrder;
 
   const selectSavedAddress = (saved, setFieldValue) => {
@@ -157,6 +191,7 @@ const CheckoutModal = ({
                   setLocationError("");
                   onConfirm({
                     ...values,
+                    ...(appliedCoupon ? { couponCode: appliedCoupon.code } : {}),
                     ...(isDelivery
                       ? {
                           location: {
@@ -309,6 +344,46 @@ const CheckoutModal = ({
                       />
                     )}
 
+                    {/* Coupon */}
+                    <View style={styles.inputContainer}>
+                      <Text style={styles.label}>Coupon code</Text>
+                      {appliedCoupon ? (
+                        <View style={styles.couponApplied}>
+                          <Ionicons name="pricetag" size={16} color="#2e7d32" />
+                          <Text style={styles.couponAppliedText}>
+                            {appliedCoupon.code} · −{format(appliedCoupon.discountAmount)}
+                          </Text>
+                          <TouchableOpacity onPress={removeCoupon}>
+                            <Ionicons name="close-circle" size={20} color="#8E8E93" />
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        <View style={styles.inputRow}>
+                          <TextInput
+                            style={styles.input}
+                            value={couponCode}
+                            onChangeText={setCouponCode}
+                            placeholder="Enter a code"
+                            autoCapitalize="characters"
+                          />
+                          <TouchableOpacity
+                            style={styles.editButton}
+                            onPress={applyCoupon}
+                            disabled={checkingCoupon || !couponCode.trim()}
+                          >
+                            {checkingCoupon ? (
+                              <ActivityIndicator size="small" color="#FF6B6B" />
+                            ) : (
+                              <Text style={styles.applyText}>Apply</Text>
+                            )}
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                      {!!couponError && (
+                        <Text style={styles.formikErrorText}>{couponError}</Text>
+                      )}
+                    </View>
+
                     {/* Totals — shown broken down so the delivery fee is not a
                         surprise at the door. */}
                     <View style={styles.summaryContainer}>
@@ -318,6 +393,14 @@ const CheckoutModal = ({
                           {format(cartTotal)}
                         </Text>
                       </View>
+                      {discount > 0 && (
+                        <View style={styles.summaryRow}>
+                          <Text style={styles.summaryLabel}>Discount</Text>
+                          <Text style={styles.discountValue}>
+                            −{format(discount)}
+                          </Text>
+                        </View>
+                      )}
                       {isDelivery && (
                         <View style={styles.summaryRow}>
                           <Text style={styles.summaryLabel}>Delivery fee</Text>
@@ -512,6 +595,20 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   summaryLabel: { fontSize: 15, color: "#666" },
+  discountValue: { fontSize: 15, fontWeight: "600", color: "#2e7d32" },
+  applyText: { fontSize: 14, fontWeight: "700", color: "#FF6B6B" },
+  couponApplied: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#f1f8f2",
+    borderColor: "#c8e6c9",
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  couponAppliedText: { flex: 1, fontSize: 15, fontWeight: "600", color: "#2e7d32" },
   summaryValue: { fontSize: 15, fontWeight: "600", color: "#1a1a1a" },
   warningText: {
     color: "#E65100",

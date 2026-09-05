@@ -44,6 +44,7 @@ orderRoutes.post("/:id/cancel", requireAuth, OrderController.cancelOwnOrder);
 // Staff only.
 orderRoutes.patch("/update/:id", requireAdmin, OrderController.updateOrder);
 orderRoutes.patch("/:id/status", requireAdmin, OrderController.updateOrder);
+orderRoutes.patch("/:id/payment", requireAdmin, OrderController.updatePayment);
 orderRoutes.delete("/delete/:id", requireAdmin, OrderController.deleteOrder);
 
 export default orderRoutes;

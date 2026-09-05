@@ -8,6 +8,7 @@ import {
   Cog6ToothIcon,
   RectangleStackIcon,
   UsersIcon,
+  TicketIcon,
 } from "@heroicons/react/24/outline";
 
 const navigation = [
@@ -17,6 +18,7 @@ const navigation = [
   { name: "Order Board", href: "/board", icon: RectangleStackIcon },
   { name: "Orders", href: "/orders", icon: ShoppingBagIcon },
   { name: "Customers", href: "/customers", icon: UsersIcon },
+  { name: "Coupons", href: "/coupons", icon: TicketIcon },
   { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
 ];
 

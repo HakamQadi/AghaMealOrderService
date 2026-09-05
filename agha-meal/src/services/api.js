@@ -121,6 +121,16 @@ export const cancelOwnOrder = async (orderId, reason) => {
   }
 };
 
+export const validateCoupon = async (code, subtotal) => {
+  try {
+    const response = await api.post("/coupons/validate", { code, subtotal });
+    return response;
+  } catch (error) {
+    console.error("Error validating coupon:", error);
+    throw error;
+  }
+};
+
 export const fetchSettings = async () => {
   try {
     const response = await api.get("/settings");

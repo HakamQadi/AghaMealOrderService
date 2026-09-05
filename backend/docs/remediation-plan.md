@@ -27,7 +27,10 @@ _Last updated 2026-09-06._
 | **2.3 Notifications** | ✅ Push + status alerts done; SMS driver written but needs a provider |
 | **2.4 Menu availability** | ✅ Done, tested |
 | **2.5 Customer management** | ✅ Done |
-| Phase 3 onward | Not started |
+| **3.1 Payment method & status** | ✅ Done, tested |
+| **3.2 Real coupons** | ✅ Done, tested |
+| **3.3 Business analytics** | ✅ Done, tested |
+| Phase 4 | Not started |
 
 **Not yet done in Phase 0:** SMS provider (0.3), request-validation layer, Sentry.
 
