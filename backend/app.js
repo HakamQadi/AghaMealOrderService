@@ -7,6 +7,7 @@ import orderRoutes from "./routes/OrderRouter.js";
 import userRouter from "./routes/UserRoutes.js";
 import settingsRouter from "./routes/SettingsRouter.js";
 import couponRouter from "./routes/CouponRouter.js";
+import reviewRouter from "./routes/ReviewRouter.js";
 import analyticsRouter from "./routes/AnalyticsRouter.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
@@ -36,6 +37,7 @@ export const createApp = () => {
   app.use("/admin/orders", orderRoutes);
   app.use("/settings", settingsRouter);
   app.use("/coupons", couponRouter);
+  app.use("/reviews", reviewRouter);
   app.use("/admin/analytics", analyticsRouter);
 
   app.use(notFoundHandler);

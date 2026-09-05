@@ -30,7 +30,12 @@ _Last updated 2026-09-06._
 | **3.1 Payment method & status** | ✅ Done, tested |
 | **3.2 Real coupons** | ✅ Done, tested |
 | **3.3 Business analytics** | ✅ Done, tested |
-| Phase 4 | Not started |
+| **4 Ratings and feedback** | ✅ Done, tested |
+| **4 Favourites** | ✅ Done, tested |
+| **4 Promotions / featured items** | ✅ Done, tested |
+| **4 Loyalty** | ✅ Done, tested — ships **disabled** until you set the rates |
+| **4 Scheduled orders** | ✅ Done, tested — ships **disabled** |
+| **4 Multi-branch** | ⚠️ **Not built — needs your decision.** It reshapes the data model (branch-scoped menus, stock, hours, order routing) and the plan flags it as conditional on a second location actually being planned. Building speculative multi-tenancy would be the wrong call. |
 
 **Not yet done in Phase 0:** SMS provider (0.3), request-validation layer, Sentry.
 

@@ -7,6 +7,18 @@ export const MAX_QUANTITY_PER_ITEM = 50;
 const isObjectId = (value) =>
   typeof value === "string" && mongoose.Types.ObjectId.isValid(value);
 
+/**
+ * The price a meal actually sells at right now: its promotional price while a
+ * promotion is running, otherwise its list price. Resolved server-side so a
+ * client cannot claim a promo that has ended.
+ */
+export const effectivePrice = (meal, now = new Date()) => {
+  const promo = meal?.promoPrice;
+  if (promo == null || !(promo >= 0) || promo >= meal.price) return meal.price;
+  if (meal.promoEndsAt && new Date(meal.promoEndsAt) < now) return meal.price;
+  return promo;
+};
+
 const normaliseQuantity = (raw) => {
   const qty = Number.parseInt(raw ?? 1, 10);
   if (!Number.isFinite(qty) || qty < 1) return 1;
@@ -91,12 +103,13 @@ export const priceCart = async (cartItems, { strict = true } = {}) => {
 
     const quantity = normaliseQuantity(item.quantity);
     // Price and name are read from the Meal document, never from the request.
-    subtotal += meal.price * quantity;
+    const price = effectivePrice(meal);
+    subtotal += price * quantity;
 
     items.push({
       meal: meal._id,
       name: meal.name,
-      price: meal.price,
+      price,
       quantity,
     });
   }

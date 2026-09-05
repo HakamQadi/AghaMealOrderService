@@ -96,6 +96,14 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
     paidAt: { type: Date },
+
+    // Points awarded when this order completed. Present means already paid
+    // out, which is what stops a re-run awarding twice.
+    loyaltyAwarded: { type: Number },
+    loyaltyRedeemed: { type: Number },
+
+    // Pre-order: when the customer wants it. Null means as soon as possible.
+    scheduledFor: { type: Date, index: true },
     discountAmount: { type: Number, default: 0, min: 0 },
 
     location: {

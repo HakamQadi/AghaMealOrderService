@@ -21,6 +21,17 @@ const getPublicSettings = asyncHandler(async (_req, res) => {
       enforceRadius: settings.delivery.enforceRadius,
     },
     hours: settings.hours,
+    loyalty: {
+      enabled: settings.loyalty?.enabled ?? false,
+      pointsPerCurrencyUnit: settings.loyalty?.pointsPerCurrencyUnit ?? 0,
+      currencyPerPoint: settings.loyalty?.currencyPerPoint ?? 0,
+      minimumRedemption: settings.loyalty?.minimumRedemption ?? 0,
+    },
+    scheduling: {
+      enabled: settings.scheduling?.enabled ?? false,
+      maxDaysAhead: settings.scheduling?.maxDaysAhead ?? 0,
+      minMinutesAhead: settings.scheduling?.minMinutesAhead ?? 0,
+    },
     isOpen: openState.isOpen,
     ...(openState.reason ? { closedReason: openState.reason } : {}),
     ...(openState.nextOpen ? { nextOpen: openState.nextOpen } : {}),
@@ -42,7 +53,8 @@ const NUMERIC_PATHS = [
 
 const updateSettings = asyncHandler(async (req, res) => {
   const settings = await getSettings();
-  const { currency, delivery, hours, ordersPaused, pausedMessage } = req.body;
+  const { currency, delivery, hours, loyalty, scheduling, ordersPaused, pausedMessage } =
+    req.body;
 
   if (currency) {
     if (currency.code) settings.currency.code = String(currency.code).toUpperCase();
@@ -80,6 +92,42 @@ const updateSettings = asyncHandler(async (req, res) => {
         throw badRequest("hours.week must contain exactly 7 entries, Sunday first");
       }
       settings.hours.week = hours.week;
+    }
+  }
+
+  if (loyalty) {
+    if (loyalty.enabled !== undefined) settings.loyalty.enabled = Boolean(loyalty.enabled);
+    for (const field of [
+      "pointsPerCurrencyUnit",
+      "currencyPerPoint",
+      "minimumRedemption",
+    ]) {
+      if (loyalty[field] !== undefined) {
+        const value = Number(loyalty[field]);
+        if (!Number.isFinite(value) || value < 0) {
+          throw badRequest(`loyalty.${field} must be a non-negative number`);
+        }
+        settings.loyalty[field] = value;
+      }
+    }
+    // Points that convert to nothing are a broken promise to the customer.
+    if (settings.loyalty.enabled && settings.loyalty.currencyPerPoint <= 0) {
+      throw badRequest("loyalty.currencyPerPoint must be above zero when loyalty is enabled");
+    }
+  }
+
+  if (scheduling) {
+    if (scheduling.enabled !== undefined) {
+      settings.scheduling.enabled = Boolean(scheduling.enabled);
+    }
+    for (const field of ["maxDaysAhead", "minMinutesAhead", "ordersPerSlot"]) {
+      if (scheduling[field] !== undefined) {
+        const value = Number(scheduling[field]);
+        if (!Number.isInteger(value) || value < 0) {
+          throw badRequest(`scheduling.${field} must be a non-negative whole number`);
+        }
+        settings.scheduling[field] = value;
+      }
     }
   }
 

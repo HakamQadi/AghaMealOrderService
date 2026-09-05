@@ -9,6 +9,7 @@ import {
   RectangleStackIcon,
   UsersIcon,
   TicketIcon,
+  StarIcon,
 } from "@heroicons/react/24/outline";
 
 const navigation = [
@@ -19,6 +20,7 @@ const navigation = [
   { name: "Orders", href: "/orders", icon: ShoppingBagIcon },
   { name: "Customers", href: "/customers", icon: UsersIcon },
   { name: "Coupons", href: "/coupons", icon: TicketIcon },
+  { name: "Reviews", href: "/reviews", icon: StarIcon },
   { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
 ];
 

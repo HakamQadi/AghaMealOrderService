@@ -121,6 +121,56 @@ export const cancelOwnOrder = async (orderId, reason) => {
   }
 };
 
+export const fetchFeaturedMeals = async () => {
+  try {
+    const response = await api.get("/meals/featured");
+    return response;
+  } catch (error) {
+    console.error("Error fetching featured meals:", error);
+    throw error;
+  }
+};
+
+export const fetchMe = async () => {
+  try {
+    const response = await api.get("/me");
+    return response;
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    throw error;
+  }
+};
+
+export const toggleFavourite = async (mealId) => {
+  try {
+    const response = await api.post(`/me/favourites/${mealId}`);
+    return response;
+  } catch (error) {
+    console.error("Error toggling favourite:", error);
+    throw error;
+  }
+};
+
+export const submitReview = async (review) => {
+  try {
+    const response = await api.post("/reviews", review);
+    return response;
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    throw error;
+  }
+};
+
+export const fetchMyReviews = async () => {
+  try {
+    const response = await api.get("/reviews/mine");
+    return response;
+  } catch (error) {
+    console.error("Error fetching reviews:", error);
+    throw error;
+  }
+};
+
 export const validateCoupon = async (code, subtotal) => {
   try {
     const response = await api.post("/coupons/validate", { code, subtotal });

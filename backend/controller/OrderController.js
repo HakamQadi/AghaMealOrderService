@@ -10,6 +10,8 @@ import {
 import { assertOpen } from "../services/businessHours.js";
 import { notifyOrderStatus, notifyOrderPlaced } from "../services/notifications.js";
 import { validateCoupon, redeemCoupon } from "../services/coupons.js";
+import { awardPoints, redeemPoints } from "../services/loyalty.js";
+import { validateScheduledFor, assertSlotCapacity } from "../services/scheduling.js";
 import {
   assertTransition,
   nextStatuses,
@@ -52,6 +54,8 @@ const createOrder = asyncHandler(async (req, res) => {
     saveAddress,
     couponCode,
     paymentMethod,
+    loyaltyPoints,
+    scheduledFor,
   } = req.body;
 
   if (!name || !contact) {
@@ -66,7 +70,12 @@ const createOrder = asyncHandler(async (req, res) => {
   }
 
   const settings = await getSettings();
-  assertOpen(settings);
+
+  // A pre-order is checked against the time it is due, not against now — the
+  // point of scheduling is ordering while the kitchen is shut.
+  const scheduledSlot = validateScheduledFor(scheduledFor, settings);
+  if (!scheduledSlot) assertOpen(settings);
+  await assertSlotCapacity(scheduledSlot, settings, Order);
 
   const userId = resolveOrderUserId(req);
   if (!userId) throw badRequest("userId is required");
@@ -94,6 +103,16 @@ const createOrder = asyncHandler(async (req, res) => {
     discountAmount = result.discountAmount;
   }
 
+  // Loyalty points are redeemed on top of any coupon, and both are computed
+  // here — never taken from the request.
+  let pointsSpent = 0;
+  if (loyaltyPoints) {
+    const remaining = Math.max(0, subtotal - discountAmount);
+    const redemption = await redeemPoints(loyaltyPoints, remaining, user);
+    pointsSpent = redemption.points;
+    discountAmount += redemption.value;
+  }
+
   const totals = computeTotals({
     subtotal,
     discountAmount,
@@ -114,6 +133,8 @@ const createOrder = asyncHandler(async (req, res) => {
     paymentMethod: ["cash", "card", "online"].includes(paymentMethod)
       ? paymentMethod
       : "cash",
+    ...(pointsSpent ? { loyaltyRedeemed: pointsSpent } : {}),
+    ...(scheduledSlot ? { scheduledFor: scheduledSlot } : {}),
     status: "placed",
     statusHistory: [{ status: "placed", at: new Date(), by: user._id }],
   });
@@ -132,6 +153,13 @@ const createOrder = asyncHandler(async (req, res) => {
         coordinates: deliveryLocation.coordinates,
       });
     }
+  }
+
+  // Deduct BEFORE saving. This ran after user.save() at first, so the points
+  // were discounted on the order but never taken off the balance — the same
+  // points could be spent indefinitely.
+  if (pointsSpent > 0) {
+    user.loyaltyPoints = Math.max(0, (user.loyaltyPoints ?? 0) - pointsSpent);
   }
 
   await user.save();
@@ -251,6 +279,14 @@ const updateOrder = asyncHandler(async (req, res) => {
   await order.save();
 
   const customer = order.user ? await User.findById(order.user) : null;
+
+  // Points are earned only once the order actually completes.
+  if (target === "completed") {
+    await awardPoints(order, customer).catch((err) =>
+      console.warn("Loyalty award failed:", err.message)
+    );
+  }
+
   notifyOrderStatus(order, customer).catch(() => {});
 
   res.status(200).json({

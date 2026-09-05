@@ -38,6 +38,26 @@ const mealSchema = new mongoose.Schema(
     unavailableUntil: {
       type: Date,
     },
+
+    // Surfaced on the app home screen.
+    isFeatured: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    // Optional promotional price. When set and lower than `price`, this is
+    // what the customer pays — the server prices from it, not from the client.
+    promoPrice: {
+      type: Number,
+      min: 0,
+    },
+    promoEndsAt: { type: Date },
+
+    // Denormalised from Review, refreshed when a review lands. Kept on the
+    // meal so the menu does not need an aggregation per request.
+    ratingAverage: { type: Number, default: 0, min: 0, max: 5 },
+    ratingCount: { type: Number, default: 0, min: 0 },
   },
   { timestamps: true }
 );

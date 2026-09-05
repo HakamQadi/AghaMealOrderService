@@ -168,6 +168,47 @@ const registerPushToken = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Push token registered" });
 });
 
+/** The signed-in customer's own profile, including loyalty balance. */
+const getMe = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id)
+    .select("-password -resetToken -resetTokenExpiration -pushTokens")
+    .populate({ path: "favourites", select: "name price image ratingAverage" });
+
+  if (!user) throw badRequest("User not found");
+
+  res.status(200).json({
+    user: {
+      id: user._id,
+      name: user.name,
+      phone: user.phone,
+      role: user.role,
+      loyaltyPoints: user.loyaltyPoints ?? 0,
+      favourites: user.favourites ?? [],
+      savedAddresses: user.savedAddresses ?? [],
+    },
+  });
+});
+
+/** Add or remove a meal from the customer's favourites. */
+const toggleFavourite = asyncHandler(async (req, res) => {
+  const { mealId } = req.params;
+
+  const user = await User.findById(req.user.id);
+  if (!user) throw badRequest("User not found");
+
+  const already = user.favourites?.some((id) => String(id) === String(mealId));
+
+  await User.updateOne(
+    { _id: user._id },
+    already ? { $pull: { favourites: mealId } } : { $addToSet: { favourites: mealId } }
+  );
+
+  res.status(200).json({
+    message: already ? "Removed from favourites" : "Added to favourites",
+    isFavourite: !already,
+  });
+});
+
 /** Staff: paginated customer list with lifetime value, for support calls. */
 const listUsers = asyncHandler(async (req, res) => {
   const limit = Math.min(Number.parseInt(req.query.limit, 10) || 50, 200);
@@ -252,6 +293,8 @@ const setUserActive = asyncHandler(async (req, res) => {
 });
 
 export {
+  getMe,
+  toggleFavourite,
   register,
   login,
   requestPasswordReset,

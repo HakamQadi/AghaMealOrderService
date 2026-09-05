@@ -8,6 +8,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { reorder, cancelOwnOrder } from "../services/api";
+import ReviewModal from "../components/modal/ReviewModal";
 import { useAuth } from "../context/AuthContext";
 import { useSettings } from "../context/SettingsContext";
 import {
@@ -26,6 +27,8 @@ const OrderDetailsScreen = ({ route, navigation }) => {
   const { format } = useSettings();
 
   const [order, setOrder] = useState(route.params.order);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
   const currentStatus = statusOf(order);
 
 
@@ -283,6 +286,16 @@ const OrderDetailsScreen = ({ route, navigation }) => {
             </TouchableOpacity>
           )}
 
+          {currentStatus === "completed" && !hasReviewed && (
+            <TouchableOpacity
+              style={styles.reviewButton}
+              onPress={() => setShowReviewModal(true)}
+            >
+              <Ionicons name="star-outline" size={20} color="#fff" />
+              <Text style={styles.trackButtonText}>Rate this order</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={styles.reorderButton}
             onPress={() => setShowReorderModal(true)}
@@ -292,6 +305,13 @@ const OrderDetailsScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <ReviewModal
+        visible={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        order={order}
+        onSubmitted={() => setHasReviewed(true)}
+      />
+
       {/* Reorder Modal */}
       {showReorderModal && (
         <ReorderModal
@@ -532,6 +552,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     gap: 12,
+  },
+  reviewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#FFB300",
+    borderRadius: 12,
+    paddingVertical: 16,
+    marginBottom: 12,
   },
   cancelOrderButton: {
     flexDirection: "row",

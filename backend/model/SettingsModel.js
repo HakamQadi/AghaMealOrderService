@@ -65,6 +65,26 @@ const settingsSchema = new mongoose.Schema(
       },
     },
 
+    loyalty: {
+      enabled: { type: Boolean, default: false },
+      // Points earned per unit of currency spent (e.g. 1 = 1 point per JOD).
+      pointsPerCurrencyUnit: { type: Number, default: 1, min: 0 },
+      // Currency each point is worth when redeemed (e.g. 0.01 = 100pts -> 1 JOD).
+      currencyPerPoint: { type: Number, default: 0.01, min: 0 },
+      minimumRedemption: { type: Number, default: 100, min: 0 },
+    },
+
+    // Pre-orders for a later time slot.
+    scheduling: {
+      enabled: { type: Boolean, default: false },
+      // How far ahead an order may be placed.
+      maxDaysAhead: { type: Number, default: 7, min: 0 },
+      // Earliest lead time, so the kitchen is not ambushed.
+      minMinutesAhead: { type: Number, default: 30, min: 0 },
+      // Orders allowed per 30-minute slot; 0 means unlimited.
+      ordersPerSlot: { type: Number, default: 0, min: 0 },
+    },
+
     // Manual kill switch for when the kitchen is overwhelmed. Overrides hours.
     ordersPaused: { type: Boolean, default: false },
     pausedMessage: { type: String, default: "" },

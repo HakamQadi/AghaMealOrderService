@@ -5,6 +5,8 @@ import {
   requestPasswordReset,
   resetPassword,
   registerPushToken,
+  getMe,
+  toggleFavourite,
   listUsers,
   setUserActive,
 } from "../controller/UserController.js";
@@ -23,8 +25,10 @@ userRouter.post("/login", authLimiter, login);
 userRouter.post("/request-reset", resetLimiter, requestPasswordReset);
 userRouter.post("/reset-password", resetLimiter, resetPassword);
 
-// Signed-in customer: register this device for push notifications.
+// Signed-in customer.
 userRouter.post("/push-token", requireAuth, registerPushToken);
+userRouter.get("/me", requireAuth, getMe);
+userRouter.post("/me/favourites/:mealId", requireAuth, toggleFavourite);
 
 // Staff: customer management.
 userRouter.get("/admin/users", requireAdmin, listUsers);

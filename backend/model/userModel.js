@@ -27,6 +27,11 @@ const userSchema = new mongoose.Schema(
     // Expo push tokens, one per device the customer has signed in on.
     pushTokens: [{ type: String }],
 
+    favourites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Meal" }],
+
+    // Loyalty points. Earned on completed orders, redeemable for a discount.
+    loyaltyPoints: { type: Number, default: 0, min: 0 },
+
     savedAddresses: [
       {
         label: { type: String, trim: true },

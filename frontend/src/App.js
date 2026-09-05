@@ -10,6 +10,7 @@ import Settings from "./pages/Settings/Settings";
 import OrderBoard from "./pages/Board/OrderBoard";
 import Customers from "./pages/Customers/Customers";
 import Coupons from "./pages/Coupons/Coupons";
+import Reviews from "./pages/Reviews/Reviews";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           <Route path="orders" element={<Orders />} />
           <Route path="customers" element={<Customers />} />
           <Route path="coupons" element={<Coupons />} />
+          <Route path="reviews" element={<Reviews />} />
           <Route path="settings" element={<Settings />} />
         </Route>
       </Route>
