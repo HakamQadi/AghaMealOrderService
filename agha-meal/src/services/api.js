@@ -11,10 +11,34 @@ const api = axios.create({
   },
 });
 
+/**
+ * Called when the server rejects our stored token. AuthContext registers its
+ * logout here so a dead session cannot leave the app stuck: without this the
+ * app still believes it is signed in (the name is prefilled at checkout) while
+ * every authenticated request fails with 401 and there is no way back except
+ * reinstalling.
+ */
+let onUnauthorized = null;
+export const setUnauthorizedHandler = (handler) => {
+  onUnauthorized = handler;
+};
+
+// A 401 from these is "wrong password", not "your session died" — signing out
+// in response would be nonsense.
+const CREDENTIAL_PATHS = ["/login", "/register", "/request-reset", "/reset-password"];
+
 // Response interceptor for handling errors
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
+    const status = error.response?.status;
+    const url = error.config?.url ?? "";
+    const isCredentialAttempt = CREDENTIAL_PATHS.some((path) => url.startsWith(path));
+
+    if (status === 401 && !isCredentialAttempt) {
+      onUnauthorized?.();
+    }
+
     console.error("API Error:", error.response?.data || error.message);
     return Promise.reject(error);
   }

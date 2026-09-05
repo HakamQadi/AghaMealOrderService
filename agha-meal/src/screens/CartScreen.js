@@ -164,6 +164,26 @@ const CartScreen = ({ navigation }) => {
         }
       );
     } catch (error) {
+      // A 401 here means the stored session was rejected. The API layer has
+      // already signed the user out; send them to log in again rather than
+      // showing a bare "Authentication required" with nothing to act on.
+      if (error.response?.status === 401) {
+        showInfo(
+          "Please sign in again",
+          "Your session has expired. Sign in and your cart will still be here.",
+          "info",
+          () => {
+            setShowInfoDialog(false);
+            setShowCheckoutModal(false);
+            navigation.navigate("Auth", {
+              screen: "Login",
+              params: { redirectTo: "Cart" },
+            });
+          }
+        );
+        return;
+      }
+
       showInfo(
         "Error",
         error.response?.data?.message || "Failed to place order.",

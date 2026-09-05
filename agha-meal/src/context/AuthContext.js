@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { registerForPushNotifications } from "../utils/push";
+import { setUnauthorizedHandler } from "../services/api";
 
 const AuthContext = createContext();
 
@@ -21,6 +22,18 @@ export const AuthProvider = ({ children }) => {
   // Check if user is already logged in when app starts
   useEffect(() => {
     checkAuthStatus();
+  }, []);
+
+  // Sign out automatically when the server rejects our token — expired, or
+  // signed with a secret that has since been rotated.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
+      AsyncStorage.multiRemove(["token", "user"]).catch(() => {});
+    });
+    return () => setUnauthorizedHandler(null);
   }, []);
 
   const checkAuthStatus = async () => {
