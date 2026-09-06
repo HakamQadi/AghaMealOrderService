@@ -1,48 +1,37 @@
-// import { Routes, Route } from "react-router-dom";
-// import "./App.css";
-// import Category from "./pages/Category/Category";
-// import NavBar from "./components/NavBar/NavBar";
-// import Meal from "./pages/Meal/Meal";
-// import Home from "./pages/Home/Home";
-
-// function App() {
-//   return (
-//     <>
-//       <NavBar />
-//       <Routes>
-//         <Route path="/" element={<Home />} />
-//         <Route path="meal" element={<Meal />} />
-//         <Route path="category" element={<Category />} />
-//       </Routes>
-//     </>
-//   );
-// }
-
-// export default App;
-
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Dashboard from "./components/Layout/Dashboard";
 import Category from "./pages/Category/Category";
 import Meal from "./pages/Meal/Meal";
-// import Orders from "./pages/Orders/Orders";
-// import Login from "./pages/Login";
+import Orders from "./pages/Orders";
+import Login from "./pages/Login";
 import PrivateRoute from "./routes/PrivateRoute";
 import Home from "./pages/Home/Home";
+import Settings from "./pages/Settings/Settings";
+import OrderBoard from "./pages/Board/OrderBoard";
+import Customers from "./pages/Customers/Customers";
+import Coupons from "./pages/Coupons/Coupons";
+import Reviews from "./pages/Reviews/Reviews";
 
 function App() {
   return (
     <Routes>
-      {/* <Route path="/login" element={<Login />} /> */}
-      <Route path="/" element={<PrivateRoute />}>
+      {/* Public Route */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Protected Routes */}
+      <Route element={<PrivateRoute />}>
         <Route element={<Dashboard />}>
           <Route path="/" element={<Home />} />
           <Route path="category" element={<Category />} />
           <Route path="meal" element={<Meal />} />
-          {/* <Route path="orders" element={<Orders />} /> */}
-          {/* <Route index element={<Navigate to="dashboard" replace />} /> */}
+          <Route path="board" element={<OrderBoard />} />
+          <Route path="orders" element={<Orders />} />
+          <Route path="customers" element={<Customers />} />
+          <Route path="coupons" element={<Coupons />} />
+          <Route path="reviews" element={<Reviews />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Route>
-      {/* <Route path="/" element={<Navigate to="/login" replace />} /> */}
     </Routes>
   );
 }

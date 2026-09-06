@@ -26,10 +26,6 @@ const getAllCategories = async (req, res) => {
       // Get all categories
       const categories = await Category.find();
 
-      if (!categories || categories.length === 0) {
-        return res.status(404).json({ message: "Categories not found" });
-      }
-
       return res.status(200).json({
         message: "Categories found successfully",
         count: categories.length,
@@ -213,7 +209,7 @@ const deleteCategory = async (req, res) => {
     return res.status(200).json({ message: "Category deleted successfully" });
   } catch (error) {
     console.error("Error deleting category:", error);
-    return res.status(500).json({ message: "Internal server error", error });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 

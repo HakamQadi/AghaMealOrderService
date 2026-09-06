@@ -6,11 +6,11 @@ const Header = ({ setSidebarOpen }) => {
   const [userName, setUserName] = useState("");
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = localStorage.getItem("username");
 
     if (storedUser) {
-      const user = JSON.parse(storedUser);
-      setUserName(user.name);
+      // const user = JSON.parse(storedUser);
+      setUserName(storedUser);
     }
   }, []);
 

@@ -1,21 +1,73 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import AppNavigation from "./src/navigation/AppNavigation";
+import { StatusBar, StyleSheet, ActivityIndicator, View } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { NavigationContainer } from "@react-navigation/native";
+import TabNavigation from "./src/navigation/TabNavigation";
+import AuthNavigation from "./src/navigation/AuthNavigation";
+import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { Provider as OrderDataProvider } from "./src/context/OrderContext";
+import { SettingsProvider } from "./src/context/SettingsContext";
+import { configureNotificationHandler } from "./src/utils/push";
+import { createStackNavigator } from "@react-navigation/stack";
+
+const RootStack = createStackNavigator();
+
+// Show order updates even while the app is open.
+configureNotificationHandler();
+const AppContent = () => {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <RootStack.Navigator screenOptions={{ headerShown: false }}>
+        <RootStack.Screen name="Main" component={TabNavigation} />
+        <RootStack.Screen name="Auth" component={AuthNavigation} />
+      </RootStack.Navigator>
+    </NavigationContainer>
+  );
+};
 
 function App() {
   return (
-    <View style={styles.container}>
-      <OrderDataProvider>
-        <AppNavigation />
-      </OrderDataProvider>
-    </View>
+    <SafeAreaProvider>
+      <SafeAreaView
+        style={styles.container}
+        edges={["right", "bottom", "left"]}
+      >
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="transparent"
+          translucent
+        />
+        <SettingsProvider>
+          <AuthProvider>
+            <OrderDataProvider>
+              <AppContent />
+            </OrderDataProvider>
+          </AuthProvider>
+        </SettingsProvider>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#fff",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F2F2F7",
   },
 });
 

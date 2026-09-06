@@ -1,20 +1,49 @@
-import AdminJS from 'adminjs'
-import AdminJSExpress from '@adminjs/express'
-import express from 'express'
+import express from "express";
+import cors from "cors";
 
-const PORT = 3000
+import MealRouter from "./routes/MealsRouter.js";
+import CategoryRouter from "./routes/CategoryRouter.js";
+import orderRoutes from "./routes/OrderRouter.js";
+import userRouter from "./routes/UserRoutes.js";
+import settingsRouter from "./routes/SettingsRouter.js";
+import couponRouter from "./routes/CouponRouter.js";
+import reviewRouter from "./routes/ReviewRouter.js";
+import analyticsRouter from "./routes/AnalyticsRouter.js";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
-const start = async () => {
-  const app = express()
+/**
+ * Build the Express app without listening on a port, so tests can drive it
+ * directly. server.js owns the listening and the database connection.
+ *
+ * (This file previously held an unwired AdminJS scaffold that nothing started.)
+ */
+export const createApp = () => {
+  const app = express();
 
-  const admin = new AdminJS({})
+  app.use(cors());
+  app.use(express.json({ limit: "1mb" }));
 
-  const adminRouter = AdminJSExpress.buildRouter(admin)
-  app.use(admin.options.rootPath, adminRouter)
+  app.get("/", (_req, res) => res.send("Hi"));
+  app.get("/ping", (_req, res) => res.send("Pong!"));
+  app.get("/health", (_req, res) =>
+    res.status(200).json({ status: "ok", uptime: process.uptime() })
+  );
 
-  app.listen(PORT, () => {
-    console.log(`AdminJS started on http://localhost:${PORT}${admin.options.rootPath}`)
-  })
-}
+  app.use("/", userRouter);
 
-start()
+  // Menu reads are public; writes are admin-only (see each router).
+  app.use(["/meals", "/admin/meals"], MealRouter);
+  app.use(["/categories", "/admin/categories"], CategoryRouter);
+  app.use("/admin/orders", orderRoutes);
+  app.use("/settings", settingsRouter);
+  app.use("/coupons", couponRouter);
+  app.use("/reviews", reviewRouter);
+  app.use("/admin/analytics", analyticsRouter);
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+
+  return app;
+};
+
+export default createApp;

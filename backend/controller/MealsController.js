@@ -1,14 +1,17 @@
 import { Category, Meal } from "../model/mealModel.js";
 import imagekit from "../utils/Imagekit.js";
 
+/**
+ * Customers see only what the kitchen can actually serve; staff see
+ * everything so they can toggle it back on.
+ */
+const visibilityFilter = (req) =>
+  req.user?.role === "admin" ? {} : { isAvailable: { $ne: false } };
+
 // GET
 const getAllMeals = async (req, res) => {
   try {
-    const meals = await Meal.find().populate("category");
-
-    if (!meals || meals.length === 0) {
-      return res.status(404).json({ message: "Meals not found" });
-    }
+    const meals = await Meal.find(visibilityFilter(req)).populate("category");
 
     res.status(200).json({
       message: "Meals found successfully",
@@ -16,7 +19,7 @@ const getAllMeals = async (req, res) => {
       meals,
     });
   } catch (error) {
-    console.error("Error getting meals:", error);
+    console.error("Error getting meals:", error); 
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -30,7 +33,10 @@ const getMealByCategory = async (req, res) => {
       return res.status(404).json({ message: "Category not found" });
     }
 
-    const meals = await Meal.find({ category: categoryDoc._id });
+    const meals = await Meal.find({
+      category: categoryDoc._id,
+      ...visibilityFilter(req),
+    });
 
     res.status(200).json({
       message: "Meals found successfully",
@@ -217,8 +223,113 @@ const deleteMeal = async (req, res) => {
   }
 };
 
+// GET featured meals for the app home screen.
+const getFeaturedMeals = async (req, res) => {
+  try {
+    const now = new Date();
+    const meals = await Meal.find({
+      ...visibilityFilter(req),
+      $or: [
+        { isFeatured: true },
+        // A live promotion is featured whether or not the flag is set.
+        {
+          promoPrice: { $ne: null },
+          $or: [{ promoEndsAt: null }, { promoEndsAt: { $gt: now } }],
+        },
+      ],
+    })
+      .populate("category")
+      .limit(20);
+
+    res.status(200).json({
+      message: "Featured meals",
+      count: meals.length,
+      meals,
+    });
+  } catch (error) {
+    console.error("Error getting featured meals:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// PATCH promotion / featured flag.
+const setPromotion = async (req, res) => {
+  const { id } = req.params;
+  const { isFeatured, promoPrice, promoEndsAt } = req.body;
+
+  const updates = {};
+  if (typeof isFeatured === "boolean") updates.isFeatured = isFeatured;
+
+  if (promoPrice !== undefined) {
+    if (promoPrice === null) {
+      updates.promoPrice = null;
+      updates.promoEndsAt = null;
+    } else {
+      const price = Number(promoPrice);
+      if (!Number.isFinite(price) || price < 0) {
+        return res.status(400).json({ message: "promoPrice must be a positive number" });
+      }
+      updates.promoPrice = price;
+    }
+  }
+  if (promoEndsAt !== undefined) updates.promoEndsAt = promoEndsAt || null;
+
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ message: "Nothing to update" });
+  }
+
+  try {
+    const meal = await Meal.findById(id);
+    if (!meal) return res.status(404).json({ message: "Meal not found" });
+
+    // A promo that is not cheaper than the list price is a mistake, not a promo.
+    const nextPromo = updates.promoPrice ?? meal.promoPrice;
+    if (nextPromo != null && nextPromo >= meal.price) {
+      return res.status(400).json({
+        message: `promoPrice must be below the list price of ${meal.price}`,
+      });
+    }
+
+    const updated = await Meal.findByIdAndUpdate(id, updates, { new: true });
+    return res.status(200).json({ message: "Promotion updated", meal: updated });
+  } catch (error) {
+    console.error("Error setting promotion:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// PATCH availability — the one-click "we ran out" control.
+const setAvailability = async (req, res) => {
+  const { id } = req.params;
+  const { isAvailable } = req.body;
+
+  if (typeof isAvailable !== "boolean") {
+    return res.status(400).json({ message: "isAvailable must be a boolean" });
+  }
+
+  try {
+    const meal = await Meal.findByIdAndUpdate(
+      id,
+      { isAvailable, ...(isAvailable ? { unavailableUntil: null } : {}) },
+      { new: true }
+    );
+    if (!meal) return res.status(404).json({ message: "Meal not found" });
+
+    return res.status(200).json({
+      message: isAvailable ? "Meal is available again" : "Meal marked unavailable",
+      meal,
+    });
+  } catch (error) {
+    console.error("Error setting meal availability:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export default {
   getAllMeals,
+  getFeaturedMeals,
+  setPromotion,
+  setAvailability,
   getMealByCategory,
   addMeal,
   updateMeal,

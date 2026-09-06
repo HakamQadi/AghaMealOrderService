@@ -1,10 +1,7 @@
 import mongoose from "mongoose";
-import dotenv from "dotenv";
-dotenv.config({ path: "./.env" });
 
 const mealSchema = new mongoose.Schema(
   {
-    //! change meal to name
     name: {
       en: { type: String, required: true },
       ar: { type: String, required: true },
@@ -28,6 +25,39 @@ const mealSchema = new mongoose.Schema(
         required: true,
       },
     ],
+
+    // Kitchen ran out. Hides the meal from customers without deleting it —
+    // deleting also destroyed the ImageKit images and broke reorder matching.
+    isAvailable: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+
+    // Cleared automatically at the next opening, for "sold out for today".
+    unavailableUntil: {
+      type: Date,
+    },
+
+    // Surfaced on the app home screen.
+    isFeatured: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    // Optional promotional price. When set and lower than `price`, this is
+    // what the customer pays — the server prices from it, not from the client.
+    promoPrice: {
+      type: Number,
+      min: 0,
+    },
+    promoEndsAt: { type: Date },
+
+    // Denormalised from Review, refreshed when a review lands. Kept on the
+    // meal so the menu does not need an aggregation per request.
+    ratingAverage: { type: Number, default: 0, min: 0, max: 5 },
+    ratingCount: { type: Number, default: 0, min: 0 },
   },
   { timestamps: true }
 );
@@ -52,27 +82,17 @@ const categorySchema = new mongoose.Schema(
       en: { type: String, required: false },
       ar: { type: String, required: false },
     },
+
+    // Hides a whole section from customers without deleting it.
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
 
 const Meal = mongoose.model("Meal", mealSchema);
 const Category = mongoose.model("Category", categorySchema);
-
-mongoose
-  .connect(process.env.CONN_STR, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log("DB connected");
-  })
-  .catch((err) => {
-    console.error("Mongoose connection error:", err);
-  });
-
-mongoose.connection.on("disconnected", () => {
-  console.log("Mongoose disconnected");
-});
 
 export { Meal, Category };

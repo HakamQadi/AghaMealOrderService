@@ -5,21 +5,31 @@ import {
   ShoppingBagIcon,
   ArrowRightOnRectangleIcon,
   HomeIcon,
+  Cog6ToothIcon,
+  RectangleStackIcon,
+  UsersIcon,
+  TicketIcon,
+  StarIcon,
 } from "@heroicons/react/24/outline";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: HomeIcon },
   { name: "Category", href: "/category", icon: TagIcon },
   { name: "Meal", href: "/meal", icon: CubeIcon },
-  // { name: "Orders", href: "/dashboard/orders", icon: ShoppingBagIcon },
+  { name: "Order Board", href: "/board", icon: RectangleStackIcon },
+  { name: "Orders", href: "/orders", icon: ShoppingBagIcon },
+  { name: "Customers", href: "/customers", icon: UsersIcon },
+  { name: "Coupons", href: "/coupons", icon: TicketIcon },
+  { name: "Reviews", href: "/reviews", icon: StarIcon },
+  { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
 ];
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("username");
     navigate("/login");
   };
 
